@@ -10,8 +10,8 @@ export async function GET(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401, headers: getCorsHeaders(origin) }
+        { authenticated: false },
+        { status: 200, headers: getCorsHeaders(origin) }
       )
     }
 
@@ -19,8 +19,8 @@ export async function GET(request: Request) {
 
     if (!user) {
       const response = NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401, headers: getCorsHeaders(origin) }
+        { authenticated: false },
+        { status: 200, headers: getCorsHeaders(origin) }
       )
       response.cookies.delete('auth-token')
       return response
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
     if (user.role === 'PUBLISHER' && user.status !== 'ACTIVE') {
       return NextResponse.json(
-        { error: 'Account pending approval' },
+        { authenticated: true, error: 'Account pending approval' },
         { status: 403, headers: getCorsHeaders(origin) }
       )
     }
@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     const effectiveRole = normalizeEffectiveUserRole(user)
 
     return NextResponse.json({
+      authenticated: true,
       id: user.id,
       username: user.username,
       role: effectiveRole,
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Auth error:', error)
     return NextResponse.json(
-      { error: 'Authentication service unavailable' },
+      { authenticated: false, error: 'Authentication service unavailable' },
       { status: 503, headers: getCorsHeaders(request.headers.get('origin')) }
     )
   }

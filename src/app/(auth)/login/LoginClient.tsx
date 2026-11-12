@@ -24,6 +24,9 @@ export default function LoginClient() {
 
     const restoreSession = async () => {
       try {
+        const hasToken = typeof document !== 'undefined' && document.cookie.split(';').some((cookie) => cookie.trim().startsWith('auth-token='));
+        if (!hasToken) return;
+
         const response = await fetch("/api/auth/me", {
           credentials: "include",
           cache: "no-store",
@@ -31,6 +34,7 @@ export default function LoginClient() {
         if (!isActive || !response.ok) return;
 
         const user = await response.json();
+        if (!user?.authenticated || !user?.role) return;
         router.replace(getDashboardPath(user.role));
       } catch (error) {
         console.error("Session check failed:", error);

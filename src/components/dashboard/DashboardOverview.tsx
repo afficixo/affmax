@@ -632,10 +632,15 @@ export default function DashboardOverview() {
 
   useEffect(() => {
     let active = true
-    fetch('/api/auth/me')
+
+    const hasToken = typeof document !== 'undefined' && document.cookie.split(';').some((cookie) => cookie.trim().startsWith('auth-token='))
+    if (!hasToken) return () => { active = false }
+
+    fetch('/api/auth/me', { credentials: 'include' })
       .then(async (response) => {
         if (!response.ok) return
-        const user = await response.json() as { fullName?: string | null; username?: string; role?: 'MANAGER' | 'PUBLISHER' }
+        const user = await response.json() as { authenticated?: boolean; fullName?: string | null; username?: string; role?: 'MANAGER' | 'PUBLISHER' }
+        if (!user.authenticated || !active) return
         if (active) {
           setUserName(user.fullName?.trim() || user.username || 'Publisher')
           setUserRole(user.role === 'MANAGER' ? 'MANAGER' : 'PUBLISHER')
