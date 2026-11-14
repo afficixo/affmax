@@ -2,8 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { getDashboardPath } from './dashboard-path'
 
-test('getDashboardPath sends managers to publisher management', () => {
-  assert.equal(getDashboardPath('MANAGER'), '/account/publishers')
+test('getDashboardPath sends managers to the dashboard', () => {
+  assert.equal(getDashboardPath('MANAGER'), '/dashboard')
 })
 
 test('getDashboardPath keeps publishers on the dashboard', () => {

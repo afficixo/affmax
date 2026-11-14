@@ -5558,7 +5558,7 @@ export default function DashboardOverview() {
         const showManagerThread = isManagerSupport && supportManagerPane === 'thread' && Boolean(selectedSupportId || supportConversation)
         const showPublisherList = !isManagerSupport && supportManagerPane === 'list'
         const showPublisherThread = !isManagerSupport && supportManagerPane === 'thread'
-        const clock = supportClockMs || Date.now()
+        const clock = supportClockMs
 
         const renderConversationRow = (
           conversation: SupportConversationRecord,

@@ -66,10 +66,13 @@ body {
   min-height: 100%;
   background: #3d464d;
   color: #58666e;
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .dashboard-shell {
