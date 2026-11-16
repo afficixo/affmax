@@ -47,6 +47,18 @@ function clickWhere(scope: AnalyticsScope, from?: Date, to?: Date) {
   return where
 }
 
+function subIdReportParts(first: string | null, second: string | null) {
+  const subId1 = (first || '').trim()
+  const subId2 = (second || '').trim()
+  return {
+    key: JSON.stringify([subId1, subId2]),
+    label: [
+      subId1 ? `s1: ${subId1}` : '',
+      subId2 ? `s2: ${subId2}` : '',
+    ].filter(Boolean).join(' / ') || '(none)',
+  }
+}
+
 export async function getOverviewStats(scope: AnalyticsScope) {
   const todayStart = startOfDayUtc()
   const monthStart = startOfMonthUtc()
@@ -161,8 +173,22 @@ export async function getReportData(
     : null
   if (toExclusive) toExclusive.setUTCDate(toExclusive.getUTCDate() + 1)
 
+  const reportDateFilter = {
+    gte: from,
+    ...(toExclusive ? { lt: toExclusive } : {}),
+  }
+  const reportLeadWhere = type === 'conversions'
+    ? {
+        ...leadWhere(scope),
+        OR: [
+          { occurredAt: reportDateFilter },
+          { occurredAt: null, createdAt: reportDateFilter },
+        ],
+      }
+    : leadWhere(scope, from, toExclusive || undefined)
+
   const leads = await prisma.conversionLead.findMany({
-    where: leadWhere(scope, from, toExclusive || undefined),
+    where: reportLeadWhere,
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -176,6 +202,7 @@ export async function getReportData(
       sub2: true,
       sub3: true,
       sub4: true,
+      ipAddress: true,
       createdAt: true,
       occurredAt: true,
     },
@@ -202,15 +229,17 @@ export async function getReportData(
     return {
       type,
       rows: leads.map((lead) => ({
-        date: lead.createdAt.toISOString(),
         offerId: lead.offerId || '',
         campaign: formatConversionCampaign(lead.campaignName || '', lead.offerId || ''),
         country: (lead.country || '—').toUpperCase(),
         device: lead.device || '—',
-        // Affmine UI "s1" = publisher subid 1 → stored as postback s3
+        // Publisher SubIDs 1 and 2 arrive as inbound postback s3 and s4.
         subId: lead.sub3 || '—',
+        subId2: lead.sub4 || '—',
         revenue: Number(lead.payout ?? 0),
+        ip: lead.ipAddress || '—',
         status: lead.status === 'Approved' || !lead.status ? 'Credited' : lead.status,
+        date: (lead.occurredAt || lead.createdAt).toISOString(),
       })),
       totals: null,
       chartLabels: [],
@@ -320,9 +349,8 @@ export async function getReportData(
       const key = click.offerId || 'unknown'
       ensure(key, `#${key}`).clicks += 1
     } else if (type === 'subid') {
-      // Always publisher subid 1 only (tracking ?s1= → OfferClick.sub1)
-      const key = (click.sub1 || '').trim() || '(none)'
-      ensure(key, key).clicks += 1
+      const { key, label } = subIdReportParts(click.sub1, click.sub2)
+      ensure(key, label).clicks += 1
     } else if (type === 'geo') {
       const key = offerCountry(click.offerId) || 'XX'
       const label = countryNames[key] || (key === 'XX' ? 'Unknown' : key)
@@ -352,9 +380,8 @@ export async function getReportData(
       bucket.leads += 1
       bucket.revenue += Number(lead.payout ?? 0)
     } else if (type === 'subid') {
-      // Always publisher subid 1 only (postback s3 → ConversionLead.sub3)
-      const key = (lead.sub3 || '').trim() || '(none)'
-      const bucket = ensure(key, key)
+      const { key, label } = subIdReportParts(lead.sub3, lead.sub4)
+      const bucket = ensure(key, label)
       bucket.leads += 1
       bucket.revenue += Number(lead.payout ?? 0)
     }

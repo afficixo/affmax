@@ -7,7 +7,7 @@ export function createPostbackToken(): string {
 
 /**
  * Manager inbound URL using only main-marketplace Affmine tokens:
- * #s1# #s2# #s3# #s4# #payout# #amount# #cmpid# #cmpname# #datetime# #ip# #country#
+ * #s1# #s2# #s3# #s4# #datetime# #ip# #country#
  *
  * Our tracking map on main offer links:
  *   s1 = publisher id, s2 = offer id, s3 = publisher sub1, s4 = publisher sub2
@@ -16,8 +16,6 @@ export function buildMarketplacePostbackUrl(origin: string, token: string): stri
   const base = origin.replace(/\/$/, '')
   return `${base}/api/postback/in/${encodeURIComponent(token)}`
     + '?s1=#s1#&s2=#s2#&s3=#s3#&s4=#s4#'
-    + '&payout=#payout#&amount=#amount#'
-    + '&cmpid=#cmpid#&cmpname=#cmpname#'
     + '&datetime=#datetime#&ip=#ip#&country=#country#'
 }
 
@@ -99,13 +97,6 @@ function firstParam(params: URLSearchParams, keys: string[]): string {
   return ''
 }
 
-function parsePayout(raw: string): number | null {
-  if (!raw) return null
-  const cleaned = raw.replace(/[^0-9.+-]/g, '')
-  const value = Number(cleaned)
-  return Number.isFinite(value) ? value : null
-}
-
 function parseOccurredAt(raw: string): Date | null {
   if (!raw) return null
   if (/^\d{9,13}$/.test(raw)) {
@@ -122,10 +113,8 @@ function buildExternalKey(parts: {
   token: string
   publisherKey: string
   offerKey: string
-  payout: string
   datetime: string
   ip: string
-  cmpid: string
   s3: string
   s4: string
 }) {
@@ -134,10 +123,8 @@ function buildExternalKey(parts: {
       parts.token,
       parts.publisherKey,
       parts.offerKey,
-      parts.payout,
       parts.datetime,
       parts.ip,
-      parts.cmpid,
       parts.s3,
       parts.s4,
     ].join('|'))
@@ -182,15 +169,11 @@ export async function ingestMarketplacePostback(
 
   const s1 = firstParam(params, ['s1', 'sub1', 'sub_id_1'])
   const s2 = firstParam(params, ['s2', 'sub2', 'sub_id_2', 'offer_id', 'offerid'])
-  let s3 = firstParam(params, ['s3', 'sub3', 'sub_id_3'])
-  let s4 = firstParam(params, ['s4', 'sub4', 'sub_id_4'])
-  const payoutRaw = firstParam(params, ['payout', 'revenue'])
-  const amountRaw = firstParam(params, ['amount'])
-  const cmpid = firstParam(params, ['cmpid', 'campaign_id', 'campaignid'])
-  const cmpname = firstParam(params, ['cmpname', 'campaign_name', 'campaignname'])
+  const s3 = firstParam(params, ['s3', 'sub3', 'sub_id_3'])
+  const s4 = firstParam(params, ['s4', 'sub4', 'sub_id_4'])
   const datetime = firstParam(params, ['datetime', 'time', 'timestamp'])
   const ip = firstParam(params, ['ip', 'ip_address', 'ipaddress'])
-  const country = firstParam(params, ['country', 'geo']).toUpperCase()
+  const country = firstParam(params, ['country', 'county', 'geo']).toUpperCase()
 
   if (!s1 || !s2) {
     return { ok: false, status: 400, error: 'Missing required s1 (publisher id) or s2 (offer id)' }
@@ -220,40 +203,22 @@ export async function ingestMarketplacePostback(
     return { ok: false, status: 404, error: `Offer #${s2} not found` }
   }
 
-  // If marketplace omitted publisher subs, backfill from latest tracking click.
-  if (!s3 || !s4) {
-    const click = await prisma.offerClick.findFirst({
-      where: {
-        offerId: offer.id,
-        OR: [
-          { publisherUserId: publisher.id },
-          { publisherNumber },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { sub1: true, sub2: true },
-    })
-    if (click) {
-      if (!s3 && click.sub1) s3 = click.sub1
-      if (!s4 && click.sub2) s4 = click.sub2
-    }
-  }
-
-  const amount = parsePayout(amountRaw)
-  const payout = parsePayout(payoutRaw) ?? amount ?? offer.payout
+  const payout = offer.payout
   if (!Number.isFinite(payout) || payout < 0) {
     return { ok: false, status: 400, error: 'Invalid payout' }
   }
 
-  const occurredAt = parseOccurredAt(datetime) ?? new Date()
+  const parsedOccurredAt = parseOccurredAt(datetime)
+  if (datetime && !parsedOccurredAt) {
+    return { ok: false, status: 400, error: 'Invalid conversion datetime' }
+  }
+  const occurredAt = parsedOccurredAt ?? new Date()
   const externalKey = buildExternalKey({
     token,
     publisherKey: s1,
     offerKey: s2,
-    payout: String(payout),
     datetime: datetime || occurredAt.toISOString(),
     ip,
-    cmpid,
     s3,
     s4,
   })
@@ -279,8 +244,8 @@ export async function ingestMarketplacePostback(
         userId: publisher.id,
         postbackId: config.id,
         offerId: offer.id,
-        campaignId: cmpid || null,
-        campaignName: cmpname || offer.name,
+        campaignId: offer.id,
+        campaignName: offer.name,
         payout,
         country: country || null,
         ipAddress: ip || null,
@@ -314,7 +279,6 @@ export async function ingestMarketplacePostback(
       const { firePublisherGlobalPostback } = await import('@/lib/publisher-postback')
       publisherPostback = await firePublisherGlobalPostback(publisher.id, {
         ...lead,
-        amount: amount ?? lead.payout,
       })
     } catch (error) {
       console.error('Publisher postback dispatch failed:', error)

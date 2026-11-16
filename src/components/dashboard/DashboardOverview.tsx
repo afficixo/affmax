@@ -685,8 +685,8 @@ const reportPages: Record<string, { title: string; columns: string[] }> = {
   '/reports/campaign': { title: 'Campaign Reports', columns: ['Campaign', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/geo': { title: 'Geo Reports', columns: ['Country', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/tool': { title: 'Tool Reports', columns: ['Tool ID', 'Name', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
-  '/reports/subid': { title: 'SubID Reports', columns: ['subID', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
-  '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'Device', 'SubID', 'Revenue', 'Status'] },
+  '/reports/subid': { title: 'SubID Reports', columns: ['SubID 1 / SubID 2', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
+  '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'Device', 'SubID 1', 'SubID 2', 'IP', 'Revenue', 'Status'] },
 }
 
 const tablePages: Record<string, { title: string; columns: string[] }> = {
@@ -876,15 +876,6 @@ function formatConversionDevice(raw?: string) {
   if (lower.includes('mac')) return 'Mac'
   if (lower.includes('windows')) return 'Windows'
   return value
-}
-
-function formatConversionSubIdParts(raw: string): { prefix: string; value: string } | null {
-  const value = (raw || '').trim()
-  if (!value || value === '—') return null
-  const matched = value.match(/^(s\d+)\s*:\s*(.*)$/i)
-  if (matched) return { prefix: matched[1].toLowerCase(), value: matched[2].trim() || matched[1] }
-  const first = value.split('/')[0]?.trim() || value
-  return { prefix: 's1', value: first }
 }
 
 function toDateInputValue(date: Date) {
@@ -3609,15 +3600,17 @@ export default function DashboardOverview() {
                               )
                             }
                             if (column === 'Device') return <td key={column}>{String(row.device || '—')}</td>
-                            if (column === 'SubID') {
-                              const parts = formatConversionSubIdParts(String(row.subId || ''))
-                              if (!parts) return <td key={column}>—</td>
+                            if (column === 'SubID 1' || column === 'SubID 2') {
+                              const subId = column === 'SubID 1' ? row.subId : row.subId2
+                              const value = String(subId || '')
+                              if (!value || value === '—') return <td key={column}>—</td>
                               return (
                                 <td key={column}>
-                                  <strong>{parts.prefix}:</strong> {parts.value}
+                                  <strong>{column === 'SubID 1' ? 's1' : 's2'}:</strong> {value}
                                 </td>
                               )
                             }
+                            if (column === 'IP') return <td key={column}>{String(row.ip || '—')}</td>
                             if (column === 'Revenue') return <td key={column}>{formatAffmineMoney(Number(row.revenue || 0))}</td>
                             if (column === 'Status') {
                               return (
@@ -3661,7 +3654,7 @@ export default function DashboardOverview() {
                               </td>
                             )
                           }
-                          if (column === 'subID' || (column === reportPage.columns[0] && pathname === '/reports/subid')) {
+                          if (column === 'SubID 1 / SubID 2' || (column === reportPage.columns[0] && pathname === '/reports/subid')) {
                             return <td key={column}>{String(row.label ?? '')}</td>
                           }
                           if (column === reportPage.columns[0]) {
@@ -5068,9 +5061,6 @@ export default function DashboardOverview() {
                     </thead>
                     <tbody>
                       {([
-                        ['#cmpid#', 'Campaign ID'],
-                        ['#cmpname#', 'Campaign name'],
-                        ['#payout#', 'Payout (in USD)'],
                         ['#datetime#', 'Conversion date & time (Unix timestamp format)'],
                         ['#ip#', 'Conversion IP'],
                         ['#country#', 'Conversion country'],
@@ -5109,13 +5099,6 @@ export default function DashboardOverview() {
                           <td>{description}</td>
                         </tr>
                       ))}
-                      <tr>
-                        <th scope="row"><code className={styles.postbackTokenCode}>#amount#</code></th>
-                        <td>
-                          Virtual currency amount{' '}
-                          <span className={styles.postbackOfferwallBadge}>Offerwall only</span>
-                        </td>
-                      </tr>
                     </tbody>
                   </table>
                 </div>
