@@ -7735,7 +7735,7 @@ a.offerAction {
 
   .main {
     margin-left: 0;
-    padding: 80px 15px 80px;
+    padding: 80px 8px;
     background: #f5f5f5;
   }
 
@@ -7765,8 +7765,20 @@ a.offerAction {
   }
 
   .pageHeaderRight {
+    width: 100%;
     flex-wrap: wrap;
+    justify-content: flex-end;
     max-width: 100%;
+  }
+
+  .reportDatePicker {
+    width: 100%;
+  }
+
+  .reportRangeInput,
+  input.reportRangeInput {
+    width: 100%;
+    min-width: 0;
   }
 
   .notices {
@@ -7827,6 +7839,73 @@ a.offerAction {
   .dataPage {
     margin: 0 3px 14px;
     padding: 11px;
+  }
+
+  .reportPanel.dataPage.subIdReport {
+    margin: 0 0 14px;
+    padding: 8px 0;
+  }
+
+  .reportPanel.subIdReport .reportHeading {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 0 6px 8px;
+  }
+
+  .reportPanel.subIdReport .reportTools {
+    position: static;
+    width: 100%;
+    padding: 0;
+  }
+
+  .reportPanel.subIdReport .reportTools input {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+  }
+
+  .reportPanel.subIdReport .reportBody {
+    padding: 6px 0;
+  }
+
+  .reportPanel.subIdReport .reportTableWrap {
+    overflow: visible;
+  }
+
+  .reportPanel.subIdReport .dataTable {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .reportPanel.subIdReport .dataTable th,
+  .reportPanel.subIdReport .dataTable td {
+    padding: 4px 2px;
+    font-size: 10px;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .reportPanel.subIdReport .dataTable thead th {
+    padding: 6px 2px;
+    background-image: none;
+    font-size: 9px;
+    line-height: 1.25;
+  }
+
+  .reportPanel.subIdReport .dataTable thead th:nth-child(1) { width: 30%; }
+  .reportPanel.subIdReport .dataTable thead th:nth-child(2) { width: 18%; }
+  .reportPanel.subIdReport .dataTable thead th:nth-child(3) { width: 14%; }
+  .reportPanel.subIdReport .dataTable thead th:nth-child(4),
+  .reportPanel.subIdReport .dataTable thead th:nth-child(5) { width: 13%; }
+  .reportPanel.subIdReport .dataTable thead th:nth-child(6) { width: 12%; }
+
+  .reportPanel.subIdReport .dataTable tfoot th:first-child,
+  .reportPanel.subIdReport .dataTable tbody td:first-child {
+    padding-left: 2px;
   }
 
   .campaignDetails {

@@ -685,7 +685,7 @@ const reportPages: Record<string, { title: string; columns: string[] }> = {
   '/reports/campaign': { title: 'Campaign Reports', columns: ['Campaign', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/geo': { title: 'Geo Reports', columns: ['Country', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/tool': { title: 'Tool Reports', columns: ['Tool ID', 'Name', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
-  '/reports/subid': { title: 'SubID Reports', columns: ['SubID 1 / SubID 2', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
+  '/reports/subid': { title: 'SubID Reports', columns: ['SubID 1', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'Device', 'SubID 1', 'SubID 2', 'IP', 'Revenue', 'Status'] },
 }
 
@@ -3501,7 +3501,7 @@ export default function DashboardOverview() {
           </section>
         ) : reportPage ? (
           <>
-          <section className={`${styles.panel} ${styles.dataPage} ${styles.reportPanel}`}>
+          <section className={`${styles.panel} ${styles.dataPage} ${styles.reportPanel} ${pathname === '/reports/subid' ? styles.subIdReport : ''}`}>
             <div className={styles.reportHeading}>
               <h2><i className="fa fa-bar-chart" aria-hidden="true" /> {reportPage.title}</h2>
               <div className={styles.reportTools}>
@@ -3654,7 +3654,7 @@ export default function DashboardOverview() {
                               </td>
                             )
                           }
-                          if (column === 'SubID 1 / SubID 2' || (column === reportPage.columns[0] && pathname === '/reports/subid')) {
+                          if (column === reportPage.columns[0] && pathname === '/reports/subid') {
                             return <td key={column}>{String(row.label ?? '')}</td>
                           }
                           if (column === reportPage.columns[0]) {

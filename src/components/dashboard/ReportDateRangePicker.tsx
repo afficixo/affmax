@@ -45,14 +45,14 @@ function formatMini(iso: string) {
   const date = parseIso(iso)
   const d = String(date.getDate()).padStart(2, '0')
   const m = String(date.getMonth() + 1).padStart(2, '0')
-  return `${d}.${m}.${date.getFullYear()}`
+  return `${m}.${d}.${date.getFullYear()}`
 }
 
 function parseMini(value: string) {
   const matched = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(value.trim())
   if (!matched) return null
-  const day = Number(matched[1])
-  const month = Number(matched[2])
+  const month = Number(matched[1])
+  const day = Number(matched[2])
   const year = Number(matched[3])
   const date = new Date(year, month - 1, day, 12, 0, 0, 0)
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null
@@ -124,7 +124,7 @@ export default function ReportDateRangePicker({
   const [activePreset, setActivePreset] = useState(presetLabel)
   const [pickingEnd, setPickingEnd] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [position, setPosition] = useState({ top: 97, right: 20 })
+  const [position, setPosition] = useState({ top: 97, right: 20, maxHeight: 0 })
   const startMonth = parseIso(startDate)
   const endMonth = parseIso(endDate)
   const [leftMonth, setLeftMonth] = useState({ year: startMonth.getFullYear(), monthIndex: startMonth.getMonth() })
@@ -139,9 +139,11 @@ export default function ReportDateRangePicker({
       const anchor = anchorRef?.current
       if (!anchor) return
       const rect = anchor.getBoundingClientRect()
+      const top = Math.round(rect.bottom + window.scrollY)
       setPosition({
-        top: Math.round(rect.bottom + window.scrollY),
+        top,
         right: Math.max(8, Math.round(window.innerWidth - rect.right)),
+        maxHeight: window.innerWidth <= 700 ? Math.max(0, window.innerHeight - rect.bottom - 8) : 0,
       })
     }
     updatePosition()
@@ -323,8 +325,15 @@ export default function ReportDateRangePicker({
 
   return createPortal(
     <div
-      className="daterangepicker dropdown-menu opensleft show-calendar"
-      style={{ display: 'block', top: position.top, right: position.right, left: 'auto' }}
+      className={`daterangepicker dropdown-menu opensleft show-calendar${activePreset === 'Custom Range' ? ' custom-range' : ''}`}
+      style={{
+        display: 'block',
+        top: position.top,
+        right: position.right,
+        left: 'auto',
+        maxHeight: activePreset === 'Custom Range' && position.maxHeight > 0 ? position.maxHeight : undefined,
+        overflowY: activePreset === 'Custom Range' && position.maxHeight > 0 ? 'auto' : undefined,
+      }}
       role="dialog"
       aria-label="Select report date range"
     >
