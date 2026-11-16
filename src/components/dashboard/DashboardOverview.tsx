@@ -794,6 +794,17 @@ function formatReportDateLabel(value: string) {
   }).format(date)
 }
 
+function getInitialReportDateRange() {
+  const end = new Date()
+  end.setUTCHours(12, 0, 0, 0)
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - 6)
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+  }
+}
+
 /** Affmine daily table / chart axis: "11/11/2026" */
 /** Affmine daily table date: `YYYY-MM-DD`. */
 function formatReportTableDate(value: string) {
@@ -976,24 +987,14 @@ export default function DashboardOverview() {
   const [appliedCampaignFilters, setAppliedCampaignFilters] = useState({ country: 'All', device: 'All', category: 'All', type: 'All' })
   const [campaignSort, setCampaignSort] = useState<{ key: 'id' | 'name' | 'payout' | 'featured'; direction: 'asc' | 'desc' }>({ key: 'featured', direction: 'asc' })
   const [campaignPage, setCampaignPage] = useState(1)
-  const [reportStartDate, setReportStartDate] = useState(() => {
-    const start = new Date()
-    start.setUTCHours(12, 0, 0, 0)
-    return start.toISOString().slice(0, 10)
-  })
-  const [reportEndDate, setReportEndDate] = useState(() => {
-    const end = new Date()
-    end.setUTCHours(12, 0, 0, 0)
-    return end.toISOString().slice(0, 10)
-  })
-  const [reportRange, setReportRange] = useState(() => {
-    const end = new Date()
-    end.setUTCHours(12, 0, 0, 0)
-    const iso = end.toISOString().slice(0, 10)
-    return `${formatReportDateLabel(iso)} - ${formatReportDateLabel(iso)}`
-  })
+  const [initialReportDates] = useState(getInitialReportDateRange)
+  const [reportStartDate, setReportStartDate] = useState(initialReportDates.start)
+  const [reportEndDate, setReportEndDate] = useState(initialReportDates.end)
+  const [reportRange, setReportRange] = useState(
+    `${formatReportDateLabel(initialReportDates.start)} - ${formatReportDateLabel(initialReportDates.end)}`,
+  )
   const [showReportDates, setShowReportDates] = useState(false)
-  const [reportPresetLabel, setReportPresetLabel] = useState('Today')
+  const [reportPresetLabel, setReportPresetLabel] = useState('Last 7 Days')
   const reportRangeAnchorRef = useRef<HTMLInputElement>(null)
   const [pageSearch, setPageSearch] = useState('')
   const [postbackEnabled, setPostbackEnabled] = useState(true)
@@ -2974,8 +2975,8 @@ export default function DashboardOverview() {
         {!campaignDetail && (
           <div className={`${styles.pageHeader} ${!pageTitle ? styles.pageHeaderEmpty : ''}`}>
             {pageTitle ? <h1>{pageTitle}</h1> : null}
-            {isDashboard && <p>Server time: <time>{time}</time></p>}
             <div className={styles.pageHeaderRight}>
+              {isDashboard && <p>Server time: <time>{time}</time></p>}
               {reportPage && (
                 <div className={styles.reportDatePicker}>
                   <input
