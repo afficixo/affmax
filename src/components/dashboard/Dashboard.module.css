@@ -1907,6 +1907,176 @@ input.reportRangeInput {
   margin-top: 0;
 }
 
+.dataTable.paymentManagerTable td {
+  white-space: normal;
+}
+
+.paymentAccountMeta {
+  display: block;
+  margin-top: 2px;
+  color: #737e84;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.paymentAccountValue {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+
+.paymentManagerHeading input {
+  width: 240px;
+}
+
+.dataTable .paymentAmount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dataTable.paymentManagerTable td:last-child {
+  white-space: nowrap;
+}
+
+.paymentInvoiceStatus {
+  display: inline-block;
+  border-radius: 2px;
+  padding: 2px 6px;
+  background: #fcf8e3;
+  color: #8a6d3b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.paymentInvoicePaid {
+  background: #dff0d8;
+  color: #3c763d;
+}
+
+.paymentPayoutForm {
+  max-width: 620px;
+}
+
+.paymentSettings .paymentPayoutForm > .pagePrimaryButton {
+  align-self: flex-start;
+  min-height: 30px;
+  border: 1px solid #4d9d5a;
+  padding: 0 12px;
+  background: #5cb85c;
+  color: #fff;
+}
+
+.paymentSettings .paymentPayoutForm > .pagePrimaryButton:hover:not(:disabled) {
+  background: #449d44;
+}
+
+.paymentSettings .paymentPayoutForm > .pagePrimaryButton:disabled {
+  border-color: #c8cdd0;
+  background: #d7dbdd;
+  color: #677178;
+}
+
+.paymentLoading {
+  display: grid;
+}
+
+.paymentLoadingAnnounce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.paymentSkeleton {
+  display: block;
+  border-radius: 3px;
+  background: linear-gradient(100deg, #edf0f1 25%, #f7f8f9 45%, #edf0f1 65%);
+  background-size: 200% 100%;
+  animation: paymentSkeletonShimmer 1.4s ease-in-out infinite;
+}
+
+.paymentSkeletonValue {
+  width: 58%;
+  height: 24px;
+  margin: 0 auto 7px;
+}
+
+.paymentSkeletonLabel {
+  width: 72%;
+  height: 10px;
+  margin: 0 auto;
+}
+
+.paymentSkeletonHeading {
+  width: 135px;
+  height: 12px;
+  margin: 0 0 9px;
+}
+
+.paymentSkeletonLine {
+  width: 94%;
+  height: 9px;
+  margin: 0 0 7px;
+}
+
+.paymentInfoSection .paymentSkeletonLine:last-child {
+  width: 68%;
+}
+
+.paymentSkeletonField {
+  width: min(100%, 360px);
+  height: 30px;
+  margin: 8px 0;
+}
+
+.paymentSkeletonTableHeading {
+  width: 72px;
+  height: 10px;
+}
+
+.paymentSkeletonTableCell {
+  width: 84px;
+  height: 10px;
+}
+
+@keyframes paymentSkeletonShimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paymentSkeleton {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .paymentManagerHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .paymentManagerHeading input {
+    width: 100%;
+  }
+}
+
+.paymentError {
+  margin: 8px 0 0;
+  border: 1px solid #e8b8b2;
+  border-radius: 3px;
+  padding: 9px 11px;
+  background: #fdf2f0;
+  color: #a94442;
+  font-size: 12px;
+}
+
 .apiDocumentation {
   min-height: 0;
   margin-top: -10px;

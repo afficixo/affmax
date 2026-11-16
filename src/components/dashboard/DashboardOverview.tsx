@@ -76,6 +76,7 @@ import {
 import { withoutLegacyAffmineDemoOffers } from '@/lib/campaign-offers'
 import { PUBLISHER_POSTBACK_URL_EXAMPLE } from '@/lib/postback-tokens'
 import ReportDateRangePicker from './ReportDateRangePicker'
+import PaymentDashboard from './PaymentDashboard'
 import styles from './Dashboard.module.css'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler)
@@ -1001,7 +1002,6 @@ export default function DashboardOverview() {
   const [postbackUrl, setPostbackUrl] = useState('')
   const [marketplacePostbackUrl, setMarketplacePostbackUrl] = useState('')
   const [marketplacePostbackLoading, setMarketplacePostbackLoading] = useState(false)
-  const [publisherEarnings, setPublisherEarnings] = useState(0)
   const [dashboardStats, setDashboardStats] = useState({
     revenue: 0,
     conversions: 0,
@@ -1075,7 +1075,7 @@ export default function DashboardOverview() {
   const [time, setTime] = useState('--:--:--')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
-  const [userName, setUserName] = useState('Publisher')
+  const [userName, setUserName] = useState('')
   const supportFirstName = (() => {
     const raw = (userName || '').trim().split(/\s+/).filter(Boolean)[0] || ''
     const lower = raw.toLowerCase()
@@ -1354,55 +1354,51 @@ export default function DashboardOverview() {
       if (profile.email) setUserEmail(profile.email)
     }
 
-    // Seed identity immediately from /me, then hydrate full Affmine fields from /profile.
-    void Promise.all([
-      fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' }),
-      fetch('/api/account/profile', { credentials: 'include', cache: 'no-store' }),
-    ])
-      .then(async ([meResponse, profileResponse]) => {
-        if (meResponse.ok) {
-          const user = await meResponse.json() as {
-            id?: string
-            email?: string | null
-            fullName?: string | null
-            username?: string
-            role?: 'MANAGER' | 'PUBLISHER'
+    const userRequest = fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return
+        const user = await response.json() as {
+          id?: string
+          email?: string | null
+          fullName?: string | null
+          username?: string
+          role?: 'MANAGER' | 'PUBLISHER'
+          publisherNumber?: number | null
+          createdAt?: string | null
+          lastLogin?: string | null
+        }
+        if (!active) return
+        setUserId(user.id ?? null)
+        setUserEmail(user.email ?? null)
+        setUserName((current) => current || user.fullName?.trim() || user.username || user.email || '')
+        setUserRole(user.role === 'MANAGER' ? 'MANAGER' : 'PUBLISHER')
+        setAccountProfile({
+          publisherNumber: typeof user.publisherNumber === 'number' ? user.publisherNumber : null,
+          createdAt: user.createdAt ?? null,
+          lastLogin: user.lastLogin ?? null,
+        })
+        const parts = (user.fullName || '').trim().split(/\s+/).filter(Boolean)
+        setAccountDetails((current) => ({
+          ...current,
+          firstName: current.firstName || parts[0] || '',
+          lastName: current.lastName || parts.slice(1).join(' ') || '',
+          email: current.email || user.email || '',
+        }))
+      })
+    const profileRequest = fetch('/api/account/profile', { credentials: 'include', cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return
+        const data = await response.json() as {
+          profile?: AccountDetailsForm & {
             publisherNumber?: number | null
             createdAt?: string | null
             lastLogin?: string | null
           }
-          if (!active) return
-          setUserId(user.id ?? null)
-          setUserEmail(user.email ?? null)
-          setUserName(user.fullName?.trim() || user.username || 'Publisher')
-          setUserRole(user.role === 'MANAGER' ? 'MANAGER' : 'PUBLISHER')
-          setAccountProfile({
-            publisherNumber: typeof user.publisherNumber === 'number' ? user.publisherNumber : null,
-            createdAt: user.createdAt ?? null,
-            lastLogin: user.lastLogin ?? null,
-          })
-          // Instant first paint for permanent fields before profile returns.
-          const parts = (user.fullName || '').trim().split(/\s+/).filter(Boolean)
-          setAccountDetails((current) => ({
-            ...current,
-            firstName: current.firstName || parts[0] || '',
-            lastName: current.lastName || parts.slice(1).join(' ') || '',
-            email: current.email || user.email || '',
-          }))
         }
-
-        if (profileResponse.ok) {
-          const data = await profileResponse.json() as {
-            profile?: AccountDetailsForm & {
-              publisherNumber?: number | null
-              createdAt?: string | null
-              lastLogin?: string | null
-            }
-          }
-          if (!active || !data.profile) return
-          applyProfile(data.profile)
-        }
+        if (!active || !data.profile) return
+        applyProfile(data.profile)
       })
+    void Promise.all([userRequest, profileRequest])
       .catch((requestError: unknown) => {
         console.error('Unable to load the dashboard account profile:', requestError)
       })
@@ -1691,7 +1687,6 @@ export default function DashboardOverview() {
           isActive?: boolean
           inboundUrl?: string
           url?: string
-          earningsSinceLastInvoice?: number
         }>
       })
       .then((data) => {
@@ -1703,9 +1698,6 @@ export default function DashboardOverview() {
         if (data.role === 'PUBLISHER') {
           setPostbackEnabled(data.isActive !== false)
           if (typeof data.url === 'string') setPostbackUrl(data.url)
-        }
-        if (typeof data.earningsSinceLastInvoice === 'number') {
-          setPublisherEarnings(data.earningsSinceLastInvoice)
         }
       })
       .catch((requestError: unknown) => {
@@ -2869,7 +2861,7 @@ export default function DashboardOverview() {
             )}
           </div>
           <div className={styles.popoverWrap}>
-            <button type="button" className={styles.profileButton} aria-expanded={profileOpen} onClick={() => { setProfileOpen(!profileOpen); setNewsOpen(false) }}>
+            <button type="button" className={styles.profileButton} aria-label={userName ? `Profile for ${userName}` : 'Profile'} aria-expanded={profileOpen} onClick={() => { setProfileOpen(!profileOpen); setNewsOpen(false) }}>
               <CircleUserRound size={17} />
               <b>{userName}</b>
               <ChevronDown size={12} />
@@ -4404,52 +4396,7 @@ export default function DashboardOverview() {
             )}
           </section>
         ) : pathname === '/payments' ? (
-          <>
-            <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentInfo}`}>
-              <h2 className={styles.sectionTitle}><i className="fa fa-info" aria-hidden="true" />INFO</h2>
-              <div className={styles.paymentSummary}>
-                <div><strong className={styles.paymentUp}>$0.00</strong><span>Total Paid</span></div>
-                <div><strong>$0.00</strong><span>Pending</span></div>
-                <div><strong className={styles.paymentUp}>${publisherEarnings.toFixed(2)}</strong><span>Earnings since last invoice</span></div>
-                <div><strong>0</strong><span>Total payments</span></div>
-              </div>
-              <section className={styles.paymentInfoSection}>
-                <h2>Payment Schedule</h2>
-                <p>Your payment schedule is: <strong>Weekly</strong>. Weekly means that you will be paid every week. Billing period is <strong>Monday to Sunday</strong>, invoice is generated and payment is sent on <strong>Tuesday</strong>.</p>
-              </section>
-              <section className={styles.paymentInfoSection}>
-                <h2>Payment Details</h2>
-                <p>You must meet the minimum payment threshold of <strong>$50</strong> for ACH, Payoneer, PayPal, eCheck and <strong>$100</strong> for Wire, in order to receive the payment. Unpaid earnings accumulate in your account until your balance reaches the threshold, then you&apos;ll be paid on the next scheduled payment date.</p>
-              </section>
-              <section className={styles.paymentInfoSection}>
-                <h2>Tax Forms</h2>
-                <p>Tax form is based on the country of your residency and whether you are an individual or business. Please use the correct form as it is really important, see instructions below:</p>
-                <ul>
-                  <li>For Non-US individuals - complete W-8BEN form</li>
-                  <li>For Non-US businesses - complete W-8BEN-E form</li>
-                  <li>For USA individuals and businesses - complete W-9 form</li>
-                </ul>
-              </section>
-              <section className={`${styles.paymentInfoSection} ${styles.payoneerNotice}`}>
-                <h2>Payoneer Payments <span>IMPORTANT!</span> <b>ACTIVE AGAIN</b></h2>
-                <p>In order to be able to receive Payoneer payments, you need to follow some steps. <a href="https://network.affmine.com/payoneer" target="_blank" rel="noreferrer">Please see instructions here.</a></p>
-              </section>
-            </section>
-            <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentSettings}`}>
-              <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT SETTINGS</h2>
-              <p role="status"><strong>You need at least $40 earnings and after that you will be able to set up your payment details.</strong></p>
-            </section>
-            <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentHistory}`}>
-              <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT HISTORY</h2>
-              <div className={styles.dataTableWrap}>
-                <table className={styles.dataTable}>
-                  <thead><tr>{['Period', 'Amount Paid', 'Method', 'Status', 'Invoice'].map((column) => <th key={column} className={styles.sortableHeader}>{column}</th>)}</tr></thead>
-                  <tbody><tr><td colSpan={5}>No data available</td></tr></tbody>
-                </table>
-              </div>
-              <div className={styles.reportPagination}><div><button type="button" disabled>Previous</button><button type="button" disabled>Next</button></div></div>
-            </section>
-          </>
+          <PaymentDashboard />
         ) : pathname === '/contentlocker' || pathname === '/offerwall' ? (
           (() => {
             const kind = pathname === '/contentlocker' ? 'locker' as const : 'offerwall' as const
