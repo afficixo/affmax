@@ -62,6 +62,8 @@ model User {
   landingPageTemplates    LandingPageTemplate[] @relation("TemplateCreatedBy")
   landingPages           LandingPage[] @relation("LandingPagesCreatedBy")
   managerPayouts         ManagerPayout[]
+  publisherInvoices      PublisherPaymentInvoice[] @relation("PublisherInvoices")
+  processedInvoices      PublisherPaymentInvoice[] @relation("ProcessedPublisherInvoices")
   referredBy             User?                  @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals              User[]                 @relation("UserReferrals")
   referralCommissionsEarned ReferralCommission[] @relation("ReferralCommissionReferrer")
@@ -610,13 +612,42 @@ model ConversionLead {
   sub4           String?
   occurredAt     DateTime?
   externalKey    String?        @unique
+  publisherInvoiceId String?
+  publisherInvoice PublisherPaymentInvoice? @relation(fields: [publisherInvoiceId], references: [id], onDelete: SetNull)
   createdAt      DateTime       @default(now())
 
   @@index([userId, createdAt])
   @@index([postbackId, createdAt])
   @@index([offerId, createdAt])
+  @@index([publisherInvoiceId])
   @@index([externalTxId])
   @@map("conversion_leads")
+}
+
+model PublisherPaymentInvoice {
+  id              String                 @id @default(cuid())
+  invoiceNumber   String                 @unique
+  publisherId     String
+  publisher       User                   @relation("PublisherInvoices", fields: [publisherId], references: [id], onDelete: Cascade)
+  totalEarning    Float
+  conversionCount Int
+  payoutMethod    String?
+  payoutAccount   String?
+  status          PublisherInvoiceStatus  @default(PENDING)
+  createdAt       DateTime               @default(now())
+  paidAt          DateTime?
+  paidById        String?
+  paidBy          User?                  @relation("ProcessedPublisherInvoices", fields: [paidById], references: [id], onDelete: SetNull)
+  conversions     ConversionLead[]
+
+  @@index([publisherId, createdAt])
+  @@index([status, createdAt])
+  @@map("publisher_payment_invoices")
+}
+
+enum PublisherInvoiceStatus {
+  PENDING
+  PAID
 }
 
 model TelegramNotification {

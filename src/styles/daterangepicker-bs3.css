@@ -465,3 +465,87 @@
   background-color: #399BFF;
   color: #fff;
 }
+
+@media (max-width: 700px) {
+  .daterangepicker.dropdown-menu {
+    min-width: 100px;
+  }
+
+  .daterangepicker.show-calendar .calendar {
+    display: none;
+  }
+
+  .daterangepicker.show-calendar.custom-range .calendar {
+    display: block;
+  }
+
+  .daterangepicker.dropdown-menu.custom-range {
+    left: 8px !important;
+    right: auto !important;
+    width: calc(100vw - 16px);
+  }
+
+  .daterangepicker.custom-range .calendar {
+    width: calc(50% - 8px);
+    max-width: none;
+  }
+
+  .daterangepicker.custom-range .calendar th,
+  .daterangepicker.custom-range .calendar td {
+    min-width: 0;
+    width: auto;
+    height: 30px;
+  }
+
+  .daterangepicker.custom-range .calendar .table-condensed > thead > tr > th,
+  .daterangepicker.custom-range .calendar .table-condensed > tbody > tr > td {
+    padding: 2px 1px;
+  }
+
+  .daterangepicker.custom-range .calendar-date {
+    padding: 2px;
+  }
+
+  .daterangepicker.custom-range .ranges {
+    width: calc(100% - 8px);
+  }
+
+  .daterangepicker.custom-range .ranges .range_inputs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .daterangepicker.custom-range .ranges .range_inputs > div {
+    float: none;
+    padding-left: 0;
+  }
+
+  .daterangepicker.custom-range .ranges .input-mini {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 350px) {
+    .daterangepicker.custom-range .calendar table {
+      table-layout: fixed;
+    }
+
+    .daterangepicker.custom-range .calendar th,
+    .daterangepicker.custom-range .calendar td {
+      height: 26px;
+      font-size: 11px;
+      line-height: 20px;
+    }
+
+    .daterangepicker.custom-range .calendar th .fa {
+      font-size: 12px;
+      line-height: 12px;
+    }
+
+    .daterangepicker.custom-range .calendar thead tr:nth-child(2) th {
+      font-size: 9px;
+      letter-spacing: -0.2px;
+    }
+  }
+}

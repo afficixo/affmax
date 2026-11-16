@@ -319,7 +319,7 @@ export async function ingestMarketplacePostback(
 
 export async function sumPublisherEarnings(userId: string): Promise<number> {
   const aggregate = await prisma.conversionLead.aggregate({
-    where: { userId },
+    where: { userId, publisherInvoiceId: null },
     _sum: { payout: true },
   })
   return Number(aggregate._sum.payout ?? 0)

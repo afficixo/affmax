@@ -47,15 +47,11 @@ function clickWhere(scope: AnalyticsScope, from?: Date, to?: Date) {
   return where
 }
 
-function subIdReportParts(first: string | null, second: string | null) {
+function subIdReportParts(first: string | null) {
   const subId1 = (first || '').trim()
-  const subId2 = (second || '').trim()
   return {
-    key: JSON.stringify([subId1, subId2]),
-    label: [
-      subId1 ? `s1: ${subId1}` : '',
-      subId2 ? `s2: ${subId2}` : '',
-    ].filter(Boolean).join(' / ') || '(none)',
+    key: JSON.stringify([subId1]),
+    label: subId1 || '(none)',
   }
 }
 
@@ -349,7 +345,7 @@ export async function getReportData(
       const key = click.offerId || 'unknown'
       ensure(key, `#${key}`).clicks += 1
     } else if (type === 'subid') {
-      const { key, label } = subIdReportParts(click.sub1, click.sub2)
+      const { key, label } = subIdReportParts(click.sub1)
       ensure(key, label).clicks += 1
     } else if (type === 'geo') {
       const key = offerCountry(click.offerId) || 'XX'
@@ -380,7 +376,7 @@ export async function getReportData(
       bucket.leads += 1
       bucket.revenue += Number(lead.payout ?? 0)
     } else if (type === 'subid') {
-      const { key, label } = subIdReportParts(lead.sub3, lead.sub4)
+      const { key, label } = subIdReportParts(lead.sub3)
       const bucket = ensure(key, label)
       bucket.leads += 1
       bucket.revenue += Number(lead.payout ?? 0)
