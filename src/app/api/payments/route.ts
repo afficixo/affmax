@@ -10,7 +10,7 @@ class PaymentConflictError extends Error {}
 
 function createInvoiceNumber(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  return `USDT-${date}-${randomBytes(4).toString('hex').toUpperCase()}`
+  return `USD-${date}-${randomBytes(4).toString('hex').toUpperCase()}`
 }
 
 async function authenticate(request: Request) {

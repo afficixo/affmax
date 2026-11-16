@@ -64,7 +64,6 @@ type PublisherPayments = {
 type PaymentsData = ManagerPayments | PublisherPayments
 
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-const usdt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 function formatDate(value: string | null) {
   if (!value) return '—'
@@ -133,7 +132,7 @@ export default function PaymentDashboard() {
   }
 
   const runManagerAction = async (action: 'move-to-pending' | 'mark-paid', id: string) => {
-    if (action === 'mark-paid' && !window.confirm('Confirm that you have sent this USDT payment and want to mark the invoice paid.')) {
+    if (action === 'mark-paid' && !window.confirm('Confirm that you have sent this payment and want to mark the USD invoice paid.')) {
       return
     }
     setBusyAction(id)
@@ -226,12 +225,12 @@ export default function PaymentDashboard() {
           <h2 className={styles.sectionTitle}><i className="fa fa-info" aria-hidden="true" />PUBLISHER PAYMENTS</h2>
           <div className={styles.paymentSummary}>
             <div><strong>{data.summary.publishers}</strong><span>Publishers</span></div>
+            <div><strong>{usd.format(data.summary.pending)}</strong><span>Pending</span></div>
             <div><strong>{usd.format(data.summary.available)}</strong><span>Earnings to invoice</span></div>
-            <div><strong>{usdt.format(data.summary.pending)} USDT</strong><span>Pending</span></div>
-            <div><strong>{usdt.format(data.summary.paid)} USDT</strong><span>Total paid</span></div>
+            <div><strong>{usd.format(data.summary.paid)}</strong><span>Total paid</span></div>
           </div>
           <section className={styles.paymentInfoSection}>
-            <p>Move each publisher&apos;s un-invoiced earnings to pending, then record payment after sending USDT. Earnings are tracked 1:1 from USD to USDT; transfers are not sent automatically.</p>
+            <p>Move each publisher&apos;s un-invoiced earnings to pending, then record payment after sending funds through Binance Pay. All earnings, invoices, and payment totals are calculated in USD; transfers are not sent automatically.</p>
             {notice ? <p className={styles.pageNotice} role="status">{notice}</p> : null}
             {error ? <p className={styles.paymentError} role="alert">{error}</p> : null}
           </section>
@@ -270,8 +269,8 @@ export default function PaymentDashboard() {
                     <td>{publisher.status}</td>
                     <td className={styles.paymentAccountValue}>{publisher.payoutAccount || 'Not set'}</td>
                     <td className={styles.paymentAmount}>{usd.format(publisher.availableEarnings)}</td>
-                    <td className={styles.paymentAmount}>{usdt.format(publisher.pendingEarnings)} USDT</td>
-                    <td className={styles.paymentAmount}>{usdt.format(publisher.paidEarnings)} USDT</td>
+                    <td className={styles.paymentAmount}>{usd.format(publisher.pendingEarnings)}</td>
+                    <td className={styles.paymentAmount}>{usd.format(publisher.paidEarnings)}</td>
                     <td className={styles.paymentAmount}>{publisher.availableConversions}</td>
                     <td>
                       <button
@@ -303,7 +302,7 @@ export default function PaymentDashboard() {
                     <td><strong>{invoice.invoiceNumber}</strong><span className={styles.paymentAccountMeta}>{invoice.conversionCount} conversions</span></td>
                     <td>{invoice.publisher ? publisherName(invoice.publisher) : '—'}</td>
                     <td className={styles.paymentAccountValue}>{invoice.payoutAccount || 'Not set'}</td>
-                    <td className={styles.paymentAmount}>{usdt.format(invoice.totalEarning)} USDT</td>
+                    <td className={styles.paymentAmount}>{usd.format(invoice.totalEarning)}</td>
                     <td>{formatDate(invoice.createdAt)}</td>
                     <td>
                       <button
@@ -333,7 +332,7 @@ export default function PaymentDashboard() {
                   <tr key={invoice.id}>
                     <td>{invoice.invoiceNumber}</td>
                     <td>{invoice.publisher ? publisherName(invoice.publisher) : '—'}</td>
-                    <td className={styles.paymentAmount}>{usdt.format(invoice.totalEarning)} USDT</td>
+                    <td className={styles.paymentAmount}>{usd.format(invoice.totalEarning)}</td>
                     <td><span className={`${styles.paymentInvoiceStatus} ${invoice.status === 'PAID' ? styles.paymentInvoicePaid : ''}`}>{invoice.status}</span></td>
                     <td>{formatDate(invoice.createdAt)}</td>
                     <td>{formatDate(invoice.paidAt)}</td>
@@ -353,18 +352,18 @@ export default function PaymentDashboard() {
       <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentInfo}`}>
         <h2 className={styles.sectionTitle}><i className="fa fa-info" aria-hidden="true" />INFO</h2>
         <div className={styles.paymentSummary}>
-          <div><strong className={styles.paymentUp}>{usdt.format(data.summary.paid)} USDT</strong><span>Total Paid</span></div>
-          <div><strong>{usdt.format(data.summary.pending)} USDT</strong><span>Pending</span></div>
+          <div><strong className={styles.paymentUp}>{usd.format(data.summary.paid)}</strong><span>Total Paid</span></div>
+          <div><strong>{usd.format(data.summary.pending)}</strong><span>Pending</span></div>
           <div><strong className={styles.paymentUp}>{usd.format(data.summary.available)}</strong><span>Earnings since last invoice</span></div>
           <div><strong>{data.summary.payments}</strong><span>Total payments</span></div>
         </div>
         <section className={styles.paymentInfoSection}>
           <h2>Payment Process</h2>
-          <p>Approved conversion earnings remain available until your manager moves them to pending. Payments are recorded after your manager sends USDT through Binance Pay.</p>
+          <p>Approved conversion earnings remain available until your manager moves them to pending. Payments are recorded after your manager sends funds through Binance Pay.</p>
         </section>
         <section className={styles.paymentInfoSection}>
           <h2>Payment Details</h2>
-          <p>Payouts are sent to your saved Binance Pay ID or Binance account email. Pending invoices are tracked at a 1:1 USD-to-USDT rate.</p>
+          <p>Payouts are sent to your saved Binance Pay ID or Binance account email. All earnings, pending invoices, and payment history are calculated in USD.</p>
         </section>
         <section className={styles.paymentInfoSection}>
           <h2>Tax Forms</h2>
@@ -376,8 +375,8 @@ export default function PaymentDashboard() {
           </ul>
         </section>
         <section className={`${styles.paymentInfoSection} ${styles.payoneerNotice}`}>
-          <h2>Binance Pay <span>IMPORTANT!</span> <b>USDT</b></h2>
-          <p>Transfers are sent manually by your manager; saving a payout destination does not initiate a transfer.</p>
+          <h2>Binance Pay <span>IMPORTANT!</span> <b>USD TRACKING</b></h2>
+          <p>Your manager handles any USDT transfer outside the app; the payment record remains in USD. Saving a payout destination does not initiate a transfer.</p>
         </section>
         {notice ? <p className={styles.pageNotice} role="status">{notice}</p> : null}
         {error ? <p className={styles.paymentError} role="alert">{error}</p> : null}
@@ -399,7 +398,7 @@ export default function PaymentDashboard() {
               required
             />
           </label>
-          <p className={styles.pageHint}>Managers can view this payout destination to prepare and record your USDT payments.</p>
+          <p className={styles.pageHint}>Managers can view this payout destination. All payment amounts remain calculated in USD.</p>
           <button type="submit" className={styles.pagePrimaryButton} disabled={busyAction === 'save' || !accountDraft.trim()}>
             {busyAction === 'save' ? 'Saving…' : 'Save payout details'}
           </button>
@@ -417,7 +416,7 @@ export default function PaymentDashboard() {
               {data.invoices.map((invoice) => (
                 <tr key={invoice.id}>
                   <td>{formatDate(invoice.createdAt)}</td>
-                  <td className={styles.paymentAmount}>{usdt.format(invoice.totalEarning)} USDT</td>
+                  <td className={styles.paymentAmount}>{usd.format(invoice.totalEarning)}</td>
                   <td>Binance Pay</td>
                   <td><span className={`${styles.paymentInvoiceStatus} ${invoice.status === 'PAID' ? styles.paymentInvoicePaid : ''}`}>{invoice.status}</span></td>
                   <td>{invoice.invoiceNumber}</td>
