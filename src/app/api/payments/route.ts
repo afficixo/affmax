@@ -13,6 +13,22 @@ function createInvoiceNumber(): string {
   return `USD-${date}-${randomBytes(4).toString('hex').toUpperCase()}`
 }
 
+function getThroughMondayUnbilledFilter() {
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - ((cutoff.getDay() + 6) % 7))
+  cutoff.setHours(0, 0, 0, 0)
+  cutoff.setDate(cutoff.getDate() + 1)
+
+  return {
+    publisherInvoiceId: null,
+    payout: { not: null },
+    OR: [
+      { occurredAt: { lt: cutoff } },
+      { occurredAt: null, createdAt: { lt: cutoff } },
+    ],
+  }
+}
+
 async function authenticate(request: Request) {
   const origin = request.headers.get('origin') || null
   const token = getTokenFromCookie(request.headers.get('cookie') || '')
@@ -54,7 +70,7 @@ export async function GET(request: Request) {
         }),
         prisma.conversionLead.groupBy({
           by: ['userId'],
-          where: { publisherInvoiceId: null, payout: { not: null } },
+          where: getThroughMondayUnbilledFilter(),
           _sum: { payout: true },
           _count: { _all: true },
         }),
@@ -267,13 +283,13 @@ export async function POST(request: Request) {
         }
 
         const conversions = await transaction.conversionLead.findMany({
-          where: { userId: publisherId, publisherInvoiceId: null, payout: { not: null } },
+          where: { userId: publisherId, ...getThroughMondayUnbilledFilter() },
           select: { id: true, payout: true },
         })
         const total = conversions.reduce((sum, conversion) => sum + Number(conversion.payout ?? 0), 0)
         const totalEarning = Math.round((total + Number.EPSILON) * 100) / 100
         if (!conversions.length || totalEarning <= 0) {
-          throw new PaymentConflictError('There are no unpaid earnings to move to pending.')
+          throw new PaymentConflictError('There are no un-invoiced earnings through Monday to move to pending.')
         }
 
         const createdInvoice = await transaction.publisherPaymentInvoice.create({

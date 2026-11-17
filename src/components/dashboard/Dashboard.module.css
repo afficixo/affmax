@@ -8278,10 +8278,6 @@ a.offerAction {
     font-size: 18px;
   }
 
-  .campaignImage {
-    display: none;
-  }
-
   .statsPanel p {
     gap: 3px;
     font-size: 10px;

@@ -149,7 +149,7 @@ export default function PaymentDashboard() {
       })
       const result = await response.json() as { error?: string }
       if (!response.ok) throw new Error(result.error || 'Unable to process payment')
-      setNotice(action === 'move-to-pending' ? 'Publisher earnings moved to pending.' : 'Invoice marked as paid.')
+      setNotice(action === 'move-to-pending' ? 'Publisher earnings through Monday moved to pending.' : 'Invoice marked as paid.')
       await loadPayments(false)
     } catch (actionError) {
       console.error('Unable to process publisher payment:', actionError)
@@ -226,11 +226,11 @@ export default function PaymentDashboard() {
           <div className={styles.paymentSummary}>
             <div><strong>{data.summary.publishers}</strong><span>Publishers</span></div>
             <div><strong>{usd.format(data.summary.pending)}</strong><span>Pending</span></div>
-            <div><strong>{usd.format(data.summary.available)}</strong><span>Earnings to invoice</span></div>
+            <div><strong>{usd.format(data.summary.available)}</strong><span>Earnings through Monday</span></div>
             <div><strong>{usd.format(data.summary.paid)}</strong><span>Total paid</span></div>
           </div>
           <section className={styles.paymentInfoSection}>
-            <p>Move each publisher&apos;s un-invoiced earnings to pending, then record payment after sending funds through Binance Pay. All earnings, invoices, and payment totals are calculated in USD; transfers are not sent automatically.</p>
+            <p>Move each publisher&apos;s un-invoiced earnings through the most recent Monday to pending, including earnings from earlier weeks. Monday is based on server-local time; earnings after that Monday are not included. All earnings, invoices, and payment totals are calculated in USD; transfers are not sent automatically.</p>
             {notice ? <p className={styles.pageNotice} role="status">{notice}</p> : null}
             {error ? <p className={styles.paymentError} role="alert">{error}</p> : null}
           </section>
@@ -252,7 +252,7 @@ export default function PaymentDashboard() {
             <table className={`${styles.dataTable} ${styles.paymentManagerTable}`}>
               <thead>
                 <tr>
-                  {['Publisher', 'Status', 'Binance Pay ID / email', 'Earnings', 'Pending', 'Total paid', 'Conversions', 'Action'].map((column, index) => (
+                  {['Publisher', 'Status', 'Binance Pay ID / email', 'Earnings through Monday', 'Pending', 'Total paid', 'Conversions through Monday', 'Action'].map((column, index) => (
                     <th key={column} className={index >= 3 && index <= 6 ? styles.paymentAmount : undefined}>{column}</th>
                   ))}
                 </tr>
