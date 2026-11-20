@@ -963,12 +963,29 @@ function isTouchDesktopViewport() {
     && window.matchMedia('(pointer: coarse)').matches
 }
 
+const touchDesktopSidebarHiddenAttribute = 'data-touch-desktop-sidebar-hidden'
+
+function getInitialDesktopSidebarHidden() {
+  return isTouchDesktopViewport()
+    && document.documentElement.hasAttribute(touchDesktopSidebarHiddenAttribute)
+}
+
+function setTouchDesktopSidebarMarker(hidden: boolean) {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  if (isTouchDesktopViewport() && hidden) {
+    root.setAttribute(touchDesktopSidebarHiddenAttribute, 'true')
+  } else {
+    root.removeAttribute(touchDesktopSidebarHiddenAttribute)
+  }
+}
+
 export default function DashboardOverview() {
   const router = useRouter()
   const pathname = usePathname()
   const [openGroups, setOpenGroups] = useState<string[]>([])
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [desktopSidebarHidden, setDesktopSidebarHidden] = useState(false)
+  const [desktopSidebarHidden, setDesktopSidebarHiddenState] = useState(getInitialDesktopSidebarHidden)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [search, setSearch] = useState('')
   const [newsOpen, setNewsOpen] = useState(false)
@@ -1103,6 +1120,10 @@ export default function DashboardOverview() {
   const intercomEnabled = hasIntercomApp()
   const isSupportPage = pathname === '/support'
   const isAccountSettings = pathname === '/account/settings'
+  const setDesktopSidebarHidden = (hidden: boolean) => {
+    setTouchDesktopSidebarMarker(hidden)
+    setDesktopSidebarHiddenState(hidden)
+  }
   const closeNavigation = () => {
     setMobileNavOpen(false)
     if (isTouchDesktopViewport()) setDesktopSidebarHidden(true)
@@ -1555,7 +1576,7 @@ export default function DashboardOverview() {
       setMobileNavOpen((open) => !open)
       return
     }
-    setDesktopSidebarHidden((hidden) => !hidden)
+    setDesktopSidebarHidden(!desktopSidebarHidden)
   }
 
   useEffect(() => {

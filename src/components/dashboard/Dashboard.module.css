@@ -585,6 +585,18 @@
   margin-left: 0;
 }
 
+@media (min-width: 761px) and (pointer: coarse) {
+  :global(html[data-touch-desktop-sidebar-hidden='true']) .sidebar {
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-100%);
+  }
+
+  :global(html[data-touch-desktop-sidebar-hidden='true']) .main {
+    margin-left: 0;
+  }
+}
+
 .pageHeader {
   display: flex;
   min-height: 42px;
@@ -6514,7 +6526,9 @@ a.offerAction {
 .featuredSlide {
   position: absolute;
   inset: 0;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   overflow: hidden;
   padding: 0 24px;
 }
@@ -6541,12 +6555,11 @@ a.offerAction {
 }
 
 .campaignImage {
-  float: left;
+  flex: 0 0 auto;
   width: 200px;
   max-width: 45%;
   height: auto;
-  max-height: 180px;
-  margin-right: 10px;
+  max-height: 100%;
   border: 1px solid #ccc;
   border-radius: 5px;
   object-fit: cover;
@@ -6573,7 +6586,7 @@ a.offerAction {
 }
 
 .featuredDetails {
-  display: block;
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   color: #58666e;
