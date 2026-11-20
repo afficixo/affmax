@@ -963,6 +963,7 @@ export default function DashboardOverview() {
   const [openGroups, setOpenGroups] = useState<string[]>([])
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [desktopSidebarHidden, setDesktopSidebarHidden] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [search, setSearch] = useState('')
   const [newsOpen, setNewsOpen] = useState(false)
   const [tickerHtml, setTickerHtml] = useState('')
@@ -1545,6 +1546,17 @@ export default function DashboardOverview() {
     }
     setDesktopSidebarHidden((hidden) => !hidden)
   }
+
+  useEffect(() => {
+    const mobileViewport = window.matchMedia('(max-width: 760px)')
+    const updateViewport = () => {
+      setIsMobileViewport(mobileViewport.matches)
+      if (!mobileViewport.matches) setMobileNavOpen(false)
+    }
+    updateViewport()
+    mobileViewport.addEventListener('change', updateViewport)
+    return () => mobileViewport.removeEventListener('change', updateViewport)
+  }, [])
 
   useEffect(() => {
     if (!campaignNoticeOpen && !campaignPreviewOpen) return
@@ -2623,6 +2635,9 @@ export default function DashboardOverview() {
       }
       return group
     })
+  const accountMenuItems = visibleMenuGroups.find((group) => group.label === 'Account')?.items ?? []
+  const accountMenuActive = accountMenuItems.some((item) => isMenuItemActive(pathname, item.href))
+  const accountMenuExpanded = openGroups.includes('Account') || accountMenuActive
   const filteredPublisherAccounts = publisherAccounts.filter((publisher) => {
     if (publisherStatusFilter !== 'ALL' && publisher.status !== publisherStatusFilter) return false
     const term = publisherSearch.trim().toLowerCase()
@@ -2777,7 +2792,7 @@ export default function DashboardOverview() {
     isOutgoing = false,
   ) => (
     <div key={key} className={`${styles.featuredSlide} ${animationClass}`} aria-hidden={isOutgoing}>
-      <Image src={toCampaignImageSource(campaign.id, campaign.imageSource ?? `/affmine/campaigns/${campaign.id}.png`)} alt={`${campaign.name} offer preview`} width={200} height={124} className={styles.campaignImage} unoptimized={Boolean(campaign.imageSource)} />
+      <Image src={toCampaignImageSource(campaign.id, campaign.imageSource ?? `/affmine/campaigns/${campaign.id}.png`)} alt={`${campaign.name} offer preview`} width={200} height={124} className={styles.campaignImage} loading="eager" unoptimized={Boolean(campaign.imageSource)} />
       <div className={styles.featuredDetails}>
         <div className={styles.featuredTitle}>
           #{campaign.id}{' '}
@@ -2830,7 +2845,7 @@ export default function DashboardOverview() {
           className={styles.menuToggle}
           onClick={toggleSidebar}
           aria-label="Toggle navigation"
-          aria-expanded={mobileNavOpen || !desktopSidebarHidden}
+          aria-expanded={isMobileViewport ? mobileNavOpen : !desktopSidebarHidden}
         >
           <i className="fa fa-bars" aria-hidden="true" />
         </button>
@@ -2884,40 +2899,44 @@ export default function DashboardOverview() {
           <Link className={`${styles.navLink} ${pathname === '/dashboard' ? styles.navActive : ''}`} href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined} onClick={() => setMobileNavOpen(false)}>
             <i className={`fas fa-tachometer-alt ${styles.navIcon}`} aria-hidden="true" /><span>Dashboard</span>
           </Link>
-          {visibleMenuGroups.slice(0, 4).map(({ label, iconClass, items }) => (
-            <div className={styles.navGroup} key={label}>
-              <button type="button" className={`${styles.navLink} ${items.some((item) => isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly })) ? styles.navActive : ''}`} aria-expanded={openGroups.includes(label)} onClick={() => toggleGroup(label)}>
-                <i className={`${iconClass} ${styles.navIcon}`} aria-hidden="true" /><span>{label}</span><span className={`${styles.navCaret} ${items.some((item) => isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly })) ? styles.navCaretActive : ''}`} aria-hidden="true" />
-              </button>
-              {(openGroups.includes(label) || items.some((item) => isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }))) && (
-                <div className={styles.submenu}>
-                  {items.map((item) => (
-                    <Link
-                      className={isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }) ? styles.submenuActive : ''}
-                      href={item.href}
-                      key={item.href}
-                      aria-current={isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }) ? 'page' : undefined}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        setMobileNavOpen(false)
-                        if (pathname !== item.href) router.push(item.href)
-                      }}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+          {visibleMenuGroups.slice(0, 4).map(({ label, iconClass, items }) => {
+            const groupActive = items.some((item) => isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }))
+            const groupExpanded = openGroups.includes(label) || groupActive
+            return (
+              <div className={styles.navGroup} key={label}>
+                <button type="button" className={`${styles.navLink} ${groupActive ? styles.navActive : ''}`} aria-expanded={groupExpanded} onClick={() => toggleGroup(label)}>
+                  <i className={`${iconClass} ${styles.navIcon}`} aria-hidden="true" /><span>{label}</span><span className={`${styles.navCaret} ${groupActive ? styles.navCaretActive : ''}`} aria-hidden="true" />
+                </button>
+                <div className={`${styles.submenu} ${groupExpanded ? styles.submenuExpanded : ''}`} aria-hidden={!groupExpanded}>
+                  <div className={styles.submenuInner}>
+                    {items.map((item) => (
+                      <Link
+                        className={isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }) ? styles.submenuActive : ''}
+                        href={item.href}
+                        key={item.href}
+                        aria-current={isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }) ? 'page' : undefined}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          setMobileNavOpen(false)
+                          if (pathname !== item.href) router.push(item.href)
+                        }}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            )
+          })}
           <Link className={`${styles.navLink} ${pathname === '/payments' ? styles.navActive : ''}`} href="/payments" aria-current={pathname === '/payments' ? 'page' : undefined} onClick={() => setMobileNavOpen(false)}><i className={`fa fa-money ${styles.navIcon}`} aria-hidden="true" /><span>Payments</span></Link>
           <div className={styles.navGroup}>
-            <button type="button" className={`${styles.navLink} ${(visibleMenuGroups.find((group) => group.label === 'Account')?.items ?? []).some((item) => isMenuItemActive(pathname, item.href)) ? styles.navActive : ''}`} aria-expanded={openGroups.includes('Account')} onClick={() => toggleGroup('Account')}>
-              <i className={`fa fa-user ${styles.navIcon}`} aria-hidden="true" /><span>Account</span><span className={`${styles.navCaret} ${(visibleMenuGroups.find((group) => group.label === 'Account')?.items ?? []).some((item) => isMenuItemActive(pathname, item.href)) ? styles.navCaretActive : ''}`} aria-hidden="true" />
+            <button type="button" className={`${styles.navLink} ${accountMenuActive ? styles.navActive : ''}`} aria-expanded={accountMenuExpanded} onClick={() => toggleGroup('Account')}>
+              <i className={`fa fa-user ${styles.navIcon}`} aria-hidden="true" /><span>Account</span><span className={`${styles.navCaret} ${accountMenuActive ? styles.navCaretActive : ''}`} aria-hidden="true" />
             </button>
-            {(openGroups.includes('Account') || (visibleMenuGroups.find((group) => group.label === 'Account')?.items ?? []).some((item) => isMenuItemActive(pathname, item.href))) && (
-              <div className={styles.submenu}>
-                {(visibleMenuGroups.find((group) => group.label === 'Account')?.items ?? []).map((item) => (
+            <div className={`${styles.submenu} ${accountMenuExpanded ? styles.submenuExpanded : ''}`} aria-hidden={!accountMenuExpanded}>
+              <div className={styles.submenuInner}>
+                {accountMenuItems.map((item) => (
                   <Link
                     className={isMenuItemActive(pathname, item.href) ? styles.submenuActive : ''}
                     href={item.href}
@@ -2933,7 +2952,7 @@ export default function DashboardOverview() {
                   </Link>
                 ))}
               </div>
-            )}
+            </div>
           </div>
           <a
             href="#support"

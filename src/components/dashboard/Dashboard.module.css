@@ -52,7 +52,10 @@
   text-align: center;
   cursor: pointer;
   z-index: 1;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .menuToggle:hover,
@@ -61,14 +64,24 @@
   color: #5ff442;
 }
 
-.menuToggle:focus-visible {
-  outline: 2px solid #17a2b8;
-  outline-offset: -2px;
+.menuToggle:active {
+  box-shadow: inset 0 0 0 2px rgba(95, 244, 66, 0.22);
 }
 
 .menuToggle i {
+  display: inline-block;
   font-size: 22px;
   line-height: 1;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menuToggle[aria-expanded='false'] i {
+  transform: rotate(90deg) scale(0.92);
+}
+
+.menuToggle:focus-visible {
+  outline: 2px solid #17a2b8;
+  outline-offset: -2px;
 }
 
 /* Affmine .searchform — transparent shell, white pill input */
@@ -204,7 +217,7 @@
   width: 41.4px;
   height: 34px;
   padding: 6px 12px;
-  transition: background-color 300ms ease, color 300ms ease;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 .profileButton {
@@ -251,6 +264,19 @@
   background: #fff;
   color: #58666e;
   box-shadow: 0 6px 24px rgba(27, 38, 45, 0.2);
+  transform-origin: top right;
+  animation: dashboardPopoverIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes dashboardPopoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .newsPopover {
@@ -328,12 +354,18 @@
   overflow-y: auto;
   background: #3d464d;
   color: rgba(255, 255, 255, 0.8);
-  transition: transform 150ms ease, visibility 0s linear 0s;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0s;
 }
 
 .sidebarHidden {
   visibility: hidden;
   pointer-events: none;
+  transform: translateX(-100%);
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 180ms;
 }
 
 .navigation {
@@ -413,6 +445,12 @@
   border-top: 4px solid rgba(255, 255, 255, 0.4);
   border-right: 4px solid transparent;
   border-left: 4px solid transparent;
+  transform-origin: center;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), border-top-color 180ms ease;
+}
+
+.navLink[aria-expanded='true'] .navCaret {
+  transform: rotate(180deg);
 }
 
 .navCaretActive {
@@ -420,12 +458,43 @@
 }
 
 .submenu {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 0fr;
   width: 220px;
   margin: 0 -20px;
-  padding: 2px 0 5px 54px;
   background: rgba(25, 32, 37, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    grid-template-rows 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 180ms ease,
+    visibility 0s linear 220ms;
+}
+
+.submenuExpanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    grid-template-rows 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 180ms ease,
+    visibility 0s linear 0s;
+}
+
+.submenuInner {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding-left: 54px;
+  transform: translateY(-4px);
+  transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.submenuExpanded .submenuInner {
+  transform: translateY(0);
 }
 
 .submenu a {
@@ -509,7 +578,7 @@
   margin-left: var(--sidebar-width);
   padding: 80px 8px 0;
   background: #f5f5f5;
-  transition: margin-left 150ms ease;
+  transition: margin-left 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .mainExpanded {
@@ -776,6 +845,22 @@ input.reportRangeInput {
   font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
+}
+
+@keyframes dashboardPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboardBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .dataPage {
@@ -2128,6 +2213,32 @@ input.reportRangeInput {
 
 @media (prefers-reduced-motion: reduce) {
   .paymentSkeleton {
+    animation: none;
+  }
+
+  .menuToggle,
+  .menuToggle i,
+  .sidebar,
+  .main,
+  .backdrop,
+  .navLink,
+  .navCaret,
+  .submenu,
+  .submenuInner {
+    transition-duration: 0.01ms !important;
+  }
+
+  .popover,
+  .performancePanel,
+  .rightColumn,
+  .statsPanel > div,
+  .campaignUpdatesPanel,
+  .conversionsPanel,
+  .backdrop,
+  .featuredSlideEnterFromRight,
+  .featuredSlideExitToLeft,
+  .featuredSlideEnterFromLeft,
+  .featuredSlideExitToRight {
     animation: none;
   }
 }
@@ -6002,6 +6113,7 @@ a.offerAction {
   min-height: 370px;
   padding: 0;
   box-shadow: none;
+  animation: dashboardPanelIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
 }
 
 .performancePanel h2 {
@@ -6094,6 +6206,7 @@ a.offerAction {
   min-width: 0;
   flex-direction: column;
   gap: 10px;
+  animation: dashboardPanelIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
 }
 
 .statsPanel {
@@ -6108,6 +6221,33 @@ a.offerAction {
   min-width: 0;
   padding: 3px 4px;
   text-align: center;
+  animation: dashboardStatIn 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.statsPanel > div:nth-child(1),
+.statsPanel > div:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.statsPanel > div:nth-child(2),
+.statsPanel > div:nth-child(5) {
+  animation-delay: 220ms;
+}
+
+.statsPanel > div:nth-child(3),
+.statsPanel > div:nth-child(6) {
+  animation-delay: 260ms;
+}
+
+@keyframes dashboardStatIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .statsPanel p {
@@ -6208,7 +6348,7 @@ a.offerAction {
   line-height: 1;
   opacity: 0.5;
   cursor: pointer;
-  transition: opacity 300ms ease;
+  transition: opacity 180ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .featuredControlPrevious {
@@ -6221,6 +6361,7 @@ a.offerAction {
 
 .featuredItem > button:hover {
   opacity: 0.8;
+  transform: scale(1.08);
 }
 
 .featuredViewport {
@@ -6243,19 +6384,19 @@ a.offerAction {
 }
 
 .featuredSlideEnterFromRight {
-  animation: featuredSlideEnterFromRight 600ms ease-in-out both;
+  animation: featuredSlideEnterFromRight 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .featuredSlideExitToLeft {
-  animation: featuredSlideExitToLeft 600ms ease-in-out both;
+  animation: featuredSlideExitToLeft 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .featuredSlideEnterFromLeft {
-  animation: featuredSlideEnterFromLeft 600ms ease-in-out both;
+  animation: featuredSlideEnterFromLeft 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .featuredSlideExitToRight {
-  animation: featuredSlideExitToRight 600ms ease-in-out both;
+  animation: featuredSlideExitToRight 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .campaignImage {
@@ -6271,23 +6412,23 @@ a.offerAction {
 }
 
 @keyframes featuredSlideEnterFromRight {
-  from { transform: translate3d(100%, 0, 0); }
-  to { transform: translate3d(0, 0, 0); }
+  from { opacity: 0; transform: translate3d(32px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes featuredSlideExitToLeft {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-100%, 0, 0); }
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to { opacity: 0; transform: translate3d(-32px, 0, 0); }
 }
 
 @keyframes featuredSlideEnterFromLeft {
-  from { transform: translate3d(-100%, 0, 0); }
-  to { transform: translate3d(0, 0, 0); }
+  from { opacity: 0; transform: translate3d(-32px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes featuredSlideExitToRight {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(100%, 0, 0); }
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to { opacity: 0; transform: translate3d(32px, 0, 0); }
 }
 
 .featuredDetails {
@@ -6335,11 +6476,12 @@ a.offerAction {
 .campaignUpdatesPanel {
   display: flex;
   height: auto;
-  min-height: 0;
+  min-height: 240px;
   max-height: 500px;
   flex-direction: column;
   overflow: hidden;
   padding: 10px 0 7px;
+  animation: dashboardPanelIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
 }
 
 .tablePanel h2 {
@@ -6463,12 +6605,13 @@ a.offerAction {
 .conversionsPanel {
   display: flex;
   height: auto;
-  min-height: 0;
+  min-height: 240px;
   max-height: 500px;
   flex-direction: column;
   overflow: hidden;
   margin: 0 0 10px;
   padding: 10px 0;
+  animation: dashboardPanelIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both;
 }
 
 .conversionsPanel h2 {
@@ -6517,6 +6660,18 @@ a.offerAction {
 
 .conversionsTable tr:hover td {
   background: #f5f5f5;
+}
+
+@media (min-width: 1181px) {
+  .campaignUpdatesPanel,
+  .conversionsPanel {
+    height: calc(100vh - 483px);
+    max-height: none;
+  }
+
+  .conversionsPanel {
+    margin-bottom: 0;
+  }
 }
 
 .conversionsTable b {
@@ -7993,12 +8148,32 @@ a.offerAction {
     display: block;
     border: 0;
     background: rgba(14, 20, 24, 0.42);
+    animation: dashboardBackdropIn 140ms ease-out both;
   }
 
   .main {
     margin-left: 0;
     padding: 80px 8px;
     background: #f5f5f5;
+  }
+
+  .main:has(.dashboardGrid) {
+    padding-top: 68px;
+    padding-bottom: 24px;
+  }
+
+  .main:has(.dashboardGrid) .pageHeader {
+    flex-wrap: nowrap;
+  }
+
+  .main:has(.dashboardGrid) .pageHeaderRight {
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .main:has(.dashboardGrid) .pageHeader p {
+    font-size: 11px;
+    white-space: nowrap;
   }
 
   .pageHeader {
@@ -8321,11 +8496,15 @@ a.offerAction {
   }
 
   .performancePanel {
-    min-height: 340px;
+    min-height: 0;
   }
 
   .chartWrap {
-    height: 250px;
+    height: 210px;
+  }
+
+  .xLabels span:nth-child(even) {
+    display: none;
   }
 
   .statsPanel {
@@ -8333,7 +8512,39 @@ a.offerAction {
   }
 
   .tablePanel {
-    min-height: 280px;
+    min-height: 0;
+  }
+
+  .featuredPanel {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .campaignImage {
+    width: 80px;
+    max-width: 35%;
+    height: 50px;
+    flex-basis: 80px;
+  }
+
+  .featuredTitle {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .campaignUpdatesPanel,
+  .conversionsPanel {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .campaignUpdatesPanel .tableScroll,
+  .conversionsScroll {
+    flex: 0 0 auto;
+    overflow: visible;
   }
 }
 
