@@ -43,16 +43,18 @@ export async function GET(request: Request, context: RouteContext) {
         where: { publisherNumber },
         select: { id: true },
       })
+      const ipAddress = request.headers.get('x-real-ip')?.trim()
+        || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || null
       await recordOfferClick({
         publisherNumber,
         publisherUserId: publisher?.id || null,
         offerId,
         sub1: subId1,
         sub2: subId2,
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-          || request.headers.get('x-real-ip')
-          || null,
+        ipAddress,
         userAgent: request.headers.get('user-agent'),
+        useProviderIpFallback: process.env.NODE_ENV === 'development',
       })
     }
   } catch (error) {

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'crypto'
 import { prisma } from '@/lib/db/prisma'
+import { lookupCountryCode } from '@/lib/ip2location'
 
 export function createPostbackToken(): string {
   return randomBytes(24).toString('hex')
@@ -173,7 +174,8 @@ export async function ingestMarketplacePostback(
   const s4 = firstParam(params, ['s4', 'sub4', 'sub_id_4'])
   const datetime = firstParam(params, ['datetime', 'time', 'timestamp'])
   const ip = firstParam(params, ['ip', 'ip_address', 'ipaddress'])
-  const country = firstParam(params, ['country', 'county', 'geo']).toUpperCase()
+  const suppliedCountry = firstParam(params, ['country', 'county', 'geo']).toUpperCase()
+  const country = /^[A-Z]{2}$/.test(suppliedCountry) ? suppliedCountry : ''
 
   if (!s1 || !s2) {
     return { ok: false, status: 400, error: 'Missing required s1 (publisher id) or s2 (offer id)' }
@@ -213,6 +215,7 @@ export async function ingestMarketplacePostback(
     return { ok: false, status: 400, error: 'Invalid conversion datetime' }
   }
   const occurredAt = parsedOccurredAt ?? new Date()
+  const countryCode = country || await lookupCountryCode(ip)
   const externalKey = buildExternalKey({
     token,
     publisherKey: s1,
@@ -247,7 +250,7 @@ export async function ingestMarketplacePostback(
         campaignId: offer.id,
         campaignName: offer.name,
         payout,
-        country: country || null,
+        country: countryCode || null,
         ipAddress: ip || null,
         status: 'Approved',
         sub1: s1,

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/prisma'
+import { lookupCountryCode } from '@/lib/ip2location'
 
 export type AnalyticsScope = {
   role: 'MANAGER' | 'PUBLISHER'
@@ -33,7 +34,7 @@ function leadWhere(scope: AnalyticsScope, from?: Date, to?: Date) {
 }
 
 function clickWhere(scope: AnalyticsScope, from?: Date, to?: Date) {
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = { isUnique: true }
   if (scope.role === 'PUBLISHER') {
     if (scope.publisherNumber != null) where.publisherNumber = scope.publisherNumber
     else where.publisherUserId = scope.userId
@@ -209,6 +210,7 @@ export async function getReportData(
       offerId: true,
       sub1: true,
       sub2: true,
+      countryCode: true,
       createdAt: true,
     },
   })
@@ -282,35 +284,16 @@ export async function getReportData(
 
   const dayKey = (date: Date) => date.toISOString().slice(0, 10)
 
-  const countryNames: Record<string, string> = {
-    US: 'United States',
-    GB: 'United Kingdom',
-    CA: 'Canada',
-    AU: 'Australia',
-    DE: 'Germany',
-    FR: 'France',
-    ES: 'Spain',
-    BR: 'Brazil',
-    TR: 'Turkey',
-    MX: 'Mexico',
-    AE: 'United Arab Emirates',
-    MY: 'Malaysia',
-    ID: 'Indonesia',
-    JP: 'Japan',
-    SA: 'Saudi Arabia',
-    PH: 'Philippines',
-    TH: 'Thailand',
-    NL: 'Netherlands',
-    HK: 'Hong Kong',
-    DK: 'Denmark',
-    NO: 'Norway',
-    SE: 'Sweden',
-    BE: 'Belgium',
+  const countryDisplayNames = new Intl.DisplayNames(['en'], { type: 'region' })
+  const countryLabel = (code: string) => {
+    if (code === 'XX') return 'Unknown'
+    if (!/^[A-Z]{2}$/.test(code)) return code
+    return countryDisplayNames.of(code) || code
   }
 
-  // Offer catalog for campaign labels + geo click attribution (Affmine uses offer primary geo)
+  // Offer catalog for campaign labels and campaign report geo attribution.
   const offerById = new Map<string, { name: string; country: string; countries: string[] }>()
-  if (type === 'campaign' || type === 'geo') {
+  if (type === 'campaign') {
     const offerIds = [
       ...new Set([
         ...clicks.map((click) => click.offerId).filter(Boolean),
@@ -332,11 +315,6 @@ export async function getReportData(
     }
   }
 
-  const offerCountry = (offerId: string) => {
-    const offer = offerById.get(offerId)
-    return (offer?.country || offer?.countries?.[0] || '').toUpperCase()
-  }
-
   for (const click of clicks) {
     if (type === 'daily') {
       const key = dayKey(click.createdAt)
@@ -348,9 +326,8 @@ export async function getReportData(
       const { key, label } = subIdReportParts(click.sub1)
       ensure(key, label).clicks += 1
     } else if (type === 'geo') {
-      const key = offerCountry(click.offerId) || 'XX'
-      const label = countryNames[key] || (key === 'XX' ? 'Unknown' : key)
-      ensure(key, label).clicks += 1
+      const key = (click.countryCode || 'XX').toUpperCase()
+      ensure(key, countryLabel(key)).clicks += 1
     }
   }
 
@@ -370,9 +347,8 @@ export async function getReportData(
         bucket.countryCounts.set(country, (bucket.countryCounts.get(country) || 0) + 1)
       }
     } else if (type === 'geo') {
-      const key = (lead.country || offerCountry(lead.offerId || '') || 'XX').toUpperCase()
-      const label = countryNames[key] || (key === 'XX' ? 'Unknown' : key)
-      const bucket = ensure(key, label)
+      const key = (lead.country || 'XX').toUpperCase()
+      const bucket = ensure(key, countryLabel(key))
       bucket.leads += 1
       bucket.revenue += Number(lead.payout ?? 0)
     } else if (type === 'subid') {
@@ -416,7 +392,7 @@ export async function getReportData(
       const label = type === 'campaign'
         ? formatCampaignLabel(offer?.name || bucket.label, bucket.key)
         : type === 'geo'
-          ? (countryNames[bucket.key] || bucket.label)
+          ? countryLabel(bucket.key)
           : bucket.label
       return {
         key: bucket.key,
@@ -498,16 +474,59 @@ export async function recordOfferClick(input: {
   sub2?: string
   ipAddress?: string | null
   userAgent?: string | null
+  useProviderIpFallback?: boolean
 }) {
-  return prisma.offerClick.create({
-    data: {
-      publisherNumber: input.publisherNumber,
-      publisherUserId: input.publisherUserId || null,
-      offerId: input.offerId,
-      sub1: input.sub1 || null,
-      sub2: input.sub2 || null,
-      ipAddress: input.ipAddress || null,
-      userAgent: input.userAgent || null,
-    },
+  const ipAddress = input.ipAddress?.trim() || null
+  const userAgent = input.userAgent?.trim() || null
+  const duplicateConditions = [
+    ...(ipAddress ? [{ ipAddress }] : []),
+    ...(userAgent ? [{ userAgent }] : []),
+  ]
+  const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+  const click = await prisma.$transaction(async (transaction) => {
+    await transaction.$queryRaw<Array<{ locked: boolean }>>`
+      SELECT TRUE AS locked
+      FROM pg_advisory_xact_lock(CAST(${input.publisherNumber} AS INTEGER), hashtext(${input.offerId}))
+    `
+
+    const duplicate = duplicateConditions.length
+      ? await transaction.offerClick.findFirst({
+          where: {
+            publisherNumber: input.publisherNumber,
+            offerId: input.offerId,
+            createdAt: { gte: windowStart },
+            OR: duplicateConditions,
+          },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+          select: { countryCode: true },
+        })
+      : null
+
+    return transaction.offerClick.create({
+      data: {
+        publisherNumber: input.publisherNumber,
+        publisherUserId: input.publisherUserId || null,
+        offerId: input.offerId,
+        sub1: input.sub1 || null,
+        sub2: input.sub2 || null,
+        ipAddress,
+        countryCode: duplicate?.countryCode || null,
+        userAgent,
+        isUnique: !duplicate,
+      },
+    })
+  })
+
+  if (!click.isUnique) return click
+
+  const countryCode = await lookupCountryCode(ipAddress, {
+    useProviderIpFallback: input.useProviderIpFallback,
+  })
+  if (!countryCode) return click
+
+  return prisma.offerClick.update({
+    where: { id: click.id },
+    data: { countryCode },
   })
 }

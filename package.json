@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "geo:backfill": "tsx scripts/backfill-geo.ts",
+    "test:geo": "tsx --test tests/ip2location.test.ts",
     "db:migrate:deploy": "node scripts/migrate-deploy-retry.js",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",

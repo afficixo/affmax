@@ -143,11 +143,14 @@ model OfferClick {
   sub1             String?
   sub2             String?
   ipAddress        String?
+  countryCode      String?
   userAgent        String?
+  isUnique         Boolean  @default(true)
   createdAt        DateTime @default(now())
 
   @@index([publisherUserId, createdAt])
   @@index([publisherNumber, createdAt])
+  @@index([publisherNumber, offerId, createdAt])
   @@index([offerId, createdAt])
   @@index([createdAt])
   @@map("offer_clicks")
