@@ -957,6 +957,12 @@ const isMenuItemActive = (pathname: string, href: string, options?: { incentiveD
   return false
 }
 
+function isTouchDesktopViewport() {
+  return typeof window !== 'undefined'
+    && window.innerWidth > 760
+    && window.matchMedia('(pointer: coarse)').matches
+}
+
 export default function DashboardOverview() {
   const router = useRouter()
   const pathname = usePathname()
@@ -1097,8 +1103,12 @@ export default function DashboardOverview() {
   const intercomEnabled = hasIntercomApp()
   const isSupportPage = pathname === '/support'
   const isAccountSettings = pathname === '/account/settings'
-  const openSupportMessenger = () => {
+  const closeNavigation = () => {
     setMobileNavOpen(false)
+    if (isTouchDesktopViewport()) setDesktopSidebarHidden(true)
+  }
+  const openSupportMessenger = () => {
+    closeNavigation()
     setSupportMessengerTab('home')
     setSupportManagerPane('list')
     setSupportComposerNew(false)
@@ -1512,6 +1522,7 @@ export default function DashboardOverview() {
 
   useEffect(() => {
     setMobileNavOpen(false)
+    if (isTouchDesktopViewport()) setDesktopSidebarHidden(true)
     try {
       const storedNotice = window.sessionStorage.getItem(DASHBOARD_NOTICE_KEY)
       if (storedNotice) {
@@ -1551,7 +1562,12 @@ export default function DashboardOverview() {
     const mobileViewport = window.matchMedia('(max-width: 760px)')
     const updateViewport = () => {
       setIsMobileViewport(mobileViewport.matches)
-      if (!mobileViewport.matches) setMobileNavOpen(false)
+      setMobileNavOpen(false)
+      if (mobileViewport.matches) {
+        setDesktopSidebarHidden(false)
+      } else if (isTouchDesktopViewport()) {
+        setDesktopSidebarHidden(true)
+      }
     }
     updateViewport()
     mobileViewport.addEventListener('change', updateViewport)
@@ -2896,7 +2912,7 @@ export default function DashboardOverview() {
 
       <aside className={`${styles.sidebar} ${mobileNavOpen ? styles.sidebarOpen : ''} ${desktopSidebarHidden ? styles.sidebarHidden : ''}`}>
         <nav className={styles.navigation} aria-label="Main navigation">
-          <Link className={`${styles.navLink} ${pathname === '/dashboard' ? styles.navActive : ''}`} href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined} onClick={() => setMobileNavOpen(false)}>
+          <Link className={`${styles.navLink} ${pathname === '/dashboard' ? styles.navActive : ''}`} href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined} onClick={closeNavigation}>
             <i className={`fas fa-tachometer-alt ${styles.navIcon}`} aria-hidden="true" /><span>Dashboard</span>
           </Link>
           {visibleMenuGroups.slice(0, 4).map(({ label, iconClass, items }) => {
@@ -2917,7 +2933,7 @@ export default function DashboardOverview() {
                         aria-current={isMenuItemActive(pathname, item.href, { incentiveDetail: detailedCampaignIncentiveOnly }) ? 'page' : undefined}
                         onClick={(event) => {
                           event.preventDefault()
-                          setMobileNavOpen(false)
+                          closeNavigation()
                           if (pathname !== item.href) router.push(item.href)
                         }}
                       >
@@ -2929,7 +2945,7 @@ export default function DashboardOverview() {
               </div>
             )
           })}
-          <Link className={`${styles.navLink} ${pathname === '/payments' ? styles.navActive : ''}`} href="/payments" aria-current={pathname === '/payments' ? 'page' : undefined} onClick={() => setMobileNavOpen(false)}><i className={`fa fa-money ${styles.navIcon}`} aria-hidden="true" /><span>Payments</span></Link>
+          <Link className={`${styles.navLink} ${pathname === '/payments' ? styles.navActive : ''}`} href="/payments" aria-current={pathname === '/payments' ? 'page' : undefined} onClick={closeNavigation}><i className={`fa fa-money ${styles.navIcon}`} aria-hidden="true" /><span>Payments</span></Link>
           <div className={styles.navGroup}>
             <button type="button" className={`${styles.navLink} ${accountMenuActive ? styles.navActive : ''}`} aria-expanded={accountMenuExpanded} onClick={() => toggleGroup('Account')}>
               <i className={`fa fa-user ${styles.navIcon}`} aria-hidden="true" /><span>Account</span><span className={`${styles.navCaret} ${accountMenuActive ? styles.navCaretActive : ''}`} aria-hidden="true" />
@@ -2944,7 +2960,7 @@ export default function DashboardOverview() {
                     aria-current={isMenuItemActive(pathname, item.href) ? 'page' : undefined}
                     onClick={(event) => {
                       event.preventDefault()
-                      setMobileNavOpen(false)
+                      closeNavigation()
                       if (pathname !== item.href) router.push(item.href)
                     }}
                   >
