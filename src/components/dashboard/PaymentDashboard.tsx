@@ -86,7 +86,7 @@ export default function PaymentDashboard() {
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
 
-  const loadPayments = useCallback(async (showLoading = true) => {
+  const loadPayments = useCallback(async (showLoading = true, syncPayoutDraft = true) => {
     if (showLoading) setLoading(true)
     setError('')
     try {
@@ -94,7 +94,7 @@ export default function PaymentDashboard() {
       const result = await response.json() as PaymentsData & { error?: string }
       if (!response.ok) throw new Error(result.error || 'Unable to load payment data')
       setData(result)
-      if (result.role === 'PUBLISHER') setAccountDraft(result.payout.account)
+      if (result.role === 'PUBLISHER' && syncPayoutDraft) setAccountDraft(result.payout.account)
     } catch (loadError) {
       console.error('Unable to load payment page:', loadError)
       setError(loadError instanceof Error ? loadError.message : 'Unable to load payment data')
@@ -105,6 +105,18 @@ export default function PaymentDashboard() {
 
   useEffect(() => {
     void loadPayments()
+  }, [loadPayments])
+
+  useEffect(() => {
+    const refreshVisiblePayments = () => {
+      if (document.visibilityState === 'visible') void loadPayments(false, false)
+    }
+    const intervalId = window.setInterval(refreshVisiblePayments, 15000)
+    document.addEventListener('visibilitychange', refreshVisiblePayments)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', refreshVisiblePayments)
+    }
   }, [loadPayments])
 
   const savePayoutDetails = async (event: FormEvent<HTMLFormElement>) => {
@@ -149,7 +161,7 @@ export default function PaymentDashboard() {
       })
       const result = await response.json() as { error?: string }
       if (!response.ok) throw new Error(result.error || 'Unable to process payment')
-      setNotice(action === 'move-to-pending' ? 'Publisher earnings through Monday moved to pending.' : 'Invoice marked as paid.')
+      setNotice(action === 'move-to-pending' ? 'Available publisher earnings moved to pending.' : 'Invoice marked as paid.')
       await loadPayments(false)
     } catch (actionError) {
       console.error('Unable to process publisher payment:', actionError)
@@ -226,11 +238,11 @@ export default function PaymentDashboard() {
           <div className={styles.paymentSummary}>
             <div><strong>{data.summary.publishers}</strong><span>Publishers</span></div>
             <div><strong>{usd.format(data.summary.pending)}</strong><span>Pending</span></div>
-            <div><strong>{usd.format(data.summary.available)}</strong><span>Earnings through Monday</span></div>
+            <div><strong>{usd.format(data.summary.available)}</strong><span>Available earnings</span></div>
             <div><strong>{usd.format(data.summary.paid)}</strong><span>Total paid</span></div>
           </div>
           <section className={styles.paymentInfoSection}>
-            <p>Move each publisher&apos;s un-invoiced earnings through the most recent Monday to pending, including earnings from earlier weeks. Monday is based on server-local time; earnings after that Monday are not included. All earnings, invoices, and payment totals are calculated in USD; transfers are not sent automatically.</p>
+            <p>Every un-invoiced conversion with a payout is available immediately, including postbacks received today. Move available earnings to pending to create an invoice. All amounts are calculated in USD; transfers are not sent automatically.</p>
             {notice ? <p className={styles.pageNotice} role="status">{notice}</p> : null}
             {error ? <p className={styles.paymentError} role="alert">{error}</p> : null}
           </section>
@@ -252,7 +264,7 @@ export default function PaymentDashboard() {
             <table className={`${styles.dataTable} ${styles.paymentManagerTable}`}>
               <thead>
                 <tr>
-                  {['Publisher', 'Status', 'Binance Pay ID / email', 'Earnings through Monday', 'Pending', 'Total paid', 'Conversions through Monday', 'Action'].map((column, index) => (
+                  {['Publisher', 'Status', 'Binance Pay ID / email', 'Available earnings', 'Pending', 'Total paid', 'Available conversions', 'Action'].map((column, index) => (
                     <th key={column} className={index >= 3 && index <= 6 ? styles.paymentAmount : undefined}>{column}</th>
                   ))}
                 </tr>
