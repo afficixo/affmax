@@ -2139,80 +2139,37 @@ input.reportRangeInput {
 
 .paymentLoading {
   display: grid;
+  min-height: calc(100vh - 204px);
+  place-content: center;
+  justify-items: center;
+  color: #58666e;
 }
 
-.paymentLoadingAnnounce {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+.paymentPublisherCards {
+  display: none;
 }
 
-.paymentSkeleton {
-  display: block;
-  border-radius: 3px;
-  background: linear-gradient(100deg, #edf0f1 25%, #f7f8f9 45%, #edf0f1 65%);
-  background-size: 200% 100%;
-  animation: paymentSkeletonShimmer 1.4s ease-in-out infinite;
+.paymentMobileCards {
+  display: none;
 }
 
-.paymentSkeletonValue {
-  width: 58%;
-  height: 24px;
-  margin: 0 auto 7px;
+.paymentLoadingSpinner {
+  width: 24px;
+  aspect-ratio: 1;
+  border: 2px solid #e3e7e9;
+  border-top-color: #5cb85c;
+  border-radius: 50%;
+  animation: paymentLoadingSpin 800ms linear infinite;
 }
 
-.paymentSkeletonLabel {
-  width: 72%;
-  height: 10px;
-  margin: 0 auto;
-}
-
-.paymentSkeletonHeading {
-  width: 135px;
-  height: 12px;
-  margin: 0 0 9px;
-}
-
-.paymentSkeletonLine {
-  width: 94%;
-  height: 9px;
-  margin: 0 0 7px;
-}
-
-.paymentInfoSection .paymentSkeletonLine:last-child {
-  width: 68%;
-}
-
-.paymentSkeletonField {
-  width: min(100%, 360px);
-  height: 30px;
-  margin: 8px 0;
-}
-
-.paymentSkeletonTableHeading {
-  width: 72px;
-  height: 10px;
-}
-
-.paymentSkeletonTableCell {
-  width: 84px;
-  height: 10px;
-}
-
-@keyframes paymentSkeletonShimmer {
-  from {
-    background-position: 100% 0;
-  }
+@keyframes paymentLoadingSpin {
   to {
-    background-position: -100% 0;
+    transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .paymentSkeleton {
+  .paymentLoadingSpinner {
     animation: none;
   }
 
@@ -2251,6 +2208,190 @@ input.reportRangeInput {
 
   .paymentManagerHeading input {
     width: 100%;
+  }
+
+  .paymentSettings .paymentManagerHeading input {
+    width: 100%;
+  }
+
+  .paymentSettings .dataTableWrap {
+    display: none;
+  }
+
+  .paymentHistory .dataTableWrap {
+    display: none;
+  }
+
+  .paymentMobileCards {
+    display: grid;
+    gap: 10px;
+  }
+
+  .paymentMobileCard {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    border: 1px solid #e8ecef;
+    border-radius: 6px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .paymentMobileCardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eceeef;
+  }
+
+  .paymentMobileCardTitle {
+    min-width: 0;
+    color: #37363e;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .paymentMobileCardMeta {
+    flex: 0 0 auto;
+    color: #737e84;
+    font-size: 11px;
+  }
+
+  .paymentMobileCardDetails {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    margin: 0;
+  }
+
+  .paymentMobileCardDetails > div {
+    min-width: 0;
+  }
+
+  .paymentMobileCardDetails dt {
+    margin-bottom: 3px;
+    color: #737e84;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .paymentMobileCardDetails dd {
+    min-width: 0;
+    margin: 0;
+    color: #58666e;
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .paymentMobileCardWide {
+    grid-column: 1 / -1;
+  }
+
+  .paymentMobileCardDetails .paymentMobileCardAmount {
+    color: #3c763d;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .paymentMobileCard > .pagePrimaryButton {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .paymentMobileEmpty {
+    margin: 0;
+    border: 1px solid #e8ecef;
+    border-radius: 6px;
+    padding: 16px 12px;
+    color: #737e84;
+    text-align: center;
+  }
+
+  .paymentPublisherCards {
+    display: grid;
+    gap: 10px;
+  }
+
+  .paymentPublisherCard {
+    display: grid;
+    gap: 12px;
+    border: 1px solid #e8ecef;
+    border-radius: 6px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .paymentPublisherCardHeader {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eceeef;
+  }
+
+  .paymentPublisherCardName {
+    display: block;
+    color: #37363e;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .paymentPublisherCardDetails {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    margin: 0;
+  }
+
+  .paymentPublisherCardDetails > div {
+    min-width: 0;
+  }
+
+  .paymentPublisherCardDetails dt {
+    margin-bottom: 3px;
+    color: #737e84;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .paymentPublisherCardDetails dd {
+    min-width: 0;
+    margin: 0;
+    color: #58666e;
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .paymentPublisherCardWide {
+    grid-column: 1 / -1;
+  }
+
+  .paymentPublisherCardDetails .paymentReadiness {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .paymentPublisherCard > .pagePrimaryButton {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .paymentPublisherEmpty {
+    margin: 0;
+    border: 1px solid #e8ecef;
+    border-radius: 6px;
+    padding: 16px 12px;
+    color: #737e84;
+    text-align: center;
   }
 }
 

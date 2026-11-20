@@ -177,43 +177,8 @@ export default function PaymentDashboard() {
 
   if (loading && !data) {
     return (
-      <div className={styles.paymentLoading} role="status" aria-live="polite" aria-busy="true">
-        <span className={styles.paymentLoadingAnnounce}>Loading payment details</span>
-        <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentInfo}`} aria-hidden="true">
-          <h2 className={styles.sectionTitle}><i className="fa fa-info" aria-hidden="true" />INFO</h2>
-          <div className={styles.paymentSummary}>
-            {[0, 1, 2, 3].map((item) => (
-              <div key={item}>
-                <span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonValue}`} />
-                <span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonLabel}`} />
-              </div>
-            ))}
-          </div>
-          {[0, 1, 2].map((item) => (
-            <section className={styles.paymentInfoSection} key={item}>
-              <span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonHeading}`} />
-              <span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonLine}`} />
-              <span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonLine}`} />
-            </section>
-          ))}
-        </section>
-        <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentSettings}`} aria-hidden="true">
-          <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT SETTINGS</h2>
-          <span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonField}`} />
-        </section>
-        <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentHistory}`} aria-hidden="true">
-          <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT HISTORY</h2>
-          <div className={styles.dataTableWrap}>
-            <table className={styles.dataTable}>
-              <thead><tr>{[0, 1, 2, 3, 4].map((item) => <th key={item}><span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonTableHeading}`} /></th>)}</tr></thead>
-              <tbody>
-                {[0, 1, 2].map((row) => (
-                  <tr key={row}>{[0, 1, 2, 3, 4].map((cell) => <td key={cell}><span className={`${styles.paymentSkeleton} ${styles.paymentSkeletonTableCell}`} /></td>)}</tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <div className={styles.paymentLoading} role="status" aria-label="Loading payment details" aria-live="polite" aria-busy="true">
+        <span className={styles.paymentLoadingSpinner} aria-hidden="true" />
       </div>
     )
   }
@@ -235,6 +200,25 @@ export default function PaymentDashboard() {
         publisher.payoutAccount,
       ].some((value) => value?.toLowerCase().includes(query))
     })
+    const renderMoveToPendingButton = (publisher: (typeof filteredPublishers)[number]) => {
+      const payable = isPaymentPayable(publisher.payoutMethod, publisher.payoutAccount)
+      const hasAvailableEarnings = publisher.availableEarnings > 0
+      return (
+        <button
+          type="button"
+          className={styles.pagePrimaryButton}
+          disabled={!hasAvailableEarnings || !payable || busyAction === publisher.id}
+          onClick={() => void runManagerAction('move-to-pending', publisher.id)}
+          title={!payable
+            ? 'Publisher must save their Binance Pay ID or account email before earnings can be moved to pending'
+            : !hasAvailableEarnings
+              ? 'No available earnings to move to pending'
+              : undefined}
+        >
+          {busyAction === publisher.id ? 'Moving…' : 'Move to pending'}
+        </button>
+      )
+    }
     return (
       <>
         <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentInfo}`}>
@@ -264,6 +248,61 @@ export default function PaymentDashboard() {
             />
           </div>
           <p className={styles.pageHint}>Showing {filteredPublishers.length} of {data.publishers.length} publishers.</p>
+          <div className={styles.paymentPublisherCards}>
+            {filteredPublishers.map((publisher) => {
+              const payable = isPaymentPayable(publisher.payoutMethod, publisher.payoutAccount)
+              return (
+                <article className={styles.paymentPublisherCard} key={publisher.id}>
+                  <header className={styles.paymentPublisherCardHeader}>
+                    <strong className={styles.paymentPublisherCardName}>{publisherName(publisher)}</strong>
+                    <span className={styles.paymentAccountMeta}>
+                      {publisher.publisherNumber == null ? publisher.email : `#${publisher.publisherNumber} · ${publisher.email}`}
+                    </span>
+                  </header>
+                  <dl className={styles.paymentPublisherCardDetails}>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{publisher.status}</dd>
+                    </div>
+                    <div>
+                      <dt>Payment status</dt>
+                      <dd>
+                        <span className={`${styles.paymentReadiness} ${payable ? styles.paymentReadinessPayable : styles.paymentReadinessRequired}`}>
+                          {payable ? 'Payable' : 'Payment method required'}
+                        </span>
+                      </dd>
+                    </div>
+                    <div className={styles.paymentPublisherCardWide}>
+                      <dt>Binance Pay ID / email</dt>
+                      <dd>{publisher.payoutAccount || 'Not set'}</dd>
+                    </div>
+                    <div>
+                      <dt>Available earnings</dt>
+                      <dd className={styles.paymentUp}>{usd.format(publisher.availableEarnings)}</dd>
+                    </div>
+                    <div>
+                      <dt>Pending</dt>
+                      <dd>{usd.format(publisher.pendingEarnings)}</dd>
+                    </div>
+                    <div>
+                      <dt>Total paid</dt>
+                      <dd>{usd.format(publisher.paidEarnings)}</dd>
+                    </div>
+                    <div>
+                      <dt>Available conversions</dt>
+                      <dd>{publisher.availableConversions}</dd>
+                    </div>
+                  </dl>
+                  {renderMoveToPendingButton(publisher)}
+                </article>
+              )
+            })}
+            {!filteredPublishers.length && (
+              <p className={styles.paymentPublisherEmpty}>
+                {query ? 'No publishers match your search.' : 'No publishers found.'}
+              </p>
+            )}
+          </div>
           <div className={styles.dataTableWrap}>
             <table className={`${styles.dataTable} ${styles.paymentManagerTable}`}>
               <thead>
@@ -276,7 +315,6 @@ export default function PaymentDashboard() {
               <tbody>
                 {filteredPublishers.map((publisher) => {
                   const payable = isPaymentPayable(publisher.payoutMethod, publisher.payoutAccount)
-                  const hasAvailableEarnings = publisher.availableEarnings > 0
                   return (
                     <tr key={publisher.id}>
                       <td>
@@ -296,21 +334,7 @@ export default function PaymentDashboard() {
                       <td className={styles.paymentAmount}>{usd.format(publisher.pendingEarnings)}</td>
                       <td className={styles.paymentAmount}>{usd.format(publisher.paidEarnings)}</td>
                       <td className={styles.paymentAmount}>{publisher.availableConversions}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className={styles.pagePrimaryButton}
-                          disabled={!hasAvailableEarnings || !payable || busyAction === publisher.id}
-                          onClick={() => void runManagerAction('move-to-pending', publisher.id)}
-                          title={!payable
-                            ? 'Publisher must save their Binance Pay ID or account email before earnings can be moved to pending'
-                            : !hasAvailableEarnings
-                              ? 'No available earnings to move to pending'
-                              : undefined}
-                        >
-                          {busyAction === publisher.id ? 'Moving…' : 'Move to pending'}
-                        </button>
-                      </td>
+                      <td>{renderMoveToPendingButton(publisher)}</td>
                     </tr>
                   )
                 })}
@@ -322,6 +346,43 @@ export default function PaymentDashboard() {
 
         <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentHistory}`}>
           <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PENDING INVOICES</h2>
+          <div className={styles.paymentMobileCards}>
+            {pendingInvoices.map((invoice) => (
+              <article className={styles.paymentMobileCard} key={invoice.id}>
+                <header className={styles.paymentMobileCardHeader}>
+                  <strong className={styles.paymentMobileCardTitle}>{invoice.invoiceNumber}</strong>
+                  <span className={styles.paymentMobileCardMeta}>{invoice.conversionCount} conversions</span>
+                </header>
+                <dl className={styles.paymentMobileCardDetails}>
+                  <div>
+                    <dt>Publisher</dt>
+                    <dd>{invoice.publisher ? publisherName(invoice.publisher) : '—'}</dd>
+                  </div>
+                  <div className={styles.paymentMobileCardWide}>
+                    <dt>Binance Pay ID / email</dt>
+                    <dd>{invoice.payoutAccount || 'Not set'}</dd>
+                  </div>
+                  <div>
+                    <dt>Amount</dt>
+                    <dd className={styles.paymentMobileCardAmount}>{usd.format(invoice.totalEarning)}</dd>
+                  </div>
+                  <div>
+                    <dt>Created</dt>
+                    <dd>{formatDate(invoice.createdAt)}</dd>
+                  </div>
+                </dl>
+                <button
+                  type="button"
+                  className={styles.pagePrimaryButton}
+                  disabled={busyAction === invoice.id}
+                  onClick={() => void runManagerAction('mark-paid', invoice.id)}
+                >
+                  {busyAction === invoice.id ? 'Saving…' : 'Mark paid'}
+                </button>
+              </article>
+            ))}
+            {!pendingInvoices.length ? <p className={styles.paymentMobileEmpty}>No pending invoices.</p> : null}
+          </div>
           <div className={styles.dataTableWrap}>
             <table className={`${styles.dataTable} ${styles.paymentManagerTable}`}>
               <thead><tr>{['Invoice', 'Publisher', 'Binance Pay ID / email', 'Amount', 'Created', 'Action'].map((column, index) => <th key={column} className={index === 3 ? styles.paymentAmount : undefined}>{column}</th>)}</tr></thead>
@@ -345,7 +406,7 @@ export default function PaymentDashboard() {
                     </td>
                   </tr>
                 ))}
-                {!pendingInvoices.length ? <tr><td colSpan={6}>No data available</td></tr> : null}
+                {!pendingInvoices.length ? <tr><td colSpan={6}>No pending invoices.</td></tr> : null}
               </tbody>
             </table>
           </div>
@@ -353,6 +414,35 @@ export default function PaymentDashboard() {
 
         <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentHistory}`}>
           <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT HISTORY</h2>
+          <div className={styles.paymentMobileCards}>
+            {data.invoices.map((invoice) => (
+              <article className={styles.paymentMobileCard} key={invoice.id}>
+                <header className={styles.paymentMobileCardHeader}>
+                  <strong className={styles.paymentMobileCardTitle}>{invoice.invoiceNumber}</strong>
+                  <span className={`${styles.paymentInvoiceStatus} ${invoice.status === 'PAID' ? styles.paymentInvoicePaid : ''}`}>{invoice.status}</span>
+                </header>
+                <dl className={styles.paymentMobileCardDetails}>
+                  <div>
+                    <dt>Publisher</dt>
+                    <dd>{invoice.publisher ? publisherName(invoice.publisher) : '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Amount</dt>
+                    <dd className={styles.paymentMobileCardAmount}>{usd.format(invoice.totalEarning)}</dd>
+                  </div>
+                  <div>
+                    <dt>Created</dt>
+                    <dd>{formatDate(invoice.createdAt)}</dd>
+                  </div>
+                  <div>
+                    <dt>Paid</dt>
+                    <dd>{formatDate(invoice.paidAt)}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+            {!data.invoices.length ? <p className={styles.paymentMobileEmpty}>No payment history yet.</p> : null}
+          </div>
           <div className={styles.dataTableWrap}>
             <table className={`${styles.dataTable} ${styles.paymentManagerTable}`}>
               <thead><tr>{['Invoice', 'Publisher', 'Amount', 'Status', 'Created', 'Paid'].map((column, index) => <th key={column} className={index === 2 ? styles.paymentAmount : undefined}>{column}</th>)}</tr></thead>
@@ -367,7 +457,7 @@ export default function PaymentDashboard() {
                     <td>{formatDate(invoice.paidAt)}</td>
                   </tr>
                 ))}
-                {!data.invoices.length ? <tr><td colSpan={6}>No data available</td></tr> : null}
+                {!data.invoices.length ? <tr><td colSpan={6}>No payment history yet.</td></tr> : null}
               </tbody>
             </table>
           </div>
@@ -423,6 +513,31 @@ export default function PaymentDashboard() {
 
       <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentHistory}`}>
         <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT HISTORY</h2>
+        <div className={styles.paymentMobileCards}>
+          {data.invoices.map((invoice) => (
+            <article className={styles.paymentMobileCard} key={invoice.id}>
+              <header className={styles.paymentMobileCardHeader}>
+                <strong className={styles.paymentMobileCardTitle}>{invoice.invoiceNumber}</strong>
+                <span className={`${styles.paymentInvoiceStatus} ${invoice.status === 'PAID' ? styles.paymentInvoicePaid : ''}`}>{invoice.status}</span>
+              </header>
+              <dl className={styles.paymentMobileCardDetails}>
+                <div>
+                  <dt>Invoice date</dt>
+                  <dd>{formatDate(invoice.createdAt)}</dd>
+                </div>
+                <div>
+                  <dt>Amount paid</dt>
+                  <dd className={styles.paymentMobileCardAmount}>{usd.format(invoice.totalEarning)}</dd>
+                </div>
+                <div>
+                  <dt>Method</dt>
+                  <dd>Binance Pay</dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+          {!data.invoices.length ? <p className={styles.paymentMobileEmpty}>No payments yet.</p> : null}
+        </div>
         <div className={styles.dataTableWrap}>
           <table className={styles.dataTable}>
             <thead>
@@ -438,7 +553,7 @@ export default function PaymentDashboard() {
                   <td>{invoice.invoiceNumber}</td>
                 </tr>
               ))}
-              {!data.invoices.length ? <tr><td colSpan={5}>No data available</td></tr> : null}
+              {!data.invoices.length ? <tr><td colSpan={5}>No payments yet.</td></tr> : null}
             </tbody>
           </table>
         </div>
