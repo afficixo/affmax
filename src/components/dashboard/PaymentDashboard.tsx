@@ -276,9 +276,14 @@ export default function PaymentDashboard() {
                       <button
                         type="button"
                         className={styles.pagePrimaryButton}
-                        disabled={!publisher.availableEarnings || !publisher.payoutAccount || busyAction === publisher.id}
+                        disabled={!publisher.availableEarnings
+                          || publisher.payoutMethod !== 'BINANCE_PAY_USDT'
+                          || !publisher.payoutAccount?.trim()
+                          || busyAction === publisher.id}
                         onClick={() => void runManagerAction('move-to-pending', publisher.id)}
-                        title={!publisher.payoutAccount ? 'Publisher must set their Binance Pay ID or account email first' : undefined}
+                        title={!publisher.payoutAccount?.trim() || publisher.payoutMethod !== 'BINANCE_PAY_USDT'
+                          ? 'Publisher must save their Binance Pay ID or account email before earnings can be moved to pending'
+                          : undefined}
                       >
                         {busyAction === publisher.id ? 'Moving…' : 'Move to pending'}
                       </button>

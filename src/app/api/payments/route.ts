@@ -133,7 +133,6 @@ export async function GET(request: Request) {
         },
         publishers: publishers.map((publisher) => ({
           ...publisher,
-          payoutAccount: publisher.payoutMethod === PAYOUT_METHOD ? publisher.payoutAccount : null,
           availableEarnings: earningsByPublisher.get(publisher.id)?.amount ?? 0,
           availableConversions: earningsByPublisher.get(publisher.id)?.conversions ?? 0,
           pendingEarnings: totalsByPublisher.get(publisher.id)?.pending ?? 0,
@@ -184,8 +183,8 @@ export async function GET(request: Request) {
         conversions: earnings._count._all,
       },
       payout: {
-        method: publisher?.payoutMethod === PAYOUT_METHOD ? PAYOUT_METHOD : '',
-        account: publisher?.payoutMethod === PAYOUT_METHOD ? publisher.payoutAccount ?? '' : '',
+        method: publisher?.payoutMethod ?? '',
+        account: publisher?.payoutAccount ?? '',
       },
       invoices,
     }, { headers: getCorsHeaders(auth.origin) })
