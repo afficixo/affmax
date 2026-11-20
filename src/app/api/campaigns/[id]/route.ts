@@ -6,6 +6,7 @@ import {
   toCampaignOfferRecord,
   toPrismaCreateData,
 } from '@/lib/campaign-offers'
+import { isCampaignImageProxyPath } from '@/lib/campaign-images'
 import { prisma } from '@/lib/db/prisma'
 
 type RouteContext = { params: Promise<{ id: string }> }
@@ -52,7 +53,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       ...partial,
       action: partial.action ?? (existing.action as 'Apply' | 'Pending' | 'View'),
       requiresApproval: partial.requiresApproval ?? existing.requiresApproval,
-      imageSource: partial.imageSource === undefined ? existing.imageSource : partial.imageSource,
+      imageSource: partial.imageSource === undefined || isCampaignImageProxyPath(partial.imageSource, id)
+        ? existing.imageSource
+        : partial.imageSource,
       offerTypes: partial.offerTypes ?? existing.offerTypes,
       category: partial.category === undefined ? existing.category : partial.category,
       device: partial.device ?? existing.device,

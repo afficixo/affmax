@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { getCorsHeaders } from '@/config/cors'
 import { getTokenFromCookie, getUserFromToken } from '@/lib/auth'
+import { toCampaignImageSource } from '@/lib/campaign-images'
 import { prisma } from '@/lib/db/prisma'
 
 type RouteContext = {
   params: Promise<{ id: string }>
+}
+
+function toPublicApplication<T extends { campaignId: string; campaignImage: string | null }>(application: T) {
+  return {
+    ...application,
+    campaignImage: toCampaignImageSource(application.campaignId, application.campaignImage) ?? null,
+  }
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -53,7 +61,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         where: { id },
         data: { noticeDismissed: true },
       })
-      return NextResponse.json({ application }, { headers: getCorsHeaders(origin) })
+      return NextResponse.json({ application: toPublicApplication(application) }, { headers: getCorsHeaders(origin) })
     }
 
     if (user.role !== 'MANAGER') {
@@ -79,7 +87,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       },
     })
 
-    return NextResponse.json({ application }, { headers: getCorsHeaders(origin) })
+    return NextResponse.json({ application: toPublicApplication(application) }, { headers: getCorsHeaders(origin) })
   } catch (error) {
     console.error('Review offer application failed:', error)
     return NextResponse.json(

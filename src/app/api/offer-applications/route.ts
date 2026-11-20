@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { getCorsHeaders } from '@/config/cors'
 import { getTokenFromCookie, getUserFromToken } from '@/lib/auth'
+import { toCampaignImageSource } from '@/lib/campaign-images'
 import { prisma } from '@/lib/db/prisma'
+
+function toPublicApplication<T extends { campaignId: string; campaignImage: string | null }>(application: T) {
+  return {
+    ...application,
+    campaignImage: toCampaignImageSource(application.campaignId, application.campaignImage) ?? null,
+  }
+}
 
 async function requireUser(request: Request) {
   const origin = request.headers.get('origin') || null
@@ -43,7 +51,7 @@ export async function GET(request: Request) {
       take: 500,
     })
 
-    return NextResponse.json({ applications }, { headers: getCorsHeaders(origin) })
+    return NextResponse.json({ applications: applications.map(toPublicApplication) }, { headers: getCorsHeaders(origin) })
   } catch (error) {
     console.error('List offer applications failed:', error)
     return NextResponse.json(
@@ -72,7 +80,7 @@ export async function POST(request: Request) {
     const campaignPayout = typeof body?.campaignPayout === 'number' ? body.campaignPayout : Number(body?.campaignPayout)
     const campaignCountry = typeof body?.campaignCountry === 'string' ? body.campaignCountry.trim().toUpperCase() : ''
     const campaignCategory = typeof body?.campaignCategory === 'string' ? body.campaignCategory.trim() : null
-    const campaignImage = typeof body?.campaignImage === 'string' ? body.campaignImage.trim() : null
+    const submittedImage = typeof body?.campaignImage === 'string' ? body.campaignImage.trim() : null
 
     if (!campaignId || !campaignName || !campaignCountry || !Number.isFinite(campaignPayout)) {
       return NextResponse.json(
@@ -89,6 +97,11 @@ export async function POST(request: Request) {
         },
       },
     })
+    const campaignOffer = await prisma.campaignOffer.findUnique({
+      where: { id: campaignId },
+      select: { imageSource: true },
+    })
+    const campaignImage = campaignOffer?.imageSource ?? submittedImage
 
     if (existing) {
       if (existing.status === 'REJECTED') {
@@ -108,11 +121,11 @@ export async function POST(request: Request) {
             noticeDismissed: true,
           },
         })
-        return NextResponse.json({ application: reopened }, { headers: getCorsHeaders(origin) })
+        return NextResponse.json({ application: toPublicApplication(reopened) }, { headers: getCorsHeaders(origin) })
       }
 
       return NextResponse.json(
-        { error: existing.status === 'APPROVED' ? 'Offer already approved' : 'Application already pending', application: existing },
+        { error: existing.status === 'APPROVED' ? 'Offer already approved' : 'Application already pending', application: toPublicApplication(existing) },
         { status: 409, headers: getCorsHeaders(origin) }
       )
     }
@@ -132,7 +145,7 @@ export async function POST(request: Request) {
       },
     })
 
-    return NextResponse.json({ application }, { status: 201, headers: getCorsHeaders(origin) })
+    return NextResponse.json({ application: toPublicApplication(application) }, { status: 201, headers: getCorsHeaders(origin) })
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return NextResponse.json(

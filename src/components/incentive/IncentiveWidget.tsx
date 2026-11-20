@@ -16,6 +16,7 @@ import {
   offerwallsStorageKey,
 } from '@/lib/incentive-tools'
 import { withoutLegacyAffmineDemoOffers } from '@/lib/campaign-offers'
+import { toCampaignImageSource } from '@/lib/campaign-images'
 import styles from './IncentiveWidget.module.css'
 
 type SeedOffer = IncentiveWidgetOffer & { placement?: string; status?: string }
@@ -49,7 +50,7 @@ function mergeOffers(seedOffers: SeedOffer[], preferRemoteOnly = false): Incenti
       country: offer.country || 'US',
       countries: offer.countries,
       offerTypes: offer.offerTypes?.length ? offer.offerTypes : ['CPI'],
-      imageSource: offer.imageSource || `/affmine/preview_i/${offer.id}.png`,
+      imageSource: toCampaignImageSource(offer.id, offer.imageSource || `/affmine/preview_i/${offer.id}.png`),
       description: offer.description,
       offerLink: incentiveOfferDestination(offer),
       device: offer.device,

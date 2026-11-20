@@ -74,6 +74,7 @@ import {
   getTrackingDomainOrigin,
 } from '@/lib/tracking'
 import { withoutLegacyAffmineDemoOffers } from '@/lib/campaign-offers'
+import { toCampaignImageSource } from '@/lib/campaign-images'
 import { PUBLISHER_POSTBACK_URL_EXAMPLE } from '@/lib/postback-tokens'
 import ReportDateRangePicker from './ReportDateRangePicker'
 import PaymentDashboard from './PaymentDashboard'
@@ -1860,10 +1861,11 @@ export default function DashboardOverview() {
     }
 
     const geos = offer.countries?.length ? offer.countries : [offer.country]
-    const nextImage = new URL(
-      offer.imageSource || (offer.placement === 'INCENTIVE' ? `/affmine/preview_i/${offer.id}.png` : `/affmine/campaigns/${offer.id}.png`),
-      window.location.origin,
-    ).toString()
+    const nextImage = offer.imageSource
+      || new URL(
+        offer.placement === 'INCENTIVE' ? `/affmine/preview_i/${offer.id}.png` : `/affmine/campaigns/${offer.id}.png`,
+        window.location.origin,
+      ).toString()
     setImagePreviewState(nextImage ? 'loading' : 'idle')
     setOfferDraft({
       ...offer,
@@ -2775,7 +2777,7 @@ export default function DashboardOverview() {
     isOutgoing = false,
   ) => (
     <div key={key} className={`${styles.featuredSlide} ${animationClass}`} aria-hidden={isOutgoing}>
-      <Image src={campaign.imageSource ?? `/affmine/campaigns/${campaign.id}.png`} alt={`${campaign.name} offer preview`} width={200} height={124} className={styles.campaignImage} unoptimized={Boolean(campaign.imageSource)} />
+      <Image src={toCampaignImageSource(campaign.id, campaign.imageSource ?? `/affmine/campaigns/${campaign.id}.png`)} alt={`${campaign.name} offer preview`} width={200} height={124} className={styles.campaignImage} unoptimized={Boolean(campaign.imageSource)} />
       <div className={styles.featuredDetails}>
         <div className={styles.featuredTitle}>
           #{campaign.id}{' '}
@@ -3466,7 +3468,7 @@ export default function DashboardOverview() {
                       </div>
                     </fieldset>
                     <label className={`${styles.addOfferField} ${styles.addOfferWideField}`}>View image source
-                      <input name="imageSource" type="url" placeholder="https://example.com/offer-image.png" value={offerDraft.imageSource} onChange={(event) => updateOfferDraft('imageSource', event.target.value)} required />
+                      <input name="imageSource" type="text" inputMode="url" placeholder="https://example.com/offer-image.png or /api/campaigns/123/image" value={offerDraft.imageSource} onChange={(event) => updateOfferDraft('imageSource', event.target.value)} required />
                     </label>
                     {offerDraft.imageSource && (
                       <div className={`${styles.addOfferImagePreview} ${styles.addOfferWideField}`}>
@@ -4101,7 +4103,7 @@ export default function DashboardOverview() {
                         <td>
                           <Image
                             className={`${styles.campaignThumb} ${isIncentive ? styles.campaignThumbIncentive : ''}`}
-                            src={campaign.imageSource ?? (isIncentive ? `/affmine/preview_i/${campaign.id}.png` : `/affmine/campaigns/${campaign.id}.png`)}
+                            src={toCampaignImageSource(campaign.id, campaign.imageSource ?? (isIncentive ? `/affmine/preview_i/${campaign.id}.png` : `/affmine/campaigns/${campaign.id}.png`))}
                             alt=""
                             width={isIncentive ? 50 : 64}
                             height={50}
@@ -4270,7 +4272,7 @@ export default function DashboardOverview() {
                           <button type="button" className={styles.previewButton} aria-label="Enlarge offer preview" onClick={() => setCampaignPreviewOpen(true)}>
                             <Image
                               className={styles.detailPreviewThumb}
-                              src={detailedCampaign.imageSource ?? `/affmine/campaigns/${detailedCampaign.id}.png`}
+                              src={toCampaignImageSource(detailedCampaign.id, detailedCampaign.imageSource ?? `/affmine/campaigns/${detailedCampaign.id}.png`)}
                               alt="Offer preview"
                               width={160}
                               height={100}
@@ -5916,7 +5918,7 @@ export default function DashboardOverview() {
                 <div className={styles.applyDialogLayout}>
                   <Image
                     className={styles.applyDialogPreview}
-                    src={applyCampaign.imageSource ?? `/affmine/campaigns/${applyCampaign.id}.png`}
+                    src={toCampaignImageSource(applyCampaign.id, applyCampaign.imageSource ?? `/affmine/campaigns/${applyCampaign.id}.png`)}
                     alt=""
                     width={280}
                     height={175}

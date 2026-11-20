@@ -1,3 +1,5 @@
+import { toCampaignImageSource } from '@/lib/campaign-images'
+
 export type CampaignOfferRecord = {
   id: string
   name: string
@@ -151,7 +153,7 @@ export function toCampaignOfferRecord(row: DbCampaignOffer): CampaignOfferRecord
     countries: row.countries.length ? row.countries : undefined,
     action,
     requiresApproval: row.requiresApproval,
-    imageSource: row.imageSource || undefined,
+    imageSource: toCampaignImageSource(row.id, row.imageSource),
     offerTypes: row.offerTypes.length ? row.offerTypes : undefined,
     category: row.category || undefined,
     device: row.device.length ? row.device : undefined,
