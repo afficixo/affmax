@@ -77,6 +77,10 @@ function publisherName(publisher: { fullName: string | null; username: string })
   return publisher.fullName?.trim() || publisher.username
 }
 
+function isPaymentPayable(method: string | null, account: string | null) {
+  return method === 'BINANCE_PAY_USDT' && Boolean(account?.trim())
+}
+
 export default function PaymentDashboard() {
   const [data, setData] = useState<PaymentsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -264,45 +268,53 @@ export default function PaymentDashboard() {
             <table className={`${styles.dataTable} ${styles.paymentManagerTable}`}>
               <thead>
                 <tr>
-                  {['Publisher', 'Status', 'Binance Pay ID / email', 'Available earnings', 'Pending', 'Total paid', 'Available conversions', 'Action'].map((column, index) => (
-                    <th key={column} className={index >= 3 && index <= 6 ? styles.paymentAmount : undefined}>{column}</th>
+                  {['Publisher', 'Status', 'Payment status', 'Binance Pay ID / email', 'Available earnings', 'Pending', 'Total paid', 'Available conversions', 'Action'].map((column, index) => (
+                    <th key={column} className={index >= 4 && index <= 7 ? styles.paymentAmount : undefined}>{column}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filteredPublishers.map((publisher) => (
-                  <tr key={publisher.id}>
-                    <td>
-                      <strong>{publisherName(publisher)}</strong>
-                      <span className={styles.paymentAccountMeta}>
-                        {publisher.publisherNumber == null ? publisher.email : `#${publisher.publisherNumber} · ${publisher.email}`}
-                      </span>
-                    </td>
-                    <td>{publisher.status}</td>
-                    <td className={styles.paymentAccountValue}>{publisher.payoutAccount || 'Not set'}</td>
-                    <td className={styles.paymentAmount}>{usd.format(publisher.availableEarnings)}</td>
-                    <td className={styles.paymentAmount}>{usd.format(publisher.pendingEarnings)}</td>
-                    <td className={styles.paymentAmount}>{usd.format(publisher.paidEarnings)}</td>
-                    <td className={styles.paymentAmount}>{publisher.availableConversions}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className={styles.pagePrimaryButton}
-                        disabled={!publisher.availableEarnings
-                          || publisher.payoutMethod !== 'BINANCE_PAY_USDT'
-                          || !publisher.payoutAccount?.trim()
-                          || busyAction === publisher.id}
-                        onClick={() => void runManagerAction('move-to-pending', publisher.id)}
-                        title={!publisher.payoutAccount?.trim() || publisher.payoutMethod !== 'BINANCE_PAY_USDT'
-                          ? 'Publisher must save their Binance Pay ID or account email before earnings can be moved to pending'
-                          : undefined}
-                      >
-                        {busyAction === publisher.id ? 'Moving…' : 'Move to pending'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {!filteredPublishers.length ? <tr><td colSpan={8}>{query ? 'No publishers match your search.' : 'No publishers found.'}</td></tr> : null}
+                {filteredPublishers.map((publisher) => {
+                  const payable = isPaymentPayable(publisher.payoutMethod, publisher.payoutAccount)
+                  const hasAvailableEarnings = publisher.availableEarnings > 0
+                  return (
+                    <tr key={publisher.id}>
+                      <td>
+                        <strong>{publisherName(publisher)}</strong>
+                        <span className={styles.paymentAccountMeta}>
+                          {publisher.publisherNumber == null ? publisher.email : `#${publisher.publisherNumber} · ${publisher.email}`}
+                        </span>
+                      </td>
+                      <td>{publisher.status}</td>
+                      <td>
+                        <span className={`${styles.paymentReadiness} ${payable ? styles.paymentReadinessPayable : styles.paymentReadinessRequired}`}>
+                          {payable ? 'Payable' : 'Payment method required'}
+                        </span>
+                      </td>
+                      <td className={styles.paymentAccountValue}>{publisher.payoutAccount || 'Not set'}</td>
+                      <td className={styles.paymentAmount}>{usd.format(publisher.availableEarnings)}</td>
+                      <td className={styles.paymentAmount}>{usd.format(publisher.pendingEarnings)}</td>
+                      <td className={styles.paymentAmount}>{usd.format(publisher.paidEarnings)}</td>
+                      <td className={styles.paymentAmount}>{publisher.availableConversions}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.pagePrimaryButton}
+                          disabled={!hasAvailableEarnings || !payable || busyAction === publisher.id}
+                          onClick={() => void runManagerAction('move-to-pending', publisher.id)}
+                          title={!payable
+                            ? 'Publisher must save their Binance Pay ID or account email before earnings can be moved to pending'
+                            : !hasAvailableEarnings
+                              ? 'No available earnings to move to pending'
+                              : undefined}
+                        >
+                          {busyAction === publisher.id ? 'Moving…' : 'Move to pending'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+                {!filteredPublishers.length ? <tr><td colSpan={9}>{query ? 'No publishers match your search.' : 'No publishers found.'}</td></tr> : null}
               </tbody>
             </table>
           </div>
@@ -364,6 +376,8 @@ export default function PaymentDashboard() {
     )
   }
 
+  const payable = isPaymentPayable(data.payout.method, data.payout.account)
+
   return (
     <>
       <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentInfo}`}>
@@ -374,33 +388,19 @@ export default function PaymentDashboard() {
           <div><strong className={styles.paymentUp}>{usd.format(data.summary.available)}</strong><span>Earnings since last invoice</span></div>
           <div><strong>{data.summary.payments}</strong><span>Total payments</span></div>
         </div>
-        <section className={styles.paymentInfoSection}>
-          <h2>Payment Process</h2>
-          <p>Approved conversion earnings remain available until your manager moves them to pending. Payments are recorded after your manager sends funds through Binance Pay.</p>
-        </section>
-        <section className={styles.paymentInfoSection}>
-          <h2>Payment Details</h2>
-          <p>Payouts are sent to your saved Binance Pay ID or Binance account email. All earnings, pending invoices, and payment history are calculated in USD.</p>
-        </section>
-        <section className={styles.paymentInfoSection}>
-          <h2>Tax Forms</h2>
-          <p>Tax form is based on the country of your residency and whether you are an individual or business. Please use the correct form as it is really important, see instructions below:</p>
-          <ul>
-            <li>For Non-US individuals - complete W-8BEN form</li>
-            <li>For Non-US businesses - complete W-8BEN-E form</li>
-            <li>For USA individuals and businesses - complete W-9 form</li>
-          </ul>
-        </section>
-        <section className={`${styles.paymentInfoSection} ${styles.payoneerNotice}`}>
-          <h2>Binance Pay <span>IMPORTANT!</span> <b>USD TRACKING</b></h2>
-          <p>Your manager handles any USDT transfer outside the app; the payment record remains in USD. Saving a payout destination does not initiate a transfer.</p>
-        </section>
         {notice ? <p className={styles.pageNotice} role="status">{notice}</p> : null}
         {error ? <p className={styles.paymentError} role="alert">{error}</p> : null}
       </section>
 
       <section className={`${styles.panel} ${styles.dataPage} ${styles.paymentSettings}`}>
-        <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT SETTINGS</h2>
+        <div className={`${styles.dataPageHeading} ${styles.paymentSettingsHeading}`}>
+          <h2 className={styles.sectionTitle}><i className="fa fa-credit-card" aria-hidden="true" />PAYMENT SETTINGS</h2>
+          {payable ? (
+            <span className={`${styles.paymentReadiness} ${styles.paymentReadinessPayable}`} aria-label="Payment status: payable">
+              Payable
+            </span>
+          ) : null}
+        </div>
         <form className={`${styles.dataForm} ${styles.paymentPayoutForm}`} onSubmit={savePayoutDetails}>
           <label className={styles.dataField} htmlFor="binance-pay-account">
             Binance Pay ID or Binance account email
@@ -415,7 +415,6 @@ export default function PaymentDashboard() {
               required
             />
           </label>
-          <p className={styles.pageHint}>Managers can view this payout destination. All payment amounts remain calculated in USD.</p>
           <button type="submit" className={styles.pagePrimaryButton} disabled={busyAction === 'save' || !accountDraft.trim()}>
             {busyAction === 'save' ? 'Saving…' : 'Save payout details'}
           </button>

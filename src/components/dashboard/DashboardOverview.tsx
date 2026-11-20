@@ -3009,16 +3009,6 @@ export default function DashboardOverview() {
         {error && <div role="alert" className={styles.error}>{error}</div>}
 
         {isDashboard ? <div className={styles.notices}>
-          <section className={`${styles.notice} ${styles.noticeInfo}`}>
-            <strong>2-step verification has been enabled in Tipalti</strong>
-            <p>The next time you access the Payments page, you will be prompted to add a phone number, which will be used for 2-step verification whenever you update your payment details. To save any changes to your payment settings, you will need to enter and confirm the verification code sent to that phone number. Please make sure you provide a phone number you will always have access to, as it will be required for all future changes to your payment information.</p>
-          </section>
-          <section className={`${styles.notice} ${styles.noticeSuccess}`}>
-            <div className={styles.payoneer}><span />Payoneer</div>
-            <p><strong>We have some good news!</strong> We are happy to announce that <strong>Payoneer is now officially back</strong> as a supported payment method. Furthermore, payments will have 0$ fee and are now instantly arriving into your Payoneer account.</p>
-            <p>Here are the steps to follow in order to configure Tipalti with your Payoneer details: <a href="https://afficix.com">Click here for Payoneer instructions</a></p>
-            <p>After you fill in your ACH details, you will be asked to introduce your Payoneer email address. This step is mandatory as we need your Payoneer email to process the payment. Contact us if you need more help with the setup process.</p>
-          </section>
           {approvedOfferNotices.map((notice) => (
             <section key={notice.id} className={`${styles.notice} ${styles.noticeApproved}`}>
               <div className={styles.noticeApprovedHead}>
