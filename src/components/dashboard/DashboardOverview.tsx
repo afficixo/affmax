@@ -986,6 +986,7 @@ export default function DashboardOverview() {
   const [openGroups, setOpenGroups] = useState<string[]>([])
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [desktopSidebarHidden, setDesktopSidebarHiddenState] = useState(getInitialDesktopSidebarHidden)
+  const [menuRotated, setMenuRotated] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [search, setSearch] = useState('')
   const [newsOpen, setNewsOpen] = useState(false)
@@ -1594,6 +1595,20 @@ export default function DashboardOverview() {
     mobileViewport.addEventListener('change', updateViewport)
     return () => mobileViewport.removeEventListener('change', updateViewport)
   }, [])
+
+  useEffect(() => {
+    if (!mobileNavOpen) return
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileNavOpen(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [mobileNavOpen])
 
   useEffect(() => {
     if (!campaignNoticeOpen && !campaignPreviewOpen) return
@@ -2880,11 +2895,18 @@ export default function DashboardOverview() {
         <button
           type="button"
           className={styles.menuToggle}
-          onClick={toggleSidebar}
+          onClick={() => {
+            setMenuRotated((rotated) => !rotated)
+            toggleSidebar()
+          }}
           aria-label="Toggle navigation"
           aria-expanded={isMobileViewport ? mobileNavOpen : !desktopSidebarHidden}
         >
-          <i className="fa fa-bars" aria-hidden="true" />
+          <i
+            className="fa fa-bars"
+            aria-hidden="true"
+            style={{ transform: `rotate(${menuRotated ? 180 : 0}deg)` }}
+          />
         </button>
         <form className={styles.searchForm} onSubmit={(event) => {
           event.preventDefault()

@@ -72,11 +72,7 @@
   display: inline-block;
   font-size: 22px;
   line-height: 1;
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.menuToggle[aria-expanded='false'] i {
-  transform: rotate(90deg) scale(0.92);
+  transition: transform 500ms ease;
 }
 
 .menuToggle:focus-visible {
@@ -8013,17 +8009,24 @@ a.offerAction {
   min-height: 40px;
   max-height: 120px;
   resize: none;
-  border: 1px solid #dfe1e6;
+  border: 1px solid #cbd2da;
   border-radius: 12px;
   padding: 10px 12px;
   color: #172b4d;
   font: inherit;
   line-height: 1.35;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.supportMessengerComposer textarea:hover {
+  border-color: #adb7c2;
 }
 
 .supportMessengerComposer textarea:focus {
-  outline: 2px solid rgba(46, 107, 255, 0.22);
-  border-color: var(--support-action);
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
+  outline: none;
 }
 
 .supportMessengerSend {
@@ -8156,7 +8159,252 @@ a.offerAction {
 
 @media (max-width: 760px) {
   .app {
-    --sidebar-width: 220px;
+    --sidebar-width: 100vw;
+  }
+
+  .main {
+    padding: 68px 10px 24px;
+  }
+
+  .accountMetaPanel {
+    min-height: 0;
+    margin-bottom: 8px;
+    padding: 12px 8px;
+  }
+
+  .accountMeta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 6px;
+  }
+
+  .accountMeta > div {
+    align-items: center;
+    text-align: center;
+  }
+
+  .accountMeta strong {
+    font-size: 11px;
+  }
+
+  .accountMeta span {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .accountDetailsPanel,
+  .passwordPanel {
+    padding: 14px 12px 16px;
+  }
+
+  .accountSectionTitle {
+    min-height: 24px;
+    margin-bottom: 10px !important;
+  }
+
+  .accountColumns {
+    gap: 14px;
+  }
+
+  .accountColumn {
+    gap: 10px;
+  }
+
+  .settingsFields,
+  .passwordPanel .settingsFields {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .accountDetailsPanel .dataField,
+  .passwordPanel .dataField {
+    gap: 4px;
+    font-size: 13px;
+  }
+
+  .accountDetailsPanel .dataField input,
+  .accountDetailsPanel .dataField input[type="email"],
+  .accountDetailsPanel .dataField input[type="text"],
+  .passwordPanel .dataField input {
+    height: 44px;
+    border: 1px solid #d8dde2 !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    background: #fff !important;
+  }
+
+  .accountDetailsPanel .accountPermanentField,
+  .accountDetailsPanel .dataField input[readonly],
+  .accountDetailsPanel .dataField input[readonly][type="email"] {
+    background: #f0f1f2 !important;
+  }
+
+  .accountDetailsPanel .dataField input:focus,
+  .passwordPanel .dataField input:focus {
+    border-color: #94a3b8 !important;
+    box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.14);
+  }
+
+  .accountSettingsSection {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+
+  .accountSettingsSection .settingsOptions {
+    gap: 12px;
+  }
+
+  .accountSettingsSection .settingsOptions label {
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .accountSettingsSection .settingsOptions input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+  }
+
+  .accountDetailsPanel .pagePrimaryButton,
+  .passwordPanel .pagePrimaryButton {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .postbackEditPanel,
+  .postbackTokensPanel {
+    margin-bottom: 8px;
+  }
+
+  .postbackEditPanel {
+    padding: 14px 12px 12px;
+  }
+
+  .postbackPanelTitle {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .postbackFormGroup {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .postbackPanelBody > .postbackFormGroup:first-child {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .postbackPanelBody > .postbackFormGroup:first-child .postbackFormControl {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .postbackFormLabel,
+  .postbackFormControl {
+    max-width: none;
+    padding: 0;
+  }
+
+  .postbackFormLabel {
+    font-weight: 600;
+  }
+
+  .postbackUrlInput {
+    height: 44px;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .postbackSwitch {
+    width: 52px;
+    height: 28px;
+    border: 0;
+    background: #cbd2da;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+    transition: background-color 180ms ease;
+  }
+
+  .postbackSwitchOn {
+    background: #668094;
+  }
+
+  .postbackSwitchGroup {
+    width: 100%;
+  }
+
+  .postbackSwitchOnLabel,
+  .postbackSwitchOffLabel {
+    display: none;
+  }
+
+  .postbackSwitchHandle {
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
+    transition: left 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .postbackSwitchOn .postbackSwitchHandle {
+    left: 27px;
+  }
+
+  .postbackSwitchOff .postbackSwitchHandle {
+    left: 3px;
+  }
+
+  .postbackPanelFooter {
+    margin: 14px -12px -12px;
+    padding: 10px 12px;
+  }
+
+  .postbackSaveButton {
+    width: 100%;
+    height: 44px;
+  }
+
+  .postbackTokensPanel {
+    padding: 14px 12px 12px;
+  }
+
+  .postbackTokensPanel .postbackPanelTitle {
+    padding: 0 0 8px;
+  }
+
+  .postbackTokensGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .postbackTokenCol {
+    max-width: none;
+    width: 100%;
+    padding: 0;
+  }
+
+  .postbackTokenTable thead th,
+  .postbackTokenTable tbody th,
+  .postbackTokenTable tbody td {
+    padding: 9px 8px;
+  }
+
+  .postbackTokenColNarrow {
+    width: 38%;
+  }
+
+  .postbackTokenCode {
+    white-space: nowrap;
   }
 
   .topbar {
@@ -8285,9 +8533,11 @@ a.offerAction {
   }
 
   .sidebar {
-    inset: 60px auto 0 0;
+    inset: 60px 0 0;
     z-index: 50;
-    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.16);
+    width: 100vw;
+    max-width: 100%;
+    box-shadow: none;
     transform: translateX(-105%);
   }
 
@@ -8295,14 +8545,151 @@ a.offerAction {
     transform: translateX(0);
   }
 
+  .navigation {
+    width: 100%;
+    margin: 0;
+    padding: 12px 0;
+  }
+
+  .navLink {
+    width: 100%;
+    min-height: 56px;
+    margin: 0;
+    padding: 15px 24px 15px 68px;
+    font-size: 16px;
+    line-height: 26px;
+    font-weight: 500;
+  }
+
+  .navIcon {
+    left: 24px;
+    top: 16px;
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .navCaret {
+    right: 24px;
+    top: 26px;
+    border-top-width: 5px;
+    border-right-width: 5px;
+    border-left-width: 5px;
+  }
+
+  .submenu {
+    width: 100%;
+    margin: 0;
+  }
+
+  .submenuInner {
+    padding-left: 68px;
+  }
+
+  .submenu a {
+    min-height: 46px;
+    padding: 11px 24px 11px 0;
+    font-size: 15px;
+    line-height: 24px;
+  }
+
+  .managerCard {
+    height: 176px;
+    flex-basis: 176px;
+  }
+
+  .managerCard h2 {
+    font-size: 24px;
+  }
+
+  .managerCard p,
+  .managerCard a {
+    font-size: 15px;
+    line-height: 24px;
+  }
+
+  .sidebarFooter {
+    height: 70px;
+    flex-basis: 70px;
+    font-size: 13px;
+    line-height: 24px;
+  }
+
   .backdrop {
-    position: fixed;
-    inset: 60px 0 0;
-    z-index: 45;
-    display: block;
-    border: 0;
-    background: rgba(14, 20, 24, 0.42);
-    animation: dashboardBackdropIn 140ms ease-out both;
+    display: none;
+  }
+
+  .supportMessenger {
+    right: 12px;
+    bottom: 76px;
+    width: calc(100vw - 24px);
+    max-width: none;
+    height: min(360px, calc(100dvh - 96px));
+    max-height: calc(100dvh - 96px);
+    border-radius: 16px;
+  }
+
+  .supportMessengerHomeTop,
+  .supportMessenger:not(.supportMessengerManager) .supportMessengerHomeTop {
+    padding: 12px 16px 14px;
+    background: #2d343b;
+  }
+
+  .supportMessengerHomeBar,
+  .supportMessenger:not(.supportMessengerManager) .supportMessengerHomeBar {
+    margin-bottom: 10px;
+  }
+
+  .supportMessengerLogo {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .supportMessengerClose {
+    width: 34px;
+    height: 34px;
+  }
+
+  .supportMessengerGreeting,
+  .supportMessenger:not(.supportMessengerManager) .supportMessengerGreeting {
+    margin: 0 0 10px;
+  }
+
+  .supportMessengerGreeting p,
+  .supportMessenger:not(.supportMessengerManager) .supportMessengerGreeting p {
+    margin-bottom: 1px;
+    font-size: 18px;
+  }
+
+  .supportMessengerGreeting h2,
+  .supportMessenger:not(.supportMessengerManager) .supportMessengerGreeting h2 {
+    font-size: 22px;
+  }
+
+  .supportMessengerActionCard,
+  .supportMessenger:not(.supportMessengerManager) .supportMessengerActionCard {
+    min-height: 60px;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .supportMessengerActionCard strong {
+    font-size: 14px;
+  }
+
+  .supportMessengerActionCard > span:first-child > span {
+    font-size: 12px;
+  }
+
+  .supportMessengerTabs {
+    height: 58px;
+  }
+
+  .chatButton {
+    right: 12px;
+    bottom: 12px;
   }
 
   .main {
