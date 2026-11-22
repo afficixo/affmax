@@ -6918,7 +6918,20 @@ a.offerAction {
   box-shadow: rgba(9, 14, 21, 0.16) 0 5px 40px 0;
   color: var(--support-ink);
   font-family: Roboto, "Segoe UI", Helvetica, Arial, sans-serif;
-  animation: supportMessengerIn 180ms ease-out;
+  transform: scale(0.75);
+  transform-origin: bottom right;
+  animation: supportMessengerManagerIn 180ms ease-out;
+}
+
+@keyframes supportMessengerManagerIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.739);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(0.75);
+  }
 }
 
 @keyframes supportMessengerIn {
