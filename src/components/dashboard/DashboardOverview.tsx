@@ -1130,7 +1130,12 @@ export default function DashboardOverview() {
           <Image src="/affmine/logo.png" alt="affmine" width={150} height={38} priority />
         </Link>
         <button type="button" className={styles.menuToggle} onClick={() => setMobileNavOpen((open) => !open)} aria-label={mobileNavOpen ? 'Close navigation' : 'Toggle navigation'}>
-          {mobileNavOpen ? <X size={20} /> : <Menu size={21} />}
+          <span
+            className={styles.menuToggleIcon}
+            style={{ transform: `rotate(${mobileNavOpen ? 180 : 0}deg)` }}
+          >
+            <Menu size={21} />
+          </span>
         </button>
         <form className={styles.searchForm} onSubmit={(event) => {
           event.preventDefault()
