@@ -68,7 +68,7 @@ export default function HomePage() {
     <PublicLayout>
       <main>
         {/* HERO */}
-        <section id="home" aria-labelledby="home-heading" className="relative overflow-hidden bg-[#0f172a] pt-32 pb-24 md:pt-44 md:pb-32">
+        <section id="home" aria-labelledby="home-heading" className="relative overflow-hidden bg-[#0f172a] pt-24 pb-20 sm:pt-32 sm:pb-24 md:pt-44 md:pb-36">
           <Image
             src="/header_image.webp"
             alt=""
@@ -76,28 +76,28 @@ export default function HomePage() {
             fetchPriority="high"
             sizes="100vw"
             className="home-hero-background pointer-events-none object-cover"
-            style={{ objectPosition: "center 44%" }}
+            style={{ objectPosition: "72% 44%" }}
           />
           <div className="home-hero-overlay pointer-events-none absolute inset-0" aria-hidden="true" />
 
           <div className="home-hero-content relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-left">
             <motion.h1
               id="home-heading"
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 32 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="font-[Montserrat] text-4xl sm:text-5xl md:text-7xl font-black leading-[1.05] tracking-tight text-white mb-6"
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="font-[Montserrat] mb-6 max-w-[12ch] text-3xl font-black leading-[1.1] tracking-tight text-white sm:mb-7 sm:max-w-none sm:text-5xl md:text-6xl lg:text-7xl"
             >
               Join the <span className="text-[#5ff442]">leading</span>
-              <br />
+              <br className="hidden sm:block" />
               affiliate network
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="mb-10 max-w-2xl text-base leading-relaxed text-white/75 md:text-lg"
+              transition={{ duration: 0.7, delay: 0.12 }}
+              className="mb-8 max-w-2xl text-sm leading-relaxed text-white/80 sm:mb-10 sm:text-base md:text-lg lg:text-lg"
             >
               Discover our exclusive private network. Even if you are a publisher or
               advertiser we have solutions for everyone.
@@ -105,22 +105,22 @@ export default function HomePage() {
 
             <div className="home-hero-actions-shell">
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.2 }}
-                className="flex flex-col items-start gap-3 sm:flex-row"
+                transition={{ duration: 0.7, delay: 0.24 }}
+                className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center"
               >
                 <Link
                   href="/signup"
                   prefetch={false}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#5ff442] px-8 py-3.5 text-base font-bold text-[#263238] transition-all hover:bg-[#4dd935] hover:-translate-y-0.5 w-full sm:w-auto"
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#5ff442] px-6 py-3 text-sm font-bold text-[#263238] shadow-lg shadow-[#5ff442]/30 transition-all hover:-translate-y-1 hover:bg-[#4dd935] active:translate-y-0 sm:w-auto"
                 >
                   Sign up
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <a
                   href="#contact"
-                  className="inline-flex items-center justify-center rounded-md border border-white/30 px-8 py-3.5 text-base font-semibold text-white transition-colors hover:bg-white/10 w-full sm:w-auto"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-white/30 bg-white/[0.05] px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/15 active:bg-white/20 sm:w-auto"
                 >
                   Contact us
                 </a>
@@ -130,9 +130,9 @@ export default function HomePage() {
         </section>
 
         {/* FEATURES */}
-        <section id="about" aria-label="About" className="bg-[#e6ebed] py-16 md:py-20">
+        <section id="about" aria-label="About" className="bg-[#eef2f4] py-16 sm:py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-8 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4 lg:gap-6">
               {[
                 {
                   icon: (
@@ -188,13 +188,15 @@ export default function HomePage() {
                   whileInView="visible"
                   viewport={{ once: true, margin: "-40px" }}
                   variants={fadeUp}
-                  className="text-center"
+                  className="flex gap-4 rounded-xl bg-white/70 backdrop-blur-sm p-5 sm:block sm:text-center sm:p-6 hover:bg-white sm:hover:shadow-md transition-all duration-300"
                 >
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-white text-[#263238] shadow-sm">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#5ff442]/20 to-[#5ff442]/10 text-[#0e7a4d] sm:mx-auto sm:mb-4 sm:h-14 sm:w-14">
                     {f.icon}
                   </div>
-                  <h2 className="font-[Montserrat] text-base font-bold text-[#263238] mb-2">{f.title}</h2>
-                  <p className="text-sm leading-relaxed text-[#455964]">{f.body}</p>
+                  <div className="min-w-0">
+                    <h2 className="font-[Montserrat] mb-2 text-[15px] font-bold text-[#263238] sm:mb-2.5 sm:text-base">{f.title}</h2>
+                    <p className="text-sm leading-relaxed text-[#455964]">{f.body}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -202,9 +204,9 @@ export default function HomePage() {
         </section>
 
         {/* PUBLISHERS */}
-        <section id="publishers" aria-labelledby="publishers-heading" className="bg-white py-20 md:py-24">
+        <section id="publishers" aria-labelledby="publishers-heading" className="bg-white py-16 sm:py-20 md:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-14">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -212,15 +214,15 @@ export default function HomePage() {
                 transition={{ duration: 0.6 }}
                 className="order-2 lg:order-1"
               >
-                <h2 id="publishers-heading" className="font-[Montserrat] text-3xl md:text-4xl font-extrabold text-[#263238] mb-4">
+                <h2 id="publishers-heading" className="font-[Montserrat] mb-3 text-2xl font-extrabold text-[#263238] sm:mb-4 sm:text-3xl md:text-4xl">
                   Publishers
                 </h2>
-                <div className="h-[3px] w-8 rounded-sm bg-[#5ff442] mb-5" />
-                <p className="text-base md:text-[17px] leading-relaxed text-[#455964] mb-4">
+                <div className="mb-5 h-[3px] w-8 rounded-sm bg-[#5ff442]" />
+                <p className="mb-4 text-[15px] leading-relaxed text-[#455964] sm:text-base md:text-[17px]">
                   Having a large experience with Publishers, we provide top-notch
                   technology and the ability to profit the most from your traffic.
                 </p>
-                <p className="text-base leading-relaxed text-[#455964] mb-8">
+                <p className="mb-8 text-[15px] leading-relaxed text-[#455964] sm:text-base">
                   We help you find the right target for any type of traffic, providing
                   you tens of verticals and thousands of different campaigns. Our
                   experienced managers will solve any difficulty you might encounter
@@ -230,7 +232,7 @@ export default function HomePage() {
                 <Link
                   href="/signup"
                   prefetch={false}
-                  className="inline-flex items-center gap-2 rounded-md bg-[#263238] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#1a2429] hover:-translate-y-0.5"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#263238] px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#1a2429]"
                 >
                   Sign up
                   <ArrowRight className="h-4 w-4" />
@@ -251,22 +253,22 @@ export default function HomePage() {
         </section>
 
         {/* WHY BECOME A PUBLISHER */}
-        <section id="services" aria-labelledby="services-heading" className="bg-[#e6ebed] py-20 md:py-24">
+        <section id="services" aria-labelledby="services-heading" className="bg-gradient-to-b from-[#eef2f4] to-white py-16 sm:py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-center mb-12"
+              className="mb-12 text-center sm:mb-14"
             >
-              <h2 id="services-heading" className="font-[Montserrat] text-2xl md:text-[28px] font-extrabold text-[#263238]">
+              <h2 id="services-heading" className="font-[Montserrat] text-2xl font-extrabold text-[#263238] sm:text-3xl md:text-[32px]">
                 Why become a Publisher?
               </h2>
-              <div className="mx-auto mt-4 h-[3px] w-8 rounded-sm bg-[#5ff442]" />
+              <div className="mx-auto mt-4 h-1 w-12 rounded-full bg-gradient-to-r from-[#5ff442] to-[#4dd935]" />
             </motion.div>
 
-            <div className="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 { icon: TrendingUp, title: "Competitive payouts", body: "We are always looking and adjust the payouts to be over the rest of the industry." },
                 { icon: Target, title: "Private programs", body: "Besides the mainstream campaigns and programs, we offer you private affiliate programs." },
@@ -282,14 +284,15 @@ export default function HomePage() {
                   whileInView="visible"
                   viewport={{ once: true, margin: "-40px" }}
                   variants={fadeUp}
+                  className="group rounded-xl border border-[#e6ebed]/60 bg-white p-6 hover:border-[#5ff442]/40 hover:shadow-lg hover:shadow-[#5ff442]/10 transition-all duration-300"
                 >
-                  <div className="mb-2 flex items-center gap-2">
-                    <item.icon className="h-5 w-5 shrink-0 text-[#0e7a4d]" aria-hidden="true" />
-                    <h3 className="font-[Montserrat] text-base font-bold text-[#263238]">
-                      {item.title}
-                    </h3>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#5ff442]/20 to-[#5ff442]/10 text-[#0e7a4d] group-hover:from-[#5ff442]/30 group-hover:to-[#5ff442]/15 transition-colors">
+                    <item.icon className="h-5 w-5" aria-hidden="true" />
                   </div>
-                  <p className="text-sm leading-relaxed text-[#455964] pl-7">{item.body}</p>
+                  <h3 className="font-[Montserrat] mb-2 text-base font-bold text-[#263238]">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-[#455964]">{item.body}</p>
                 </motion.div>
               ))}
             </div>
@@ -297,9 +300,9 @@ export default function HomePage() {
         </section>
 
         {/* ADVERTISERS */}
-        <section id="advertisers" aria-labelledby="advertisers-heading" className="bg-white py-20 md:py-24">
+        <section id="advertisers" aria-labelledby="advertisers-heading" className="bg-white py-16 sm:py-20 md:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-14">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -315,24 +318,24 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <h2 id="advertisers-heading" className="font-[Montserrat] text-3xl md:text-4xl font-extrabold text-[#263238] mb-4">
+                <h2 id="advertisers-heading" className="font-[Montserrat] mb-3 text-2xl font-extrabold text-[#263238] sm:mb-4 sm:text-3xl md:text-4xl">
                   Advertisers
                 </h2>
-                <div className="h-[3px] w-8 rounded-sm bg-[#5ff442] mb-5" />
-                <p className="text-base md:text-[17px] leading-relaxed text-[#455964] mb-4">
+                <div className="mb-5 h-[3px] w-8 rounded-sm bg-[#5ff442]" />
+                <p className="mb-4 text-[15px] leading-relaxed text-[#455964] sm:text-base md:text-[17px]">
                   Always looking for perfection, we have a portfolio of only
                   top-performing campaigns from major verticals. Because of platform
                   flexibility and our large Publisher number, we are able to drive
                   traffic in no time and customize any new format.
                 </p>
-                <p className="text-base leading-relaxed text-[#455964] mb-8">
+                <p className="mb-8 text-[15px] leading-relaxed text-[#455964] sm:text-base">
                   We are open to new affiliate programs and campaigns, if you are
                   interested please get in touch with us and we will find the best
                   solution for your needs.
                 </p>
                 <a
                   href="#contact"
-                  className="inline-flex items-center gap-2 rounded-md bg-[#263238] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#1a2429] hover:-translate-y-0.5"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#263238] px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#1a2429]"
                 >
                   Contact us
                   <ArrowRight className="h-4 w-4" />
@@ -343,43 +346,43 @@ export default function HomePage() {
         </section>
 
         {/* CONTACT */}
-        <section id="contact" aria-labelledby="contact-heading" className="bg-[#f8fafb] border-t border-[#263238]/8 py-20 md:py-24">
+        <section id="contact" aria-labelledby="contact-heading" className="border-t border-[#263238]/8 bg-gradient-to-b from-[#f8fafb] to-[#ffffff] py-16 sm:py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-12">
+            <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-14">
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
                 className="md:col-span-4"
               >
-                <h2 id="contact-heading" className="font-[Montserrat] text-2xl md:text-3xl font-extrabold text-[#263238] mb-3">
-                  Get In Touch With Us
+                <h2 id="contact-heading" className="font-[Montserrat] mb-3 text-2xl font-extrabold text-[#263238] sm:text-3xl md:text-[28px]">
+                  Get In Touch<br />With Us
                 </h2>
-                <div className="h-[3px] w-8 rounded-sm bg-[#5ff442] mb-5" />
-                <p className="text-[15px] leading-relaxed text-[#455964] mb-6">
+                <div className="mb-6 h-1 w-12 rounded-full bg-gradient-to-r from-[#5ff442] to-[#4dd935]" />
+                <p className="mb-8 text-sm leading-relaxed text-[#455964]">
                   Feel free to contact us regarding any concerns and our team will
                   answer in a short time. We strive to provide the best support in
                   the industry.
                 </p>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div className="flex items-start gap-3">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white border border-[#e6ebed] text-[#263238]">
-                      <MapPin className="h-4 w-4" aria-hidden="true" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#5ff442]/20 to-[#5ff442]/10 text-[#0e7a4d]">
+                      <MapPin className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#6b7c87] mb-0.5">Address</p>
-                      <p className="text-sm text-[#455964]">16192 Coastal Highway<br />Lewes, DE 19958</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#6b7c87] mb-1">Address</p>
+                      <p className="text-sm text-[#455964] leading-relaxed">16192 Coastal Highway<br />Lewes, DE 19958</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white border border-[#e6ebed] text-[#263238]">
-                      <Mail className="h-4 w-4" aria-hidden="true" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#5ff442]/20 to-[#5ff442]/10 text-[#0e7a4d]">
+                      <Mail className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#6b7c87] mb-0.5">Email</p>
-                      <a href="mailto:contact@afficix.com" className="text-sm text-[#0e7a4d] hover:underline">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#6b7c87] mb-1">Email</p>
+                      <a href="mailto:contact@afficix.com" className="text-sm font-medium text-[#0e7a4d] hover:text-[#359f25] transition-colors">
                         contact@afficix.com
                       </a>
                     </div>
@@ -388,56 +391,56 @@ export default function HomePage() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="md:col-span-8"
               >
                 {status === "success" && (
-                  <div className="mb-5 flex items-start gap-3 rounded-md border border-[#5ff442]/40 bg-[#5ff442]/10 p-4 text-sm text-[#0e7a4d]">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Thank you! Your message has been received and our team will reply shortly.</span>
+                  <div className="mb-6 flex items-start gap-3 rounded-xl border border-[#5ff442]/30 bg-gradient-to-r from-[#5ff442]/10 to-[#5ff442]/5 p-4 text-sm text-[#0e7a4d]">
+                    <Check className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span className="font-medium">Thank you! Your message has been received and our team will reply shortly.</span>
                   </div>
                 )}
                 {submitError && (
-                  <div role="alert" className="mb-5 rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-                    {submitError}
+                  <div role="alert" className="mb-6 flex items-start gap-3 rounded-xl border border-red-300 bg-gradient-to-r from-red-50 to-red-50/50 p-4 text-sm text-red-700">
+                    <span className="font-medium">{submitError}</span>
                   </div>
                 )}
 
                 <form onSubmit={handleSubmit} noValidate>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
                     <FormField label="First Name" id="firstName" value={form.firstName} onChange={update("firstName")} error={errors.firstName} placeholder="Jane" autoComplete="given-name" />
                     <FormField label="Last Name" id="lastName" value={form.lastName} onChange={update("lastName")} error={errors.lastName} placeholder="Doe" autoComplete="family-name" />
                   </div>
 
                   <FormField label="E-mail" id="email" type="email" value={form.email} onChange={update("email")} error={errors.email} placeholder="jane@company.com" autoComplete="email" />
 
-                  <div className="mb-4">
-                    <label htmlFor="message" className="mb-1.5 block text-sm font-semibold text-[#263238]">
+                  <div className="mb-6">
+                    <label htmlFor="message" className="mb-2 block text-sm font-semibold text-[#263238]">
                       Message <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       id="message"
                       name="message"
-                      rows={5}
+                      rows={4}
                       value={form.message}
                       onChange={update("message")}
                       placeholder="How can we help you?"
-                      className={`w-full resize-y rounded-md border bg-white px-4 py-3 text-sm text-[#263238] placeholder:text-[#9aa7b1] focus:outline-none focus:ring-2 transition-colors ${
+                      className={`w-full resize-none rounded-lg border bg-white px-4 py-3 text-sm text-[#263238] placeholder:text-[#9aa7b1] transition-all focus:outline-none focus:ring-2 ${
                         errors.message
                           ? "border-red-400 focus:ring-red-200"
                           : "border-[#d8e1e6] focus:border-[#5ff442] focus:ring-[#5ff442]/20"
                       }`}
                     />
-                    {errors.message && <p className="mt-1 text-xs text-red-500">{errors.message}</p>}
+                    {errors.message && <p className="mt-1.5 text-xs text-red-500">{errors.message}</p>}
                   </div>
 
                   <button
                     type="submit"
                     disabled={status === "sending"}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#5ff442] px-6 py-3.5 text-sm font-bold text-[#263238] transition-colors hover:bg-[#4dd935] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#5ff442] px-6 py-3 text-sm font-bold text-[#263238] shadow-lg shadow-[#5ff442]/20 transition-all hover:-translate-y-0.5 hover:bg-[#4dd935] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                   >
                     {status === "sending" ? "Sending…" : "Submit"}
                   </button>
@@ -476,7 +479,7 @@ function FormField({
         onChange={onChange}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className={`w-full rounded-md border bg-white px-4 py-3 text-sm text-[#263238] placeholder:text-[#9aa7b1] focus:outline-none focus:ring-2 transition-colors ${
+        className={`min-h-11 w-full rounded-lg border bg-white px-4 py-3 text-sm text-[#263238] placeholder:text-[#9aa7b1] transition-colors focus:outline-none focus:ring-2 ${
           error
             ? "border-red-400 focus:ring-red-200"
             : "border-[#d8e1e6] focus:border-[#5ff442] focus:ring-[#5ff442]/20"
@@ -489,7 +492,7 @@ function FormField({
 
 function PublisherIllustration() {
   return (
-    <div className="relative mx-auto aspect-video w-full max-w-[460px] overflow-hidden rounded-lg border border-[#e6ebed] bg-[#e6ebed] shadow-lg">
+    <div className="relative mx-auto aspect-[16/10] w-full max-w-[520px] overflow-hidden rounded-xl border border-[#e6ebed] bg-[#eef2f4]">
       <Image
         src="/publishers-image.jpg"
         alt="Affiliate publisher reviewing campaign performance"
@@ -503,7 +506,7 @@ function PublisherIllustration() {
 
 function AdvertiserIllustration() {
   return (
-    <div className="relative aspect-video overflow-hidden rounded-lg border border-[#e6ebed] bg-[#263238] shadow-lg">
+    <div className="relative mx-auto aspect-[16/10] w-full max-w-[520px] overflow-hidden rounded-xl border border-[#e6ebed] bg-[#263238]">
       <Image
         src="/advertisers-image.jpg"
         alt="Advertiser reviewing a campaign on a laptop"

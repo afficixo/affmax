@@ -16,11 +16,26 @@ model User {
   googleEmailVerified Boolean  @default(false)
   googleEmailVerifiedAt DateTime?
   fullName         String?
+  firstName        String?
+  lastName         String?
   address           String?
+  city             String?
+  state            String?
+  zipCode          String?
+  country          String?
+  companyName      String?
+  companyAddress   String?
+  companyCity      String?
+  companyState     String?
+  companyZipCode   String?
+  companyCountry   String?
   source           String?
   contractNumber   String?
   telegramUsername String?
   bkashNumber      String?
+  publisherNumber  Int?        @unique
+  leadNotifications Boolean    @default(true)
+  campaignEmailUpdates Boolean @default(true)
   clickRate        Float?      @default(0)
   commissionRate   Float?      @default(20)
   referralCommissionRate Float  @default(5)
@@ -30,6 +45,9 @@ model User {
   paymentPasswordHash String?
   password         String
   botFallbackUrl   String?
+  // Publisher Global S2S postback URL (Developer Tools > Postback)
+  globalPostbackUrl     String  @default("")
+  globalPostbackEnabled Boolean @default(true)
   role             UserRole    @default(PUBLISHER)
   status           UserStatus  @default(PENDING)
   referralCode     String?     @unique
@@ -44,6 +62,8 @@ model User {
   landingPageTemplates    LandingPageTemplate[] @relation("TemplateCreatedBy")
   landingPages           LandingPage[] @relation("LandingPagesCreatedBy")
   managerPayouts         ManagerPayout[]
+  publisherInvoices      PublisherPaymentInvoice[] @relation("PublisherInvoices")
+  processedInvoices      PublisherPaymentInvoice[] @relation("ProcessedPublisherInvoices")
   referredBy             User?                  @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals              User[]                 @relation("UserReferrals")
   referralCommissionsEarned ReferralCommission[] @relation("ReferralCommissionReferrer")
@@ -53,9 +73,93 @@ model User {
   conversionLeads         ConversionLead[]
   telegramNotification    TelegramNotification?
   ownedSupportConversations SupportConversation[] @relation("SupportConversationManager")
+  publisherSupportConversations SupportConversation[] @relation("SupportConversationPublisher")
   sentSupportMessages      SupportMessage[] @relation("SupportMessageSender")
   
   @@map("users")
+}
+
+model OfferApplication {
+  id                 String                 @id @default(cuid())
+  campaignId         String
+  campaignName       String
+  campaignPayout     Float
+  campaignCountry    String
+  campaignCategory   String?
+  campaignImage      String?
+  publisherId        String
+  publisherUsername  String
+  publisherEmail     String?
+  status             OfferApplicationStatus @default(PENDING)
+  reviewNote         String?
+  reviewedById       String?
+  reviewedByUsername String?
+  noticeDismissed    Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  reviewedAt         DateTime?
+
+  @@unique([publisherId, campaignId])
+  @@index([status, createdAt])
+  @@index([publisherId, status])
+  @@index([publisherId, status, noticeDismissed])
+  @@map("offer_applications")
+}
+
+/// Shared campaign catalog (browse + incentive). Visible to all authenticated roles.
+model CampaignOffer {
+  id               String   @id
+  name             String
+  payout           Float
+  country          String
+  countries        String[] @default([])
+  action           String   @default("Apply")
+  requiresApproval Boolean  @default(true)
+  imageSource      String?
+  offerTypes       String[] @default([])
+  category         String?
+  device           String[] @default([])
+  description      String?
+  offerLink        String?
+  isHot            Boolean  @default(false)
+  status           String   @default("ACTIVE")
+  placement        String   @default("STANDARD")
+  incentiveActive  Boolean  @default(true)
+  createdById      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([placement, status])
+  @@index([status, createdAt])
+  @@map("campaign_offers")
+}
+
+/// Publisher tracking-link clicks (before marketplace conversion postback).
+model OfferClick {
+  id               String   @id @default(cuid())
+  publisherNumber  Int
+  publisherUserId  String?
+  offerId          String
+  sub1             String?
+  sub2             String?
+  ipAddress        String?
+  countryCode      String?
+  userAgent        String?
+  isUnique         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  @@index([publisherUserId, createdAt])
+  @@index([publisherNumber, createdAt])
+  @@index([publisherNumber, offerId, createdAt])
+  @@index([offerId, createdAt])
+  @@index([createdAt])
+  @@map("offer_clicks")
+}
+
+enum OfferApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model CountryClickRate {
@@ -466,6 +570,7 @@ model ReferralCommission {
 enum PostbackProvider {
   AFFMINE
   ADBLUMEDIA
+  MARKETPLACE
 }
 
 model PostbackConfig {
@@ -485,22 +590,67 @@ model PostbackConfig {
   @@map("postback_configs")
 }
 
+/// Inbound marketplace conversion credited to a publisher for one of our offers.
 model ConversionLead {
   id             String         @id @default(cuid())
   userId         String
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   postbackId     String
   postback       PostbackConfig @relation(fields: [postbackId], references: [id], onDelete: Cascade)
+  offerId        String?
+  campaignId     String?
+  campaignName   String?
   payout         Float?
+  country        String?
+  city           String?
+  device         String?
+  os             String?
+  userAgent      String?
+  status         String?
+  externalTxId   String?
+  ipAddress      String?
   sub1           String?
   sub2           String?
   sub3           String?
   sub4           String?
+  occurredAt     DateTime?
+  externalKey    String?        @unique
+  publisherInvoiceId String?
+  publisherInvoice PublisherPaymentInvoice? @relation(fields: [publisherInvoiceId], references: [id], onDelete: SetNull)
   createdAt      DateTime       @default(now())
 
   @@index([userId, createdAt])
   @@index([postbackId, createdAt])
+  @@index([offerId, createdAt])
+  @@index([publisherInvoiceId])
+  @@index([externalTxId])
   @@map("conversion_leads")
+}
+
+model PublisherPaymentInvoice {
+  id              String                 @id @default(cuid())
+  invoiceNumber   String                 @unique
+  publisherId     String
+  publisher       User                   @relation("PublisherInvoices", fields: [publisherId], references: [id], onDelete: Cascade)
+  totalEarning    Float
+  conversionCount Int
+  payoutMethod    String?
+  payoutAccount   String?
+  status          PublisherInvoiceStatus  @default(PENDING)
+  createdAt       DateTime               @default(now())
+  paidAt          DateTime?
+  paidById        String?
+  paidBy          User?                  @relation("ProcessedPublisherInvoices", fields: [paidById], references: [id], onDelete: SetNull)
+  conversions     ConversionLead[]
+
+  @@index([publisherId, createdAt])
+  @@index([status, createdAt])
+  @@map("publisher_payment_invoices")
+}
+
+enum PublisherInvoiceStatus {
+  PENDING
+  PAID
 }
 
 model TelegramNotification {
@@ -518,14 +668,19 @@ model TelegramNotification {
 
 model SupportConversation {
   id          String           @id @default(cuid())
-  managerId   String           @unique
-  manager     User             @relation("SupportConversationManager", fields: [managerId], references: [id], onDelete: Cascade)
+  publisherId String
+  publisher   User             @relation("SupportConversationPublisher", fields: [publisherId], references: [id], onDelete: Cascade)
+  managerId   String?
+  manager     User?            @relation("SupportConversationManager", fields: [managerId], references: [id], onDelete: SetNull)
+  subject     String?
   status      SupportStatus    @default(OPEN)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   messages    SupportMessage[]
 
+  @@index([publisherId, updatedAt])
   @@index([status, updatedAt])
+  @@index([managerId, updatedAt])
   @@map("support_conversations")
 }
 

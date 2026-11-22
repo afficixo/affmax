@@ -3,12 +3,8 @@ import bcrypt from 'bcryptjs'
 import { verifyCredentials, generateToken, JWT_EXPIRY } from '@/lib/auth'
 import { getCorsHeaders } from '@/config/cors'
 import { prisma } from '@/lib/db/prisma'
-import { createUserSafe } from '@/lib/db/user'
-import { MANAGER_USERNAME, MANAGER_PASSWORD } from '@/lib/constants'
+import { getManagerEnvCredentials, isManagerEnvLoginAttempt } from '@/lib/manager-auth'
 import { checkRateLimit, getResetTime } from '@/lib/utils/rate-limiter'
-
-const MANAGER_ENV_USERNAME = MANAGER_USERNAME?.trim() || ''
-const MANAGER_ENV_PASSWORD = MANAGER_PASSWORD?.trim() || ''
 
 /**
  * Get client IP from request headers
@@ -67,19 +63,102 @@ export async function POST(request: Request) {
       )
     }
 
-    // Try normal credential verification but handle DB errors gracefully.
-    // In local development we still want a usable bootstrap session even when the
-    // database-backed user record is missing or Prisma cannot upsert it yet.
-    let user = null
+    const { username: managerUsername, password: managerPassword } = getManagerEnvCredentials()
+    const isManagerEnvLogin = isManagerEnvLoginAttempt(username, password)
+
+    let user: {
+      id: string
+      username: string
+      role: 'MANAGER' | 'PUBLISHER'
+      status: string
+    } | null = null
     let dbError = false
-    try {
-      user = await verifyCredentials(username, password)
-    } catch (err) {
-      console.error('verifyCredentials error for user=', username, err)
-      dbError = true
+
+    if (isManagerEnvLogin && managerUsername && managerPassword) {
+      try {
+        const existing = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { username: { equals: managerUsername, mode: 'insensitive' } },
+              { email: { equals: managerUsername, mode: 'insensitive' } },
+              { email: { equals: `${managerUsername}@example.com`, mode: 'insensitive' } },
+              { username: { equals: username, mode: 'insensitive' } },
+              { email: { equals: username, mode: 'insensitive' } },
+            ],
+          },
+          select: { id: true, username: true, email: true },
+        })
+
+        const hashed = await bcrypt.hash(managerPassword, 10)
+
+        // Use direct Prisma writes so createUserSafe cannot drop `role`.
+        if (!existing) {
+          user = await prisma.user.create({
+            data: {
+              username: managerUsername,
+              email: `${managerUsername}@example.com`,
+              password: hashed,
+              role: 'MANAGER',
+              status: 'ACTIVE',
+              lastLogin: new Date(),
+            },
+            select: {
+              id: true,
+              username: true,
+              role: true,
+              status: true,
+            },
+          })
+        } else {
+          user = await prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              username: managerUsername,
+              password: hashed,
+              role: 'MANAGER',
+              status: 'ACTIVE',
+              lastLogin: new Date(),
+            },
+            select: {
+              id: true,
+              username: true,
+              role: true,
+              status: true,
+            },
+          })
+        }
+
+        // Absolute guarantee for the session payload.
+        user = { ...user, role: 'MANAGER', status: 'ACTIVE' }
+      } catch (err) {
+        console.error('Manager bootstrap/login failed for user=', username, err)
+        dbError = true
+        console.warn('DB unavailable; issuing in-memory token for', managerUsername)
+        user = {
+          id: `local-${managerUsername}`,
+          username: managerUsername,
+          role: 'MANAGER',
+          status: 'ACTIVE',
+        }
+      }
+    } else {
+      try {
+        user = await verifyCredentials(username, password)
+      } catch (err) {
+        console.error('verifyCredentials error for user=', username, err)
+        dbError = true
+      }
     }
 
-    if (user && user.status !== 'ACTIVE') {
+    if (!user) {
+      console.error('Invalid credentials attempt for user=', username, { dbError, isManagerEnvLogin })
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401, headers: getCorsHeaders(origin) }
+      )
+    }
+
+    if (user.status !== 'ACTIVE') {
       const message = user.role === 'PUBLISHER'
         ? user.status === 'PENDING'
           ? 'Your publisher account is currently awaiting manager approval.'
@@ -91,57 +170,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 403, headers: getCorsHeaders(origin) })
     }
 
-    if (!user) {
-      if (MANAGER_ENV_USERNAME && MANAGER_ENV_PASSWORD && username === MANAGER_ENV_USERNAME && password === MANAGER_ENV_PASSWORD) {
-        if (dbError) {
-          console.warn('DB unavailable; issuing in-memory token for', username)
-          user = { id: `local-${MANAGER_ENV_USERNAME}`, username: MANAGER_ENV_USERNAME, role: 'MANAGER' } as any
-        } else {
-          const existingManager = await prisma.user.findUnique({
-            where: { username: MANAGER_ENV_USERNAME },
-          })
-
-          if (!existingManager) {
-            try {
-              const hashed = await bcrypt.hash(MANAGER_ENV_PASSWORD, 10)
-              user = await createUserSafe({
-                username: MANAGER_ENV_USERNAME,
-                email: `${MANAGER_ENV_USERNAME}@example.com`,
-                password: hashed,
-                role: 'MANAGER',
-                status: 'ACTIVE',
-              } as any)
-            } catch (err) {
-              console.error('Error creating manager user for login:', username, err)
-              return NextResponse.json(
-                { error: 'Unable to initialize manager account' },
-                { status: 503, headers: getCorsHeaders(origin) }
-              )
-            }
-          } else {
-            return NextResponse.json(
-              { error: 'Invalid credentials' },
-              { status: 401, headers: getCorsHeaders(origin) }
-            )
-          }
-        }
-      } else {
-        console.error('Invalid credentials attempt for user=', username)
-        return NextResponse.json(
-          { error: 'Invalid credentials' },
-          { status: 401, headers: getCorsHeaders(origin) }
-        )
-      }
-    }
-
     const token = generateToken(user.id)
+    const role = isManagerEnvLogin ? 'MANAGER' : user.role
 
     const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role,
       },
     }, { headers: getCorsHeaders(origin) })
 
