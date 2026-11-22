@@ -8953,6 +8953,225 @@ a.offerAction {
     white-space: normal;
   }
 
+  .browseCampaignsHeading {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .browseCampaignsHeading h2 {
+    min-height: 24px;
+    font-size: 14px;
+  }
+
+  .browseCampaignActions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .statusTabs {
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .statusTab {
+    min-height: 38px;
+    flex: 0 0 auto;
+    border-radius: 7px;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+
+  .campaignTableSearch {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .campaignTableSearch svg {
+    display: block;
+    flex: 0 0 auto;
+  }
+
+  .campaignTable {
+    min-width: 850px;
+  }
+
+  .publisherTable {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    border-collapse: separate;
+  }
+
+  .publisherTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .publisherTable tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .publisherTable tr {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 14px;
+    border: 1px solid #e4e9ed;
+    border-radius: 14px;
+    padding: 12px 16px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(29, 43, 52, 0.05);
+  }
+
+  .publisherTable td {
+    display: grid;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    align-content: start;
+    gap: 3px;
+    border: 0;
+    padding: 9px 0;
+    color: #43515a;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .publisherTable td:nth-child(n) {
+    width: auto;
+  }
+
+  .publisherTable td::before {
+    color: #84919a;
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .publisherTable td:nth-child(1),
+  .publisherTable td:nth-child(2),
+  .publisherTable td:nth-child(3),
+  .publisherTable td:nth-child(4),
+  .publisherTable td:nth-child(8) {
+    grid-column: 1 / -1;
+  }
+
+  .publisherTable td:nth-child(1) {
+    padding-right: 100px;
+  }
+
+  .publisherTable .publisherIdCell {
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 6px;
+    padding: 3px 8px;
+    background: #f0f4f6;
+    color: #40596b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .publisherTable td:nth-child(5),
+  .publisherTable td:nth-child(6) {
+    border-top: 1px solid #edf0f2;
+    padding-top: 10px;
+  }
+
+  .publisherTable td:nth-child(7) {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    padding: 0;
+  }
+
+  .publisherTable td:nth-child(7)::before {
+    content: none;
+  }
+
+  .publisherTable .approvalPublisher {
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .publisherTable .approvalPublisher strong {
+    color: #263b49;
+    font-size: 14px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .publisherTable .approvalPublisher span {
+    color: #65747d;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .publisherTable .publisherSource {
+    max-width: 100%;
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .publisherTable .approvalActions {
+    gap: 8px;
+  }
+
+  .publisherTable td:nth-child(8) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
+    border-top: 1px solid #edf0f2;
+    padding-top: 12px;
+  }
+
+  .publisherTable .approvalActions button {
+    min-height: 40px;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .publisherTable .publisherEmpty {
+    grid-column: 1 / -1;
+    display: block;
+  }
+
+  .approvalTable .approvalPublisher,
+  .approvalTable .approvalPublisher strong,
+  .approvalTable .approvalPublisher span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .approvalTable td:nth-child(4) {
+    padding-right: 14px;
+  }
+
+  .approvalTable td:nth-child(5) {
+    border-left: 1px solid #dfe5e9;
+    padding-left: 14px;
+  }
+
   .campaignTableFooter {
     align-items: flex-start;
     flex-direction: column;

@@ -3829,24 +3829,24 @@ export default function DashboardOverview() {
                         const statusClass = styles[`publisherStatus${publisher.status}` as 'publisherStatusPENDING' | 'publisherStatusACTIVE' | 'publisherStatusDISABLED' | 'publisherStatusREJECTED']
                         return (
                           <tr key={publisher.id}>
-                            <td>
+                            <td data-label="ID">
                               <strong className={styles.publisherIdCell}>
                                 {publisher.publisherNumber != null ? `#${publisher.publisherNumber}` : '—'}
                               </strong>
                             </td>
-                            <td>
+                            <td data-label="Publisher">
                               <div className={styles.approvalPublisher}>
                                 <strong>{publisher.username}</strong>
                                 {publisher.fullName ? <span>{publisher.fullName}</span> : <span className={styles.publisherMetaMuted}>No full name</span>}
                               </div>
                             </td>
-                            <td>
+                            <td data-label="Contact">
                               <div className={styles.approvalPublisher}>
                                 <span>{publisher.email}</span>
                                 {publisher.telegramUsername ? <span>{publisher.telegramUsername}</span> : <span className={styles.publisherMetaMuted}>No Teams/Telegram</span>}
                               </div>
                             </td>
-                            <td>
+                            <td data-label="Details">
                               <div className={styles.approvalPublisher}>
                                 {publisher.contractNumber ? <span>Contract {publisher.contractNumber}</span> : <span className={styles.publisherMetaMuted}>No contract #</span>}
                                 {publisher.address ? <span className={styles.publisherSource}>{publisher.address}</span> : null}
@@ -3854,14 +3854,14 @@ export default function DashboardOverview() {
                                 {publisher.source ? <span className={styles.publisherSource}>{publisher.source}</span> : null}
                               </div>
                             </td>
-                            <td>{Number.isNaN(joinedAt.getTime()) ? '—' : joinedAt.toLocaleDateString()}</td>
-                            <td>{lastLoginAt && !Number.isNaN(lastLoginAt.getTime()) ? lastLoginAt.toLocaleDateString() : 'Never'}</td>
-                            <td>
+                            <td data-label="Joined">{Number.isNaN(joinedAt.getTime()) ? '—' : joinedAt.toLocaleDateString()}</td>
+                            <td data-label="Last login">{lastLoginAt && !Number.isNaN(lastLoginAt.getTime()) ? lastLoginAt.toLocaleDateString() : 'Never'}</td>
+                            <td data-label="Status">
                               <span className={`${styles.approvalStatus} ${statusClass}`}>
                                 {publisher.status}
                               </span>
                             </td>
-                            <td>
+                            <td data-label="Action">
                               <div className={styles.approvalActions}>
                                 {publisher.status !== 'ACTIVE' && (
                                   <button
