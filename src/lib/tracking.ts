@@ -69,6 +69,25 @@ export function sanitizeTrackingToken(value: string | number | null | undefined)
     .slice(0, 100)
 }
 
+export type TrackingIdPrefix = 'P' | 'O'
+
+export function encodeTrackingId(value: string | number, prefix: TrackingIdPrefix): string {
+  const token = sanitizeTrackingToken(value)
+  return /^\d+$/.test(token) ? `${prefix}${BigInt(token).toString(16).toUpperCase()}` : token
+}
+
+export function decodeTrackingId(value: string, prefix: TrackingIdPrefix): string {
+  const token = sanitizeTrackingToken(value)
+  const hexMatch = token.match(new RegExp(`^${prefix}([0-9a-f]+)$`, 'i'))
+    || token.match(/^0x([0-9a-f]+)$/i)
+  return hexMatch ? BigInt(`0x${hexMatch[1]}`).toString(10) : token
+}
+
+export function isHexTrackingId(value: string, prefix: TrackingIdPrefix): boolean {
+  return new RegExp(`^${prefix}[0-9a-f]+$`, 'i').test(value)
+    || /^0x[0-9a-f]+$/i.test(value)
+}
+
 export type PublicTrackingParts = {
   publisherId: string | number
   offerId: string | number
@@ -78,8 +97,8 @@ export type PublicTrackingParts = {
 
 /** Publisher-facing link: https://tracking-domain/{publisher}/{offer}/?s1=&s2= */
 export function buildPublicTrackingUrl(parts: PublicTrackingParts, origin = getTrackingDomainOrigin()): string {
-  const publisherId = sanitizeTrackingToken(parts.publisherId)
-  const offerId = sanitizeTrackingToken(parts.offerId)
+  const publisherId = encodeTrackingId(parts.publisherId, 'P')
+  const offerId = encodeTrackingId(parts.offerId, 'O')
   if (!origin || !publisherId || !offerId) return ''
 
   // No trailing slash — avoids an extra 308 before the track rewrite.
@@ -101,7 +120,7 @@ export type MainOfferParts = {
 
 /**
  * Hidden network link used for postbacks:
- * {main}/?s1={publisher_id}&s2={offer_id}&s3={sub1}&s4={sub2}
+ * {main}/?s1=P{publisher_hex}&s2=O{offer_hex}&s3={sub1}&s4={sub2}
  */
 export function buildMainOfferUrl(parts: MainOfferParts): string {
   const base = (parts.mainOfferBase || DEFAULT_MAIN_OFFER_BASE).trim() || DEFAULT_MAIN_OFFER_BASE
@@ -114,8 +133,8 @@ export function buildMainOfferUrl(parts: MainOfferParts): string {
 
   // Keep path/host from the offer's main link; replace query with postback map.
   url.search = ''
-  url.searchParams.set('s1', sanitizeTrackingToken(parts.publisherId))
-  url.searchParams.set('s2', sanitizeTrackingToken(parts.offerId))
+  url.searchParams.set('s1', encodeTrackingId(parts.publisherId, 'P'))
+  url.searchParams.set('s2', encodeTrackingId(parts.offerId, 'O'))
   const sub1 = parts.subId1?.trim()
   const sub2 = parts.subId2?.trim()
   if (sub1) url.searchParams.set('s3', sub1)

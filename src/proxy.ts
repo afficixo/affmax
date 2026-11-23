@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getCookieValue } from '@/lib/utils/helpers'
-import { getTrackingDomainHost, isSharedTrackingAppHost, isTrackingPath } from '@/lib/tracking'
+import { getTrackingDomainHost, isHexTrackingId, isSharedTrackingAppHost, isTrackingPath } from '@/lib/tracking'
 
 /**
  * Auth gate + publisher tracking rewrites.
@@ -22,10 +22,12 @@ export async function proxy(request: NextRequest) {
     )
     const publisherLooksLikeId = /^[0-9]+$/.test(trackingParts.publisherId)
     const sharedHost = isSharedTrackingAppHost(requestHost)
+    const usesHexIds = isHexTrackingId(trackingParts.publisherId, 'P')
+      && isHexTrackingId(trackingParts.offerId, 'O')
 
-    // Shared app+tracking host (local/dev): only numeric /{publisher}/{offer}/.
+    // Rewrite numeric legacy IDs and prefixed hexadecimal IDs on shared app/tracking hosts.
     // Dedicated tracking host: any non-reserved /{publisher}/{offer}/.
-    const shouldRewrite = publisherLooksLikeId || (onTrackingHost && !sharedHost)
+    const shouldRewrite = publisherLooksLikeId || usesHexIds || (onTrackingHost && !sharedHost)
     if (shouldRewrite) {
       const rewriteUrl = request.nextUrl.clone()
       rewriteUrl.pathname = `/api/track/${encodeURIComponent(trackingParts.publisherId)}/${encodeURIComponent(trackingParts.offerId)}`

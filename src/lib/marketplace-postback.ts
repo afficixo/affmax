@@ -5,6 +5,7 @@ import {
   DEFAULT_MARKETPLACE_POSTBACK_TOKENS,
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
+import { decodeTrackingId } from '@/lib/tracking'
 
 type StoredMarketplacePostbackTokens = {
   s1Token: string
@@ -23,7 +24,8 @@ export function createPostbackToken(): string {
  * #s1# #s2# #s3# #s4# #ip#
  *
  * Our tracking map on offer links:
- *   s1 = publisher id, s2 = offer id, s3 = publisher sub1, s4 = publisher sub2
+ *   s1 = prefixed publisher ID, s2 = prefixed offer ID
+ *   s3 = publisher sub1, s4 = publisher sub2
  */
 export function getMarketplacePostbackTokens(
   config: StoredMarketplacePostbackTokens,
@@ -172,8 +174,7 @@ export type IngestPostbackResult =
 /**
  * Marketplace → our app.
  * Mapping (already used on tracking links):
- *   s1 = publisher id (publisherNumber)
- *   s2 = offer id (CampaignOffer.id)
+ *   s1 = prefixed publisher ID, s2 = prefixed offer ID
  *   s3 = publisher sub id 1
  *   s4 = publisher sub id 2
  */
@@ -188,8 +189,8 @@ export async function ingestMarketplacePostback(
     return { ok: false, status: 404, error: 'Unknown or inactive postback token' }
   }
 
-  const s1 = firstParam(params, ['s1', 'sub1', 'sub_id_1'])
-  const s2 = firstParam(params, ['s2', 'sub2', 'sub_id_2', 'offer_id', 'offerid'])
+  const s1 = decodeTrackingId(firstParam(params, ['s1', 'sub1', 'sub_id_1']), 'P')
+  const s2 = decodeTrackingId(firstParam(params, ['s2', 'sub2', 'sub_id_2', 'offer_id', 'offerid']), 'O')
   const s3 = firstParam(params, ['s3', 'sub3', 'sub_id_3'])
   const s4 = firstParam(params, ['s4', 'sub4', 'sub_id_4'])
   const datetime = firstParam(params, ['datetime', 'time', 'timestamp'])

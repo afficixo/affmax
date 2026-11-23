@@ -4,6 +4,7 @@ import { recordOfferClick } from '@/lib/analytics'
 import {
   DEFAULT_MAIN_OFFER_BASE,
   buildMainOfferUrl,
+  decodeTrackingId,
   sanitizeTrackingToken,
 } from '@/lib/tracking'
 
@@ -13,8 +14,8 @@ type RouteContext = {
 
 export async function GET(request: Request, context: RouteContext) {
   const { publisherId: rawPublisherId, offerId: rawOfferId } = await context.params
-  const publisherId = sanitizeTrackingToken(rawPublisherId)
-  const offerId = sanitizeTrackingToken(rawOfferId)
+  const publisherId = sanitizeTrackingToken(decodeTrackingId(rawPublisherId, 'P'))
+  const offerId = sanitizeTrackingToken(decodeTrackingId(rawOfferId, 'O'))
 
   if (!publisherId || !offerId) {
     return NextResponse.json({ error: 'Invalid tracking link' }, { status: 400 })

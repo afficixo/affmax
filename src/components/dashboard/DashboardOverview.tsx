@@ -13,6 +13,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   CircleUserRound,
+  Copy,
   CodeXml,
   Flame,
   Gauge,
@@ -1122,7 +1123,6 @@ export default function DashboardOverview() {
   const [trackingSubIds, setTrackingSubIds] = useState(['', ''])
   const [generatedTrackingUrl, setGeneratedTrackingUrl] = useState('')
   const [trackingMessage, setTrackingMessage] = useState('')
-  const [campaignNoticeOpen, setCampaignNoticeOpen] = useState(false)
   const [campaignPreviewOpen, setCampaignPreviewOpen] = useState(false)
   const [applyCampaignId, setApplyCampaignId] = useState<string | null>(null)
   const [applyTermsAccepted, setApplyTermsAccepted] = useState(false)
@@ -1602,7 +1602,6 @@ export default function DashboardOverview() {
     setTrackingSubIds(['', ''])
     setGeneratedTrackingUrl('')
     setTrackingMessage('')
-    setCampaignNoticeOpen(false)
     setCampaignPreviewOpen(false)
   }, [pathname])
 
@@ -1651,11 +1650,10 @@ export default function DashboardOverview() {
   }, [mobileNavOpen])
 
   useEffect(() => {
-    if (!campaignNoticeOpen && !campaignPreviewOpen) return
+    if (!campaignPreviewOpen) return
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setCampaignNoticeOpen(false)
         setCampaignPreviewOpen(false)
       }
     }
@@ -1663,7 +1661,7 @@ export default function DashboardOverview() {
     document.addEventListener('keydown', closeOnEscape)
     campaignDialogCloseRef.current?.focus()
     return () => document.removeEventListener('keydown', closeOnEscape)
-  }, [campaignNoticeOpen, campaignPreviewOpen])
+  }, [campaignPreviewOpen])
 
   useEffect(() => {
     setWizardStep(0)
@@ -2369,7 +2367,7 @@ export default function DashboardOverview() {
     .slice(0, 25)
   const detailedCampaign = campaignDetail ? allCampaignOffers.find((campaign) => campaign.id === campaignDetail[1]) : undefined
   const publisherTrackingId = accountProfile.publisherNumber
-  const updateCampaignTrackingLink = () => {
+  const copyCampaignTrackingLink = async () => {
     if (publisherTrackingId == null || !detailedCampaign?.id) {
       setTrackingMessage('Publisher ID is required before generating a tracking link.')
       return
@@ -2385,7 +2383,12 @@ export default function DashboardOverview() {
       return
     }
     setGeneratedTrackingUrl(nextUrl)
-    setTrackingMessage('Tracking URL updated with publisher, offer, and Sub IDs.')
+    try {
+      await navigator.clipboard.writeText(nextUrl)
+      setTrackingMessage('Tracking URL copied.')
+    } catch {
+      setTrackingMessage('Copy failed — select the tracking URL and copy it manually.')
+    }
   }
   const resetCampaignTrackingLink = () => {
     setTrackingSubIds(['', ''])
@@ -4370,7 +4373,7 @@ export default function DashboardOverview() {
                     <span className={styles.detailTitleName}>{detailedCampaign.name}</span>
                     {detailedCampaign.isHot && <span className={styles.campaignHot}>HOT</span>}
                     {!detailedCampaignIncentiveOnly && (detailedCampaign.status === 'PAUSED'
-                      ? <span className={styles.campaignPaused}><Pause size={11} aria-hidden="true" />Paused</span>
+                      ? <span className={styles.campaignPaused}>Paused</span>
                       : <span className={styles.campaignActive}><Check size={11} aria-hidden="true" />Active</span>)}
                   </h2>
                 </div>
@@ -4388,21 +4391,6 @@ export default function DashboardOverview() {
                         </div>
                       </div>
                       <div className={styles.infoRow}><div className={styles.infoLabel}>Converts on</div><div className={styles.infoValue}>{detailedCampaign.category ?? 'E-mail Submit'}</div></div>
-                      <div className={styles.infoRow}>
-                        <div className={styles.infoLabel}>Preview</div>
-                        <div className={styles.infoValue}>
-                          <button type="button" className={styles.previewButton} aria-label="Enlarge offer preview" onClick={() => setCampaignPreviewOpen(true)}>
-                            <Image
-                              className={styles.detailPreviewThumb}
-                              src={toCampaignImageSource(detailedCampaign.id, detailedCampaign.imageSource ?? `/affmine/campaigns/${detailedCampaign.id}.png`)}
-                              alt="Offer preview"
-                              width={160}
-                              height={100}
-                              unoptimized={Boolean(detailedCampaign.imageSource)}
-                            />
-                          </button>
-                        </div>
-                      </div>
                     </div>
                   </div>
                   <div className={styles.payoutColumn}>
@@ -4430,12 +4418,28 @@ export default function DashboardOverview() {
                         </table>
                       </div>
                     </div>
-                    {!detailedCampaignIncentiveOnly && (
-                      <button type="button" className={styles.noticeLink} onClick={() => setCampaignNoticeOpen(true)}>MANDATORY NOTICE FROM ADVERTISER (MUST READ)</button>
-                    )}
+                    <div className={styles.payoutPreviewPanel}>
+                      <div className={styles.panelTitle}><span className={styles.panelTitleIcon}></span>Preview</div>
+                      <div className={styles.payoutPreviewBody}>
+                        <button type="button" className={styles.previewButton} aria-label="Enlarge offer preview" onClick={() => setCampaignPreviewOpen(true)}>
+                          <Image
+                            className={styles.detailPreviewThumb}
+                            src={toCampaignImageSource(detailedCampaign.id, detailedCampaign.imageSource ?? `/affmine/campaigns/${detailedCampaign.id}.png`)}
+                            alt="Offer preview"
+                            width={160}
+                            height={100}
+                            unoptimized={Boolean(detailedCampaign.imageSource)}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {detailedCampaignIncentiveOnly ? (
+                {detailedCampaign.status === 'PAUSED' ? (
+                  <div className={styles.campaignUnavailableNotice} role="status">
+                    This campaign is not available.
+                  </div>
+                ) : detailedCampaignIncentiveOnly ? (
                   <>
                     <h4 className={styles.incentiveDirectLinkNotice}>
                       Direct linking not allowed,{' '}
@@ -4444,7 +4448,6 @@ export default function DashboardOverview() {
                       <Link href="/offerwall/new">offerwall</Link>
                       {' '}to use this offer.
                     </h4>
-                    <button type="button" className={styles.noticeLink} onClick={() => setCampaignNoticeOpen(true)}>MANDATORY NOTICE FROM ADVERTISER (MUST READ)</button>
                   </>
                 ) : (
                   <div className={styles.trackingPanel}>
@@ -4452,7 +4455,6 @@ export default function DashboardOverview() {
                     <div className={styles.trackingContent}>
                       <div className={styles.trackingLeft}>
                         <div className={styles.fieldLabel}>Tracking URL</div>
-                        <div className={styles.trackingBadgeSuccess}>NEW tracking link - increased performance</div>
                         <textarea
                           aria-label="Publisher tracking URL"
                           readOnly
@@ -4461,13 +4463,6 @@ export default function DashboardOverview() {
                             if (generatedTrackingUrl) event.currentTarget.select()
                           }}
                         />
-                        <p>
-                          This is your publisher tracking link on your domain. Clicks are mapped for postback as
-                          {' '}<code>s1=publisher_id</code>, <code>s2=offer_id</code>, <code>s3=sub1</code>, <code>s4=sub2</code> on the main offer URL.
-                          Use Sub ID fields below or append <code>&amp;s1=</code> / <code>&amp;s2=</code> for your own click IDs.
-                          Configure <Link href="/tools/postback">postback</Link> to receive conversions per publisher.
-                        </p>
-                        <p>Shown format: <code>/publisher_id/offer_id/?s1=&amp;s2=</code></p>
                       </div>
                       <div className={styles.trackingRight}>
                         {['Sub ID 1', 'Sub ID 2'].map((label, index) => (
@@ -4478,39 +4473,29 @@ export default function DashboardOverview() {
                         ))}
                         <div className={styles.trackingActions}>
                           <button type="button" className={styles.pageSecondaryButton} onClick={resetCampaignTrackingLink}><RotateCcw size={13} aria-hidden="true" />Reset</button>
-                          <button type="button" className={styles.pagePrimaryButton} onClick={updateCampaignTrackingLink}><Check size={13} aria-hidden="true" />Update</button>
+                          <button type="button" className={styles.pagePrimaryButton} onClick={copyCampaignTrackingLink}><Copy size={13} aria-hidden="true" />Copy URL</button>
                         </div>
                         {trackingMessage && <p className={styles.trackingStatus} role="status">{trackingMessage}</p>}
                       </div>
                     </div>
                   </div>
                 )}
-                {(campaignNoticeOpen || campaignPreviewOpen) && (
+                {campaignPreviewOpen && (
                   <div className={styles.campaignDialogBackdrop} onMouseDown={(event) => {
                     if (event.target === event.currentTarget) {
-                      setCampaignNoticeOpen(false)
                       setCampaignPreviewOpen(false)
                     }
                   }}>
                     <section className={styles.campaignDialog} role="dialog" aria-modal="true" aria-labelledby="campaign-dialog-title">
                       <header className={styles.campaignDialogHeader}>
-                        <h2 id="campaign-dialog-title">{campaignNoticeOpen ? 'MANDATORY NOTICE FROM ADVERTISER (MUST READ)' : 'Offer preview'}</h2>
+                        <h2 id="campaign-dialog-title">Offer preview</h2>
                         <button ref={campaignDialogCloseRef} type="button" className={styles.campaignDialogClose} aria-label="Close dialog" onClick={() => {
-                          setCampaignNoticeOpen(false)
                           setCampaignPreviewOpen(false)
                         }}><X size={18} /></button>
                       </header>
-                      {campaignNoticeOpen ? (
-                        <div className={styles.campaignDialogBody}>
-                          <p><strong>Crack Bounty is required to provide notice that you are prohibited from engaging in acts or practices in violation of the Federal Trade Commission Consent Order while promoting RewardZone USA and related offers. All advertising material must meet the requirements in the Advertising &amp; Marketing Requirements policy, including its pre-approved examples. Violations may result in disciplinary action, including immediate termination and forfeiture of monies owed.</strong></p>
-                          <p><a href="https://crackbounty.afficix.com/notice/FTC-Consent-Order.pdf" target="_blank" rel="noreferrer">Federal Trade Commission Consent Order</a></p>
-                          <p><a href="https://crackbounty.afficix.com/notice/RZ-Advertising-Marketing-Requirements.pdf" target="_blank" rel="noreferrer">Advertising &amp; Marketing Requirements</a></p>
-                        </div>
-                      ) : (
-                        <div className={styles.campaignDialogBody}>
-                          <Image className={styles.campaignPreviewLarge} src={`/affmine/campaigns/${detailedCampaign.id}.png`} alt="Full offer preview" width={700} height={440} />
-                        </div>
-                      )}
+                      <div className={styles.campaignDialogBody}>
+                        <Image className={styles.campaignPreviewLarge} src={`/affmine/campaigns/${detailedCampaign.id}.png`} alt="Full offer preview" width={700} height={440} />
+                      </div>
                     </section>
                   </div>
                 )}
