@@ -3947,7 +3947,7 @@ export default function DashboardOverview() {
                                     disabled={updatingPublisherId === publisher.id}
                                     onClick={() => void updatePublisherStatus(publisher.id, 'DISABLED')}
                                   >
-                                    <Pause size={12} aria-hidden="true" />Disable
+                                    Disable
                                   </button>
                                 )}
                                 {(publisher.status === 'REJECTED' || publisher.status === 'DISABLED') && (
@@ -5976,7 +5976,9 @@ export default function DashboardOverview() {
               <div className={styles.supportMessengerHome}>
                 <div className={`${styles.supportMessengerHomeTop} ${isManagerSupport ? styles.supportMessengerHomeTopManager : ''}`}>
                   <div className={styles.supportMessengerHomeBar}>
-                    <span className={styles.supportMessengerLogo} aria-hidden="true">a</span>
+                  <span className={styles.supportMessengerLogo} aria-hidden="true">
+                    <Image src="/favicon.png" alt="" width={40} height={40} className={styles.supportMessengerLogoImage} />
+                  </span>
                     <button type="button" className={styles.supportMessengerClose} aria-label="Close support" onClick={closeSupportMessenger}>
                       <X size={18} strokeWidth={2.25} />
                     </button>
