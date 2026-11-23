@@ -267,7 +267,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders(origin) })
     }
 
-    let body: { configId?: unknown; isActive?: unknown; url?: unknown }
+    let body: {
+      configId?: unknown
+      isActive?: unknown
+      url?: unknown
+      label?: unknown
+      tokens?: unknown
+    }
     try {
       const parsed = await request.json() as unknown
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -276,7 +282,13 @@ export async function PATCH(request: Request) {
           headers: getCorsHeaders(origin),
         })
       }
-      body = parsed as { configId?: unknown; isActive?: unknown; url?: unknown }
+      body = parsed as {
+        configId?: unknown
+        isActive?: unknown
+        url?: unknown
+        label?: unknown
+        tokens?: unknown
+      }
     } catch {
       return NextResponse.json({ error: 'A valid postback settings object is required.' }, {
         status: 400,
@@ -297,12 +309,6 @@ export async function PATCH(request: Request) {
         })
       }
       if (configId) {
-        if (typeof body.isActive !== 'boolean') {
-          return NextResponse.json({ error: 'A postback status is required.' }, {
-            status: 400,
-            headers: getCorsHeaders(origin),
-          })
-        }
         const target = await prisma.postbackConfig.findFirst({
           where: {
             id: configId,
@@ -313,6 +319,81 @@ export async function PATCH(request: Request) {
         if (!target) {
           return NextResponse.json({ error: 'Marketplace postback URL not found.' }, {
             status: 404,
+            headers: getCorsHeaders(origin),
+          })
+        }
+
+        if (typeof body.label === 'string' || body.tokens !== undefined) {
+          const label = typeof body.label === 'string' ? body.label.trim() : target.label
+          if (!label || label.length > 60 || /[\u0000-\u001f\u007f]/.test(label)) {
+            return NextResponse.json({ error: 'Marketplace name must be between 1 and 60 characters.' }, {
+              status: 400,
+              headers: getCorsHeaders(origin),
+            })
+          }
+
+          if (!isMarketplacePostbackTokens(body.tokens)) {
+            return NextResponse.json({ error: 'Marketplace postback tokens are required.' }, {
+              status: 400,
+              headers: getCorsHeaders(origin),
+            })
+          }
+
+          const tokens: MarketplacePostbackTokens = {
+            s1: body.tokens.s1.trim(),
+            s2: body.tokens.s2.trim(),
+            s3: body.tokens.s3.trim(),
+            s4: body.tokens.s4.trim(),
+            ip: body.tokens.ip.trim(),
+          }
+          if (!tokens.s1 || !tokens.s2) {
+            return NextResponse.json({ error: 'Publisher ID (s1) and offer ID (s2) tokens are required.' }, {
+              status: 400,
+              headers: getCorsHeaders(origin),
+            })
+          }
+          if (marketplaceTokenKeys.some((key) => (
+            tokens[key].length > 128 || /[\u0000-\u0020\u007f&=?]/.test(tokens[key])
+          ))) {
+            return NextResponse.json({
+              error: 'Tokens must be 128 characters or fewer and cannot contain spaces, &, =, or ?.',
+            }, {
+              status: 400,
+              headers: getCorsHeaders(origin),
+            })
+          }
+
+          const updated = await prisma.postbackConfig.update({
+            where: { id: target.id },
+            data: {
+              label,
+              s1Token: tokens.s1,
+              s2Token: tokens.s2,
+              s3Token: tokens.s3,
+              s4Token: tokens.s4,
+              ipToken: tokens.ip,
+            },
+          })
+          const appOrigin = resolveAppOrigin(request)
+          return NextResponse.json({
+            role: 'MANAGER',
+            marketplace: {
+              id: updated.id,
+              label: updated.label,
+              isActive: updated.isActive,
+              tokens: getMarketplacePostbackTokens(updated),
+              inboundUrl: buildMarketplacePostbackUrl(
+                appOrigin,
+                updated.token,
+                getMarketplacePostbackTokens(updated),
+              ),
+            },
+          }, { headers: getCorsHeaders(origin) })
+        }
+
+        if (typeof body.isActive !== 'boolean') {
+          return NextResponse.json({ error: 'A postback status is required.' }, {
+            status: 400,
             headers: getCorsHeaders(origin),
           })
         }
@@ -394,6 +475,64 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to save postback config' },
       { status: 500, headers: getCorsHeaders(origin) },
+    )
+  }
+}
+
+export async function DELETE(request: Request) {
+  const origin = request.headers.get('origin') || null
+  try {
+    const token = getTokenFromCookie(request.headers.get('cookie') || '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders(origin) })
+    }
+    const user = await getUserFromToken(token)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders(origin) })
+    }
+
+    const role = normalizeEffectiveUserRole(user) || user.role
+    if (role !== 'MANAGER') {
+      return NextResponse.json({ error: 'Only managers can remove marketplace postback URLs.' }, {
+        status: 403,
+        headers: getCorsHeaders(origin),
+      })
+    }
+
+    const configId = new URL(request.url).searchParams.get('configId')?.trim()
+    if (!configId) {
+      return NextResponse.json({ error: 'A valid marketplace postback ID is required.' }, {
+        status: 400,
+        headers: getCorsHeaders(origin),
+      })
+    }
+
+    const { prisma } = await import('@/lib/db/prisma')
+    const primaryConfig = await ensureMarketplacePostbackConfig(user.id)
+    const target = await prisma.postbackConfig.findFirst({
+      where: {
+        id: configId,
+        userId: primaryConfig.userId,
+        provider: 'MARKETPLACE',
+      },
+      select: { id: true },
+    })
+    if (!target) {
+      return NextResponse.json({ error: 'Marketplace postback URL not found.' }, {
+        status: 404,
+        headers: getCorsHeaders(origin),
+      })
+    }
+
+    await prisma.postbackConfig.delete({ where: { id: target.id } })
+    return NextResponse.json({ ok: true }, { headers: getCorsHeaders(origin) })
+  } catch (error) {
+    console.error('DELETE /api/postback/config failed:', error)
+    return NextResponse.json(
+      { error: 'Unable to remove marketplace postback URL.' },
+      { status: 500,
+        headers: getCorsHeaders(origin),
+      },
     )
   }
 }

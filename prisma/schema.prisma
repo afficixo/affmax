@@ -599,8 +599,8 @@ model ConversionLead {
   id                 String                   @id @default(cuid())
   userId             String
   user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postbackId         String
-  postback           PostbackConfig           @relation(fields: [postbackId], references: [id], onDelete: Cascade)
+  postbackId         String?
+  postback           PostbackConfig?          @relation(fields: [postbackId], references: [id], onDelete: SetNull)
   offerId            String?
   campaignId         String?
   campaignName       String?

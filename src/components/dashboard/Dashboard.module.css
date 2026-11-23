@@ -2557,6 +2557,33 @@ input.reportRangeInput {
   cursor: default;
 }
 
+.postbackCollapseButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.postbackCollapseChevron,
+.postbackCollapseChevronOpen {
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+
+.postbackCollapseChevronOpen {
+  transform: rotate(180deg);
+}
+
+.postbackPanelBodyCollapsed {
+  display: none;
+}
+
 .postbackNotice {
   margin: 8px 0 0;
   border: 1px solid #b7dced;
@@ -2627,6 +2654,113 @@ input.reportRangeInput {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.marketplacePostbackHeaderActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.marketplacePostbackActionMenu {
+  position: relative;
+}
+
+.marketplacePostbackMenuButton {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d5dadd;
+  border-radius: 3px;
+  background: #fff;
+  color: #58666e;
+  cursor: pointer;
+}
+
+.marketplacePostbackMenuButton:hover,
+.marketplacePostbackMenuButton:focus-visible {
+  background: #f3f7f9;
+  color: #2f719e;
+}
+
+.marketplacePostbackMenu {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  min-width: 130px;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid #d5dadd;
+  border-radius: 3px;
+  padding: 4px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+}
+
+.marketplacePostbackMenu button {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 2px;
+  padding: 0 8px;
+  background: transparent;
+  color: #58666e;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.marketplacePostbackMenu button:hover,
+.marketplacePostbackMenu button:focus-visible {
+  background: #f3f7f9;
+  color: #2f719e;
+}
+
+.marketplacePostbackMenu .marketplacePostbackRemoveMenuItem {
+  color: #a94442;
+}
+
+.marketplacePostbackMenu .marketplacePostbackRemoveMenuItem:hover,
+.marketplacePostbackMenu .marketplacePostbackRemoveMenuItem:focus-visible {
+  background: #fcf4f4;
+  color: #a94442;
+}
+
+.marketplacePostbackEditForm {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  border-top: 1px solid #eceeef;
+  padding-top: 10px;
+}
+
+.marketplacePostbackEditForm .marketplaceTokenGrid {
+  margin: 4px 0 0;
+}
+
+.marketplacePostbackEditActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.postbackCancelButton {
+  height: 34px;
+  border: 1px solid #d5dadd;
+  border-radius: 3px;
+  padding: 7px 16px;
+  background: #fff;
+  color: #58666e;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 /* bootstrap-toggle mini (57×25) */

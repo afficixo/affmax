@@ -82,7 +82,6 @@ import {
 import { withoutLegacyCrackBountyDemoOffers } from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import {
-  PUBLISHER_POSTBACK_URL_EXAMPLE,
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
 import ReportDateRangePicker from './ReportDateRangePicker'
@@ -1055,8 +1054,15 @@ export default function DashboardOverview() {
   )
   const [marketplacePostbackCreating, setMarketplacePostbackCreating] = useState(false)
   const [marketplacePostbackUpdatingId, setMarketplacePostbackUpdatingId] = useState<string | null>(null)
+  const [marketplacePostbackMenuId, setMarketplacePostbackMenuId] = useState<string | null>(null)
+  const [editingMarketplacePostbackId, setEditingMarketplacePostbackId] = useState<string | null>(null)
+  const [editingMarketplaceName, setEditingMarketplaceName] = useState('')
+  const [editingMarketplaceTokens, setEditingMarketplaceTokens] = useState<MarketplacePostbackTokens>(
+    EMPTY_MARKETPLACE_POSTBACK_TOKENS,
+  )
   const [marketplacePostbackLoading, setMarketplacePostbackLoading] = useState(false)
   const [marketplacePostbackLoadError, setMarketplacePostbackLoadError] = useState('')
+  const [marketplacePostbackCreateExpanded, setMarketplacePostbackCreateExpanded] = useState(false)
   const [dashboardStats, setDashboardStats] = useState({
     revenue: 0,
     conversions: 0,
@@ -4969,20 +4975,35 @@ export default function DashboardOverview() {
           <>
             <section className={`${styles.panel} ${styles.postbackEditPanel}`}>
               <div className={styles.postbackPanelTitle}>
-                <i className={`fa fa-info ${styles.postbackTitleIcon}`} aria-hidden="true" />
-                {userRole === 'MANAGER' ? 'Marketplace Inbound Postback' : 'Edit Postback'}
+                {userRole === 'MANAGER' ? (
+                  <button
+                    type="button"
+                    className={styles.postbackCollapseButton}
+                    aria-expanded={marketplacePostbackCreateExpanded}
+                    aria-controls="marketplace-postback-create"
+                    onClick={() => setMarketplacePostbackCreateExpanded((current) => !current)}
+                  >
+                    <i className={`fa fa-info ${styles.postbackTitleIcon}`} aria-hidden="true" />
+                    <span>Marketplace Inbound Postback</span>
+                    <ChevronDown
+                      size={14}
+                      className={marketplacePostbackCreateExpanded ? styles.postbackCollapseChevronOpen : styles.postbackCollapseChevron}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ) : (
+                  <>
+                    <i className={`fa fa-info ${styles.postbackTitleIcon}`} aria-hidden="true" />
+                    Edit Postback
+                  </>
+                )}
               </div>
-              <div className={styles.postbackPanelBody}>
+              <div
+                id="marketplace-postback-create"
+                className={`${styles.postbackPanelBody}${userRole === 'MANAGER' && !marketplacePostbackCreateExpanded ? ` ${styles.postbackPanelBodyCollapsed}` : ''}`}
+              >
                 {userRole === 'MANAGER' ? (
                   <>
-                    <p className={styles.postbackManagerNote} role="note">
-                      Enter the exact macro token each marketplace uses. We generate the app endpoint token automatically; the values below fill the same postback fields:
-                      {' '}<code className={styles.postbackTokenCode}>s1=publisher_id</code>,
-                      {' '}<code className={styles.postbackTokenCode}>s2=offer_id</code>,
-                      {' '}<code className={styles.postbackTokenCode}>s3=sub1</code>,
-                      {' '}<code className={styles.postbackTokenCode}>s4=sub2</code>,
-                      {' '}<code className={styles.postbackTokenCode}>ip</code>. Publisher ID and offer ID are required.
-                    </p>
                     <div className={styles.postbackFormGroup}>
                       <label className={styles.postbackFormLabel} htmlFor="marketplace-postback-name">
                         Marketplace name
@@ -4995,7 +5016,6 @@ export default function DashboardOverview() {
                           value={newMarketplaceName}
                           maxLength={60}
                           onChange={(event) => setNewMarketplaceName(event.target.value)}
-                          placeholder="e.g. Affmine"
                         />
                       </div>
                     </div>
@@ -5012,7 +5032,6 @@ export default function DashboardOverview() {
                               value={newMarketplaceTokens[field.key]}
                               maxLength={128}
                               required={field.required}
-                              placeholder={field.example}
                               onChange={(event) => setNewMarketplaceTokens((current) => ({
                                 ...current,
                                 [field.key]: event.target.value,
@@ -5074,13 +5093,13 @@ export default function DashboardOverview() {
                           className={styles.postbackUrlInput}
                           value={postbackUrl}
                           onChange={(event) => setPostbackUrl(event.target.value)}
-                          placeholder={PUBLISHER_POSTBACK_URL_EXAMPLE}
                         />
                       </div>
                     </div>
                   </>
                 ) : null}
               </div>
+              {(userRole !== 'MANAGER' || marketplacePostbackCreateExpanded) ? (
               <div className={styles.postbackPanelFooter}>
                 {userRole === 'MANAGER' ? (
                   <button
@@ -5162,6 +5181,7 @@ export default function DashboardOverview() {
                   </button>
                 )}
               </div>
+              ) : null}
               {userRole === 'MANAGER' ? (
                 <div className={styles.marketplacePostbackList} role="list" aria-label="Marketplace postback URLs">
                   {marketplacePostbackLoading ? (
@@ -5172,61 +5192,122 @@ export default function DashboardOverview() {
                     <article className={styles.marketplacePostbackItem} key={marketplace.id} role="listitem">
                       <div className={styles.marketplacePostbackItemHeader}>
                         <strong className={styles.marketplacePostbackName}>{marketplace.label}</strong>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-label={`${marketplace.isActive ? 'Disable' : 'Enable'} ${marketplace.label} postback`}
-                          aria-checked={marketplace.isActive}
-                          disabled={marketplacePostbackUpdatingId !== null}
-                          className={`${styles.postbackSwitch} ${marketplace.isActive ? styles.postbackSwitchOn : styles.postbackSwitchOff}`}
-                          onClick={async () => {
-                            const next = !marketplace.isActive
-                            setMarketplacePostbackUpdatingId(marketplace.id)
-                            setMarketplacePostbacks((current) => current.map((item) => (
-                              item.id === marketplace.id ? { ...item, isActive: next } : item
-                            )))
-                            try {
-                              const response = await fetch('/api/postback/config', {
-                                method: 'PATCH',
-                                credentials: 'include',
-                                headers: { 'content-type': 'application/json' },
-                                body: JSON.stringify({ configId: marketplace.id, isActive: next }),
-                              })
-                              const payload = await response.json().catch(() => null) as {
-                                error?: string
-                                marketplace?: MarketplacePostbackRecord
-                              } | null
-                              if (!response.ok || !payload?.marketplace) {
+                        <div className={styles.marketplacePostbackHeaderActions}>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-label={`${marketplace.isActive ? 'Disable' : 'Enable'} ${marketplace.label} postback`}
+                            aria-checked={marketplace.isActive}
+                            disabled={marketplacePostbackUpdatingId !== null}
+                            className={`${styles.postbackSwitch} ${marketplace.isActive ? styles.postbackSwitchOn : styles.postbackSwitchOff}`}
+                            onClick={async () => {
+                              const next = !marketplace.isActive
+                              setMarketplacePostbackUpdatingId(marketplace.id)
+                              setMarketplacePostbacks((current) => current.map((item) => (
+                                item.id === marketplace.id ? { ...item, isActive: next } : item
+                              )))
+                              try {
+                                const response = await fetch('/api/postback/config', {
+                                  method: 'PATCH',
+                                  credentials: 'include',
+                                  headers: { 'content-type': 'application/json' },
+                                  body: JSON.stringify({ configId: marketplace.id, isActive: next }),
+                                })
+                                const payload = await response.json().catch(() => null) as {
+                                  error?: string
+                                  marketplace?: MarketplacePostbackRecord
+                                } | null
+                                if (!response.ok || !payload?.marketplace) {
+                                  setMarketplacePostbacks((current) => current.map((item) => (
+                                    item.id === marketplace.id ? { ...item, isActive: marketplace.isActive } : item
+                                  )))
+                                  setPageNotice(payload?.error || 'Unable to update marketplace postback status.')
+                                  return
+                                }
+                                const updatedMarketplace = payload.marketplace
+                                setMarketplacePostbacks((current) => current.map((item) => (
+                                  item.id === marketplace.id ? updatedMarketplace : item
+                                )))
+                                setPageNotice(next
+                                  ? `${marketplace.label} postback enabled.`
+                                  : `${marketplace.label} postback disabled.`)
+                              } catch (error) {
+                                console.error('Unable to update marketplace postback status:', error)
                                 setMarketplacePostbacks((current) => current.map((item) => (
                                   item.id === marketplace.id ? { ...item, isActive: marketplace.isActive } : item
                                 )))
-                                setPageNotice(payload?.error || 'Unable to update marketplace postback status.')
-                                return
+                                setPageNotice('Unable to update marketplace postback status.')
+                              } finally {
+                                setMarketplacePostbackUpdatingId(null)
                               }
-                              const updatedMarketplace = payload.marketplace
-                              setMarketplacePostbacks((current) => current.map((item) => (
-                                item.id === marketplace.id ? updatedMarketplace : item
-                              )))
-                              setPageNotice(next
-                                ? `${marketplace.label} postback enabled.`
-                                : `${marketplace.label} postback disabled.`)
-                            } catch (error) {
-                              console.error('Unable to update marketplace postback status:', error)
-                              setMarketplacePostbacks((current) => current.map((item) => (
-                                item.id === marketplace.id ? { ...item, isActive: marketplace.isActive } : item
-                              )))
-                              setPageNotice('Unable to update marketplace postback status.')
-                            } finally {
-                              setMarketplacePostbackUpdatingId(null)
-                            }
-                          }}
-                        >
-                          <span className={styles.postbackSwitchGroup} aria-hidden="true">
-                            <span className={styles.postbackSwitchOnLabel}>On</span>
-                            <span className={styles.postbackSwitchOffLabel}>Off</span>
-                            <span className={styles.postbackSwitchHandle} />
-                          </span>
-                        </button>
+                            }}
+                          >
+                            <span className={styles.postbackSwitchGroup} aria-hidden="true">
+                              <span className={styles.postbackSwitchOnLabel}>On</span>
+                              <span className={styles.postbackSwitchOffLabel}>Off</span>
+                              <span className={styles.postbackSwitchHandle} />
+                            </span>
+                          </button>
+                          <div className={styles.marketplacePostbackActionMenu}>
+                            <button
+                              type="button"
+                              className={styles.marketplacePostbackMenuButton}
+                              aria-label={`Actions for ${marketplace.label}`}
+                              aria-expanded={marketplacePostbackMenuId === marketplace.id}
+                              onClick={() => setMarketplacePostbackMenuId((current) => (
+                                current === marketplace.id ? null : marketplace.id
+                              ))}
+                            >
+                              <i className="fa fa-ellipsis-v" aria-hidden="true" />
+                            </button>
+                            {marketplacePostbackMenuId === marketplace.id ? (
+                              <div className={styles.marketplacePostbackMenu} role="menu">
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  onClick={() => {
+                                    setEditingMarketplacePostbackId(marketplace.id)
+                                    setEditingMarketplaceName(marketplace.label)
+                                    setEditingMarketplaceTokens({ ...marketplace.tokens })
+                                    setMarketplacePostbackMenuId(null)
+                                  }}
+                                >
+                                  <i className="fa fa-edit" aria-hidden="true" />Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={styles.marketplacePostbackRemoveMenuItem}
+                                  onClick={async () => {
+                                    setMarketplacePostbackMenuId(null)
+                                    if (!window.confirm(`Remove ${marketplace.label} postback URL?`)) return
+                                    setMarketplacePostbackUpdatingId(marketplace.id)
+                                    try {
+                                      const response = await fetch(
+                                        `/api/postback/config?configId=${encodeURIComponent(marketplace.id)}`,
+                                        { method: 'DELETE', credentials: 'include' },
+                                      )
+                                      const payload = await response.json().catch(() => null) as { error?: string } | null
+                                      if (!response.ok) {
+                                        setPageNotice(payload?.error || 'Unable to remove marketplace postback URL.')
+                                        return
+                                      }
+                                      setMarketplacePostbacks((current) => current.filter((item) => item.id !== marketplace.id))
+                                      setPageNotice(`${marketplace.label} postback URL removed.`)
+                                    } catch (error) {
+                                      console.error('Unable to remove marketplace postback URL:', error)
+                                      setPageNotice('Unable to remove marketplace postback URL.')
+                                    } finally {
+                                      setMarketplacePostbackUpdatingId(null)
+                                    }
+                                  }}
+                                >
+                                  <i className="fa fa-trash" aria-hidden="true" />Remove
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
                       <input
                         type="text"
@@ -5236,6 +5317,98 @@ export default function DashboardOverview() {
                         onFocus={(event) => event.currentTarget.select()}
                         aria-label={`${marketplace.label} postback URL`}
                       />
+                      {editingMarketplacePostbackId === marketplace.id ? (
+                        <div className={styles.marketplacePostbackEditForm}>
+                          <label className={styles.postbackFormLabel} htmlFor={`edit-marketplace-name-${marketplace.id}`}>
+                            Marketplace name
+                          </label>
+                          <input
+                            id={`edit-marketplace-name-${marketplace.id}`}
+                            type="text"
+                            className={styles.postbackUrlInput}
+                            value={editingMarketplaceName}
+                            maxLength={60}
+                            onChange={(event) => setEditingMarketplaceName(event.target.value)}
+                          />
+                          <div className={styles.marketplaceTokenGrid}>
+                            {MARKETPLACE_POSTBACK_TOKEN_FIELDS.map((field) => (
+                              <label
+                                className={styles.marketplaceTokenField}
+                                htmlFor={`edit-${marketplace.id}-${field.key}`}
+                                key={field.key}
+                              >
+                                <span>{field.label}{field.required ? ' *' : ''}</span>
+                                <input
+                                  id={`edit-${marketplace.id}-${field.key}`}
+                                  type="text"
+                                  className={`${styles.postbackUrlInput} ${styles.marketplaceTokenInput}`}
+                                  value={editingMarketplaceTokens[field.key]}
+                                  maxLength={128}
+                                  required={field.required}
+                                  onChange={(event) => setEditingMarketplaceTokens((current) => ({
+                                    ...current,
+                                    [field.key]: event.target.value,
+                                  }))}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                          <div className={styles.marketplacePostbackEditActions}>
+                            <button
+                              type="button"
+                              className={styles.postbackSaveButton}
+                              disabled={
+                                marketplacePostbackUpdatingId !== null
+                                || !editingMarketplaceName.trim()
+                                || !editingMarketplaceTokens.s1.trim()
+                                || !editingMarketplaceTokens.s2.trim()
+                              }
+                              onClick={async () => {
+                                setMarketplacePostbackUpdatingId(marketplace.id)
+                                try {
+                                  const response = await fetch('/api/postback/config', {
+                                    method: 'PATCH',
+                                    credentials: 'include',
+                                    headers: { 'content-type': 'application/json' },
+                                    body: JSON.stringify({
+                                      configId: marketplace.id,
+                                      label: editingMarketplaceName.trim(),
+                                      tokens: editingMarketplaceTokens,
+                                    }),
+                                  })
+                                  const payload = await response.json().catch(() => null) as {
+                                    error?: string
+                                    marketplace?: MarketplacePostbackRecord
+                                  } | null
+                                  if (!response.ok || !payload?.marketplace) {
+                                    setPageNotice(payload?.error || 'Unable to edit marketplace postback URL.')
+                                    return
+                                  }
+                                  setMarketplacePostbacks((current) => current.map((item) => (
+                                    item.id === marketplace.id ? payload.marketplace! : item
+                                  )))
+                                  setEditingMarketplacePostbackId(null)
+                                  setPageNotice(`${payload.marketplace.label} postback URL updated.`)
+                                } catch (error) {
+                                  console.error('Unable to edit marketplace postback URL:', error)
+                                  setPageNotice('Unable to edit marketplace postback URL.')
+                                } finally {
+                                  setMarketplacePostbackUpdatingId(null)
+                                }
+                              }}
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.postbackCancelButton}
+                              onClick={() => setEditingMarketplacePostbackId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
                       <div className={styles.marketplacePostbackActions}>
                         <button
                           type="button"
