@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getCorsHeaders } from '@/config/cors'
 import { getTokenFromCookie, getUserFromToken } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
@@ -177,7 +178,77 @@ export async function PATCH(request: Request) {
   const { user, origin } = auth
   try {
     const body = await request.json()
-    // First name, last name, and email are permanent identity fields — not editable here.
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Invalid profile data' }, { status: 400, headers: getCorsHeaders(origin) })
+    }
+
+    const hasIdentityField = ['firstName', 'lastName', 'email'].some((field) => (
+      Object.prototype.hasOwnProperty.call(body, field)
+    ))
+    const identityData: Prisma.UserUpdateInput = {}
+    if (hasIdentityField && user.role !== 'MANAGER') {
+      return NextResponse.json(
+        { error: 'Only managers can update name and e-mail details' },
+        { status: 403, headers: getCorsHeaders(origin) },
+      )
+    }
+
+    if (hasIdentityField) {
+      const current = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { email: true, firstName: true, lastName: true, fullName: true },
+      })
+      if (!current) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404, headers: getCorsHeaders(origin) })
+      }
+
+      const existingName = splitFullName(current.fullName)
+      const firstNameValue = Object.prototype.hasOwnProperty.call(body, 'firstName')
+        ? body.firstName
+        : current.firstName ?? existingName.firstName
+      const lastNameValue = Object.prototype.hasOwnProperty.call(body, 'lastName')
+        ? body.lastName
+        : current.lastName ?? existingName.lastName
+      if (
+        typeof firstNameValue !== 'string'
+        || firstNameValue.trim().length > 100
+        || typeof lastNameValue !== 'string'
+        || lastNameValue.trim().length > 100
+      ) {
+        return NextResponse.json({ error: 'Names must be 100 characters or fewer' }, { status: 400, headers: getCorsHeaders(origin) })
+      }
+
+      const firstName = firstNameValue.trim()
+      const lastName = lastNameValue.trim()
+      identityData.firstName = firstName || null
+      identityData.lastName = lastName || null
+      identityData.fullName = [firstName, lastName].filter(Boolean).join(' ') || null
+
+      if (Object.prototype.hasOwnProperty.call(body, 'email')) {
+        const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+        if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          return NextResponse.json({ error: 'Enter a valid e-mail address' }, { status: 400, headers: getCorsHeaders(origin) })
+        }
+
+        const duplicate = await prisma.user.findFirst({
+          where: {
+            id: { not: user.id },
+            email: { equals: email, mode: 'insensitive' },
+          },
+          select: { id: true },
+        })
+        if (duplicate) {
+          return NextResponse.json({ error: 'That e-mail address is already in use' }, { status: 409, headers: getCorsHeaders(origin) })
+        }
+
+        identityData.email = email
+        if (email.toLowerCase() !== current.email.toLowerCase()) {
+          identityData.googleEmailVerified = false
+          identityData.googleEmailVerifiedAt = null
+        }
+      }
+    }
+
     const address = cleanText(body?.address, 300)
     const city = cleanText(body?.city, 100)
     const state = cleanText(body?.state, 100)
@@ -195,6 +266,7 @@ export async function PATCH(request: Request) {
     const profile = await prisma.user.update({
       where: { id: user.id },
       data: {
+        ...identityData,
         address,
         city,
         state,
@@ -215,6 +287,9 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ profile: serializeProfile(profile) }, { headers: getCorsHeaders(origin) })
   } catch (error) {
     console.error('Update account profile failed:', error)
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return NextResponse.json({ error: 'That e-mail address is already in use' }, { status: 409, headers: getCorsHeaders(origin) })
+    }
     return NextResponse.json({ error: 'Unable to save profile' }, { status: 503, headers: getCorsHeaders(origin) })
   }
 }

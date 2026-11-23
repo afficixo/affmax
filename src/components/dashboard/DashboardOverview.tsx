@@ -1152,6 +1152,7 @@ export default function DashboardOverview() {
   const [userId, setUserId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<'MANAGER' | 'PUBLISHER' | null>(null)
+  const canEditAccountIdentity = userRole === 'MANAGER'
   const [accountProfile, setAccountProfile] = useState<{
     publisherNumber: number | null
     createdAt: string | null
@@ -2624,6 +2625,11 @@ export default function DashboardOverview() {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...(canEditAccountIdentity ? {
+            firstName: accountDetails.firstName,
+            lastName: accountDetails.lastName,
+            email: accountDetails.email,
+          } : {}),
           address: accountDetails.address,
           city: accountDetails.city,
           state: accountDetails.state,
@@ -2649,6 +2655,7 @@ export default function DashboardOverview() {
         email: data.profile!.email || current.email,
       }))
       setUserName([data.profile.firstName, data.profile.lastName].filter(Boolean).join(' ') || userName)
+      setUserEmail(data.profile.email || null)
       setPageNotice('Account details saved.')
     } catch (saveError) {
       setPageNotice(saveError instanceof Error ? saveError.message : 'Unable to save account details')
@@ -5513,33 +5520,37 @@ export default function DashboardOverview() {
                 <div className={styles.accountColumn}>
                   <label className={styles.dataField}>First name
                     <input
-                      className={styles.accountPermanentField}
+                      className={canEditAccountIdentity ? undefined : styles.accountPermanentField}
                       value={accountDetails.firstName}
                       autoComplete="given-name"
-                      readOnly
-                      aria-readonly="true"
-                      title="First name cannot be changed"
+                      onChange={(event) => setAccountDetails((current) => ({ ...current, firstName: event.target.value }))}
+                      readOnly={!canEditAccountIdentity}
+                      aria-readonly={!canEditAccountIdentity}
+                      title={canEditAccountIdentity ? undefined : 'Only managers can change this field'}
                     />
                   </label>
                   <label className={styles.dataField}>Last name
                     <input
-                      className={styles.accountPermanentField}
+                      className={canEditAccountIdentity ? undefined : styles.accountPermanentField}
                       value={accountDetails.lastName}
                       autoComplete="family-name"
-                      readOnly
-                      aria-readonly="true"
-                      title="Last name cannot be changed"
+                      onChange={(event) => setAccountDetails((current) => ({ ...current, lastName: event.target.value }))}
+                      readOnly={!canEditAccountIdentity}
+                      aria-readonly={!canEditAccountIdentity}
+                      title={canEditAccountIdentity ? undefined : 'Only managers can change this field'}
                     />
                   </label>
                   <label className={styles.dataField}>E-mail
                     <input
-                      className={styles.accountPermanentField}
+                      className={canEditAccountIdentity ? undefined : styles.accountPermanentField}
                       type="email"
+                      required={canEditAccountIdentity}
                       value={accountDetails.email}
                       autoComplete="email"
-                      readOnly
-                      aria-readonly="true"
-                      title="E-mail cannot be changed"
+                      onChange={(event) => setAccountDetails((current) => ({ ...current, email: event.target.value }))}
+                      readOnly={!canEditAccountIdentity}
+                      aria-readonly={!canEditAccountIdentity}
+                      title={canEditAccountIdentity ? undefined : 'Only managers can change this field'}
                     />
                   </label>
                   <div className={styles.settingsFields}>
