@@ -71,5 +71,7 @@ export async function GET(request: Request, context: RouteContext) {
     subId2,
   })
 
-  return NextResponse.redirect(destination, 302)
+  const response = NextResponse.redirect(destination, 302)
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  return response
 }
