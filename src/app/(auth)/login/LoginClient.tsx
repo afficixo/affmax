@@ -88,6 +88,10 @@ export default function LoginClient() {
         body: JSON.stringify({ username, password }),
       });
 
+      if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error(`The sign-in service returned an unexpected response (HTTP ${response.status}). Please try again.`);
+      }
+
       const data = await response.json();
 
       if (!response.ok) {

@@ -117,9 +117,9 @@ export default function PublicLayout({
                 alt="Crack Bounty"
                 width={2172}
                 height={724}
-                sizes="120px"
-                className="h-9 w-[120px] object-contain sm:h-10 sm:w-[132px]"
-                priority
+                sizes="(min-width: 640px) 186px, 160px"
+                className="h-12 w-[160px] object-contain sm:h-14 sm:w-[186px]"
+                preload
               />
             </a>
 

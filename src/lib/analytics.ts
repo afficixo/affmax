@@ -324,9 +324,9 @@ export async function getReportData(
     return countryDisplayNames.of(code) || code
   }
 
-  // Offer catalog for campaign labels and campaign report geo attribution.
+  // Offer details provide campaign labels and the lead geo report's target geo.
   const offerById = new Map<string, { name: string; country: string; countries: string[] }>()
-  if (type === 'campaign') {
+  if (type === 'campaign' || type === 'geo') {
     const offerIds = [
       ...new Set([
         ...clicks.map((click) => click.offerId).filter(Boolean),
@@ -380,7 +380,10 @@ export async function getReportData(
         bucket.countryCounts.set(country, (bucket.countryCounts.get(country) || 0) + 1)
       }
     } else if (type === 'geo') {
-      const key = (lead.country || 'XX').toUpperCase()
+      const offer = offerById.get(lead.offerId || '')
+      const key = usableCountryCode(offer?.country)
+        || usableCountryCode(offer?.countries[0])
+        || 'XX'
       const bucket = ensure(key, countryLabel(key))
       bucket.leads += 1
       bucket.revenue += Number(lead.payout ?? 0)
