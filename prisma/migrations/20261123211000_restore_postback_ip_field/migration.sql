@@ -1,2 +1,2 @@
-ALTER TABLE "postback_configs"
+ALTER TABLE IF EXISTS "postback_configs"
   ADD COLUMN IF NOT EXISTS "ipToken" TEXT NOT NULL DEFAULT '#ip#';
