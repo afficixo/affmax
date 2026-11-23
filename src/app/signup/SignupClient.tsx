@@ -6,7 +6,49 @@ import Link from "next/link"
 import { getDashboardPath } from "@/lib/auth/dashboard-path"
 import PublicLayout from "@/components/layout/PublicLayout"
 import { signupCountries } from "@/lib/signup-countries"
+import {
+  validateSignupFields,
+  type SignupField,
+  type SignupFieldErrors,
+} from "@/lib/signup-validation"
 import styles from "./Signup.module.css"
+
+const signupFieldOrder: SignupField[] = [
+  "firstName",
+  "lastName",
+  "email",
+  "address",
+  "city",
+  "state",
+  "zipcode",
+  "country",
+  "password",
+  "confirmPassword",
+  "verticals",
+  "traffic",
+  "terms",
+]
+
+const signupFieldIds: Record<SignupField, string> = {
+  firstName: "firstName",
+  lastName: "lastName",
+  email: "inputEmail",
+  address: "inputAddress",
+  city: "inputCity",
+  state: "inputState",
+  zipcode: "inputZip",
+  country: "inputCountry",
+  password: "inputPassword",
+  confirmPassword: "inputPassword2",
+  verticals: "inputTrafficVerticals",
+  traffic: "inputTrafficSource",
+  terms: "gridCheck",
+}
+
+function FieldError({ field, message }: { field: SignupField; message?: string }) {
+  if (!message) return null
+  return <p id={`signup-${field}-error`} className={styles.fieldError}>{message}</p>
+}
 
 function buildUsername(email: string) {
   const local = email.split("@")[0] ?? "publisher"
@@ -39,6 +81,7 @@ export default function SignupClient() {
   const [captchaValue, setCaptchaValue] = useState(7)
   const [captchaVerified, setCaptchaVerified] = useState(false)
   const [captchaError, setCaptchaError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({})
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [approvalPendingSuccess, setApprovalPendingSuccess] = useState(false)
@@ -82,30 +125,64 @@ export default function SignupClient() {
     [country]
   )
 
+  const clearFieldError = (field: SignupField) => {
+    setFieldErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
+
+  const fieldErrorProps = (field: SignupField) => ({
+    "aria-invalid": Boolean(fieldErrors[field]),
+    "aria-describedby": fieldErrors[field] ? `signup-${field}-error` : undefined,
+  })
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError("")
     setCaptchaError("")
 
-    if (!agreed) {
-      setError("Please confirm that you agree to the Terms and Conditions and Privacy Policy.")
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError("Password and Confirm Password do not match.")
-      return
-    }
-
-    if (!captchaVerified) {
-      setCaptchaError("Please complete the verification challenge.")
-      return
-    }
-
+    const validationErrors = validateSignupFields({
+      firstName,
+      lastName,
+      email,
+      address,
+      city,
+      state,
+      zipcode,
+      country,
+      password,
+      confirmPassword,
+      verticals,
+      traffic,
+      agreed,
+      skype,
+      hearAbout,
+      referralCode,
+    })
     const answer = Number(captchaAnswer)
-    if (!Number.isInteger(answer) || answer !== captchaValue) {
-      setCaptchaError("Please solve the verification question correctly before continuing.")
+    const captchaValid = Number.isInteger(answer) && answer === captchaValue
+    if (!captchaValid) {
+      setCaptchaError(captchaAnswer.trim()
+        ? "Please solve the verification question correctly before continuing."
+        : "Verification answer is required.")
       setCaptchaVerified(false)
+    }
+
+    setFieldErrors(validationErrors)
+    const firstInvalidField = signupFieldOrder.find((field) => validationErrors[field])
+    if (firstInvalidField) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(signupFieldIds[firstInvalidField])?.focus()
+      })
+      return
+    }
+    if (!captchaValid) {
+      window.requestAnimationFrame(() => {
+        document.getElementById("captcha-answer")?.focus()
+      })
       return
     }
 
@@ -146,12 +223,7 @@ export default function SignupClient() {
 
       if (data?.requiresApproval) {
         setApprovalPendingSuccess(true)
-        setSuccess(
-          "Account created. Your publisher account is pending manager approval. You can sign in after it has been approved."
-        )
-        window.setTimeout(() => {
-          router.push("/login?approval_pending=1")
-        }, 1200)
+        setSuccess("Account created. Your publisher account is under review. You can sign in once it is approved.")
         return
       }
 
@@ -213,11 +285,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="First Name"
                   value={firstName}
-                  onChange={(event) => setFirstName(event.target.value)}
+                  {...fieldErrorProps("firstName")}
+                  onChange={(event) => {
+                    setFirstName(event.target.value)
+                    clearFieldError("firstName")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="given-name"
                 />
+                <FieldError field="firstName" message={fieldErrors.firstName} />
               </div>
               <div className={`${styles.formGroup} ${styles.col6}`}>
                 <input
@@ -227,11 +304,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="Last Name"
                   value={lastName}
-                  onChange={(event) => setLastName(event.target.value)}
+                  {...fieldErrorProps("lastName")}
+                  onChange={(event) => {
+                    setLastName(event.target.value)
+                    clearFieldError("lastName")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="family-name"
                 />
+                <FieldError field="lastName" message={fieldErrors.lastName} />
               </div>
             </div>
 
@@ -243,11 +325,17 @@ export default function SignupClient() {
                 className={styles.control}
                 placeholder="E-mail"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                maxLength={254}
+                {...fieldErrorProps("email")}
+                onChange={(event) => {
+                  setEmail(event.target.value)
+                  clearFieldError("email")
+                }}
                 required
                 disabled={loading}
                 autoComplete="email"
               />
+              <FieldError field="email" message={fieldErrors.email} />
             </div>
 
             <div className={styles.formRow}>
@@ -259,11 +347,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="Address"
                   value={address}
-                  onChange={(event) => setAddress(event.target.value)}
+                  {...fieldErrorProps("address")}
+                  onChange={(event) => {
+                    setAddress(event.target.value)
+                    clearFieldError("address")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="street-address"
                 />
+                <FieldError field="address" message={fieldErrors.address} />
               </div>
               <div className={`${styles.formGroup} ${styles.col4}`}>
                 <input
@@ -273,11 +366,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="City"
                   value={city}
-                  onChange={(event) => setCity(event.target.value)}
+                  {...fieldErrorProps("city")}
+                  onChange={(event) => {
+                    setCity(event.target.value)
+                    clearFieldError("city")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="address-level2"
                 />
+                <FieldError field="city" message={fieldErrors.city} />
               </div>
             </div>
 
@@ -290,11 +388,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="State"
                   value={state}
-                  onChange={(event) => setState(event.target.value)}
+                  {...fieldErrorProps("state")}
+                  onChange={(event) => {
+                    setState(event.target.value)
+                    clearFieldError("state")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="address-level1"
                 />
+                <FieldError field="state" message={fieldErrors.state} />
               </div>
               <div className={`${styles.formGroup} ${styles.col4}`}>
                 <input
@@ -304,11 +407,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="ZIP Code"
                   value={zipcode}
-                  onChange={(event) => setZipcode(event.target.value)}
+                  {...fieldErrorProps("zipcode")}
+                  onChange={(event) => {
+                    setZipcode(event.target.value)
+                    clearFieldError("zipcode")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="postal-code"
                 />
+                <FieldError field="zipcode" message={fieldErrors.zipcode} />
               </div>
               <div className={`${styles.formGroup} ${styles.col4}`}>
                 <select
@@ -316,7 +424,11 @@ export default function SignupClient() {
                   name="country"
                   className={`${styles.select}${country ? ` ${styles.selectHasValue}` : ""}`}
                   value={country}
-                  onChange={(event) => setCountry(event.target.value)}
+                  {...fieldErrorProps("country")}
+                  onChange={(event) => {
+                    setCountry(event.target.value)
+                    clearFieldError("country")
+                  }}
                   required
                   disabled={loading}
                   aria-label="Select country"
@@ -328,6 +440,7 @@ export default function SignupClient() {
                     </option>
                   ))}
                 </select>
+                <FieldError field="country" message={fieldErrors.country} />
               </div>
             </div>
 
@@ -354,11 +467,17 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="Password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  {...fieldErrorProps("password")}
+                  onChange={(event) => {
+                    setPassword(event.target.value)
+                    clearFieldError("password")
+                    clearFieldError("confirmPassword")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                <FieldError field="password" message={fieldErrors.password} />
               </div>
               <div className={`${styles.formGroup} ${styles.col6}`}>
                 <input
@@ -368,11 +487,16 @@ export default function SignupClient() {
                   className={styles.control}
                   placeholder="Confirm Password"
                   value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  {...fieldErrorProps("confirmPassword")}
+                  onChange={(event) => {
+                    setConfirmPassword(event.target.value)
+                    clearFieldError("confirmPassword")
+                  }}
                   required
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                <FieldError field="confirmPassword" message={fieldErrors.confirmPassword} />
               </div>
             </div>
 
@@ -387,10 +511,15 @@ export default function SignupClient() {
                   className={styles.textarea}
                   placeholder="What niches/verticals are you interested in?"
                   value={verticals}
-                  onChange={(event) => setVerticals(event.target.value)}
+                  {...fieldErrorProps("verticals")}
+                  onChange={(event) => {
+                    setVerticals(event.target.value)
+                    clearFieldError("verticals")
+                  }}
                   required
                   disabled={loading}
                 />
+                <FieldError field="verticals" message={fieldErrors.verticals} />
               </div>
             </div>
 
@@ -403,10 +532,15 @@ export default function SignupClient() {
                   className={styles.textarea}
                   placeholder="Describe your traffic sources and promotion methods"
                   value={traffic}
-                  onChange={(event) => setTraffic(event.target.value)}
+                  {...fieldErrorProps("traffic")}
+                  onChange={(event) => {
+                    setTraffic(event.target.value)
+                    clearFieldError("traffic")
+                  }}
                   required
                   disabled={loading}
                 />
+                <FieldError field="traffic" message={fieldErrors.traffic} />
               </div>
             </div>
 
@@ -432,7 +566,11 @@ export default function SignupClient() {
                   type="checkbox"
                   id="gridCheck"
                   checked={agreed}
-                  onChange={(event) => setAgreed(event.target.checked)}
+                  {...fieldErrorProps("terms")}
+                  onChange={(event) => {
+                    setAgreed(event.target.checked)
+                    clearFieldError("terms")
+                  }}
                   required
                   disabled={loading}
                 />
@@ -448,6 +586,7 @@ export default function SignupClient() {
                   of Crack Bounty LLC.
                 </label>
               </div>
+              <FieldError field="terms" message={fieldErrors.terms} />
             </div>
 
             <div className={styles.captcha} aria-live="polite">
@@ -474,6 +613,7 @@ export default function SignupClient() {
                     required
                     disabled={loading}
                     aria-invalid={!!captchaError}
+                    aria-describedby={captchaError ? "signup-captcha-error" : undefined}
                   />
                 </div>
               )}
@@ -482,7 +622,7 @@ export default function SignupClient() {
                 <span>Privacy</span>
               </div>
             </div>
-            {captchaError ? <p className={styles.alertError}>{captchaError}</p> : null}
+            {captchaError ? <p id="signup-captcha-error" className={styles.alertError}>{captchaError}</p> : null}
 
             <button type="submit" name="btn-join" value="1" className={styles.submit} disabled={loading}>
               {loading ? "…" : "Next"}

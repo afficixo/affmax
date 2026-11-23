@@ -61,6 +61,13 @@ export async function POST(request: Request) {
       )
     }
 
+    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      return NextResponse.json(
+        { error: 'Enter a valid e-mail address' },
+        { status: 400, headers: getCorsHeaders(origin) }
+      )
+    }
+
     if (!captchaPrompt) {
       return NextResponse.json(
         { error: 'Please solve the captcha correctly before signing up' },

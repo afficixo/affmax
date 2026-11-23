@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDashboardPath } from "@/lib/auth/dashboard-path";
 import PublicLayout from "@/components/layout/PublicLayout";
-import { AlertCircle, CheckCircle2, Clock3 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginClient() {
   const router = useRouter();
@@ -13,8 +13,6 @@ export default function LoginClient() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [approvalPendingNotice, setApprovalPendingNotice] = useState(false);
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -49,30 +47,22 @@ export default function LoginClient() {
     const errorParam = searchParams.get("error");
     const successParam = searchParams.get("success");
     const approvalPending = searchParams.get("approval_pending") === "1";
-    setApprovalPendingNotice(approvalPending);
 
     if (errorParam === "google_auth_failed") {
       setError("Google sign-in could not be completed. Try again or sign in with your username and password.");
     } else if (errorParam === "missing_code") {
       setError("Google returned an incomplete sign-in response. Please try again.");
     } else if (errorParam === "google_account_not_found") {
-      setError("No approved account was found for that Google email. Sign up first or use another sign-in method.");
+      setError("No account was found for that Google email. Sign up first or use another sign-in method.");
     } else if (approvalPending) {
-      setError("Your publisher account is pending contract approval. You can sign in once the contract is approved.");
+      setError("Unable to sign in. Please contact support.");
     } else {
       setError("");
     }
 
     if (successParam === "google-authenticated") {
-      setSuccess("Google sign-in complete. Redirecting you to your dashboard...");
-      const redirectPath = getDashboardPath(null);
-      const timer = window.setTimeout(() => {
-        router.replace(redirectPath);
-      }, 1000);
-      return () => window.clearTimeout(timer);
+      router.replace(getDashboardPath(null));
     }
-
-    setSuccess("");
   }, [router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,15 +85,13 @@ export default function LoginClient() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(response.status === 403
+          ? "Unable to sign in. Please contact support."
+          : data.error || "Login failed");
       }
 
-      setSuccess("Welcome back. Redirecting you to your dashboard...");
-      window.setTimeout(() => {
-        router.push(getDashboardPath(data?.user?.role));
-      }, 500);
+      router.replace(getDashboardPath(data?.user?.role));
     } catch (err) {
-      setSuccess("");
       setError(err instanceof Error ? err.message : "We could not sign you in. Check your details and try again.");
     } finally {
       setLoading(false);
@@ -121,44 +109,16 @@ export default function LoginClient() {
           {error && (
             <div
               role="alert"
-              className={`mb-4 overflow-hidden rounded border ${
-                approvalPendingNotice
-                  ? "border-[#7ec9b4]/40 bg-[#eef8f4] text-[#31584e]"
-                  : "border-red-200 bg-red-50 text-red-800"
-              }`}
+              className="mb-4 overflow-hidden rounded border border-red-200 bg-red-50 text-red-800"
             >
               <div className="flex items-start gap-3 p-3">
                 <div className="mt-0.5">
-                  {approvalPendingNotice ? (
-                    <Clock3 className="h-4 w-4" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4" />
-                  )}
+                  <AlertCircle className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  {approvalPendingNotice ? (
-                    <>
-                      <p className="text-sm font-semibold">Approval Pending</p>
-                      <p className="mt-1 text-sm leading-5">
-                        Your publisher account is awaiting approval from the manager.
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm leading-5">{error}</p>
-                  )}
+                  <p className="text-sm leading-5">{error}</p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {success && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="mb-4 flex items-start gap-2 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
-            >
-              <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
-              <span className="leading-5">{success}</span>
             </div>
           )}
 

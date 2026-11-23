@@ -145,7 +145,7 @@ export default function PublicLayout({
               <Link
                 href="/signup"
                 prefetch={false}
-                className="hidden lg:inline-flex items-center rounded-lg bg-[#5ff442] px-4 py-2.5 text-sm font-bold text-[#263238] transition-colors hover:bg-[#4dd935]"
+                className="hidden lg:inline-flex items-center rounded-lg bg-[#17a2b8] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#138496]"
               >
                 Sign up
               </Link>

@@ -141,6 +141,21 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
+.page input.control[aria-invalid="true"],
+.page select.select[aria-invalid="true"],
+.page textarea.textarea[aria-invalid="true"],
+.captchaInput[aria-invalid="true"] {
+  border-color: #c82333 !important;
+}
+
+.fieldError {
+  margin: 4px 0 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+}
+
 .select {
   padding: 6px 28px 6px 10px;
   appearance: none;
@@ -184,6 +199,11 @@
   height: 13px;
   margin: 0;
   cursor: pointer;
+}
+
+.checkbox[aria-invalid="true"] {
+  outline: 2px solid #c82333;
+  outline-offset: 2px;
 }
 
 .checkboxLabel {
