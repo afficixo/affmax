@@ -1,6 +1,20 @@
 import { createHash, randomBytes } from 'crypto'
 import { prisma } from '@/lib/db/prisma'
 import { lookupCountryCode } from '@/lib/ip2location'
+import {
+  DEFAULT_MARKETPLACE_POSTBACK_TOKENS,
+  type MarketplacePostbackTokens,
+} from '@/lib/postback-tokens'
+
+type StoredMarketplacePostbackTokens = {
+  s1Token: string
+  s2Token: string
+  s3Token: string
+  s4Token: string
+  datetimeToken: string
+  ipToken: string
+  countryToken: string
+}
 
 export function createPostbackToken(): string {
   return randomBytes(24).toString('hex')
@@ -13,11 +27,30 @@ export function createPostbackToken(): string {
  * Our tracking map on offer links:
  *   s1 = publisher id, s2 = offer id, s3 = publisher sub1, s4 = publisher sub2
  */
-export function buildMarketplacePostbackUrl(origin: string, token: string): string {
+export function getMarketplacePostbackTokens(
+  config: StoredMarketplacePostbackTokens,
+): MarketplacePostbackTokens {
+  return {
+    s1: config.s1Token,
+    s2: config.s2Token,
+    s3: config.s3Token,
+    s4: config.s4Token,
+    datetime: config.datetimeToken,
+    ip: config.ipToken,
+    country: config.countryToken,
+  }
+}
+
+export function buildMarketplacePostbackUrl(
+  origin: string,
+  token: string,
+  tokens: MarketplacePostbackTokens = DEFAULT_MARKETPLACE_POSTBACK_TOKENS,
+): string {
   const base = origin.replace(/\/$/, '')
+  // Keep the marketplace macro syntax intact so its system can substitute values.
   return `${base}/api/postback/in/${encodeURIComponent(token)}`
-    + '?s1=#s1#&s2=#s2#&s3=#s3#&s4=#s4#'
-    + '&datetime=#datetime#&ip=#ip#&country=#country#'
+    + `?s1=${tokens.s1}&s2=${tokens.s2}&s3=${tokens.s3}&s4=${tokens.s4}`
+    + `&datetime=${tokens.datetime}&ip=${tokens.ip}&country=${tokens.country}`
 }
 
 export async function ensureMarketplacePostbackConfig(managerId: string) {

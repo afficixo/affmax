@@ -81,7 +81,10 @@ import {
 } from '@/lib/tracking'
 import { withoutLegacyCrackBountyDemoOffers } from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
-import { PUBLISHER_POSTBACK_URL_EXAMPLE } from '@/lib/postback-tokens'
+import {
+  PUBLISHER_POSTBACK_URL_EXAMPLE,
+  type MarketplacePostbackTokens,
+} from '@/lib/postback-tokens'
 import ReportDateRangePicker from './ReportDateRangePicker'
 import PaymentDashboard from './PaymentDashboard'
 import styles from './Dashboard.module.css'
@@ -92,8 +95,34 @@ type MarketplacePostbackRecord = {
   id: string
   label: string
   isActive: boolean
+  tokens: MarketplacePostbackTokens
   inboundUrl: string
 }
+
+const EMPTY_MARKETPLACE_POSTBACK_TOKENS: MarketplacePostbackTokens = {
+  s1: '',
+  s2: '',
+  s3: '',
+  s4: '',
+  datetime: '',
+  ip: '',
+  country: '',
+}
+
+const MARKETPLACE_POSTBACK_TOKEN_FIELDS: Array<{
+  key: keyof MarketplacePostbackTokens
+  label: string
+  example: string
+  required?: boolean
+}> = [
+  { key: 's1', label: 'Publisher ID (s1)', example: '#S1#', required: true },
+  { key: 's2', label: 'Offer ID (s2)', example: '#S2#', required: true },
+  { key: 's3', label: 'Sub ID 1 (s3)', example: '#S3#' },
+  { key: 's4', label: 'Sub ID 2 (s4)', example: '#S4#' },
+  { key: 'datetime', label: 'Conversion time', example: '#DATETIME#' },
+  { key: 'ip', label: 'Conversion IP', example: '#IP#' },
+  { key: 'country', label: 'Country', example: '#COUNTRY#' },
+]
 
 /** Crack Bounty Daily Reports only — Chart.js grouped bar (`#canvas` in `#container`). */
 function ReportDailyBarChart({
@@ -1037,9 +1066,13 @@ export default function DashboardOverview() {
   const [postbackUrl, setPostbackUrl] = useState('')
   const [marketplacePostbacks, setMarketplacePostbacks] = useState<MarketplacePostbackRecord[]>([])
   const [newMarketplaceName, setNewMarketplaceName] = useState('')
+  const [newMarketplaceTokens, setNewMarketplaceTokens] = useState<MarketplacePostbackTokens>(
+    EMPTY_MARKETPLACE_POSTBACK_TOKENS,
+  )
   const [marketplacePostbackCreating, setMarketplacePostbackCreating] = useState(false)
   const [marketplacePostbackUpdatingId, setMarketplacePostbackUpdatingId] = useState<string | null>(null)
   const [marketplacePostbackLoading, setMarketplacePostbackLoading] = useState(false)
+  const [marketplacePostbackLoadError, setMarketplacePostbackLoadError] = useState('')
   const [dashboardStats, setDashboardStats] = useState({
     revenue: 0,
     conversions: 0,
@@ -1757,9 +1790,13 @@ export default function DashboardOverview() {
     if (pathname !== '/tools/postback' && pathname !== '/payments') return
     let active = true
     setMarketplacePostbackLoading(true)
+    setMarketplacePostbackLoadError('')
     void fetch('/api/postback/config', { credentials: 'include', cache: 'no-store' })
       .then(async (response) => {
-        if (!response.ok) return null
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null) as { error?: string } | null
+          throw new Error(payload?.error || 'Unable to load postback settings.')
+        }
         return response.json() as Promise<{
           role?: string
           isActive?: boolean
@@ -1779,6 +1816,7 @@ export default function DashboardOverview() {
       })
       .catch((requestError: unknown) => {
         console.error('Unable to load postback config:', requestError)
+        if (active) setMarketplacePostbackLoadError('Unable to load postback settings. Refresh and try again.')
       })
       .finally(() => {
         if (active) setMarketplacePostbackLoading(false)
@@ -4956,14 +4994,14 @@ export default function DashboardOverview() {
                 {userRole === 'MANAGER' ? (
                   <>
                     <p className={styles.postbackManagerNote} role="note">
-                      Create one URL for each offer marketplace. Only the secret token in the URL changes; the postback fields stay the same:
+                      Enter the exact macro token each marketplace uses. We generate the app endpoint token automatically; the values below fill the same postback fields:
                       {' '}<code className={styles.postbackTokenCode}>s1=publisher_id</code>,
                       {' '}<code className={styles.postbackTokenCode}>s2=offer_id</code>,
                       {' '}<code className={styles.postbackTokenCode}>s3=sub1</code>,
                       {' '}<code className={styles.postbackTokenCode}>s4=sub2</code>,
                       {' '}<code className={styles.postbackTokenCode}>datetime</code>,
                       {' '}<code className={styles.postbackTokenCode}>ip</code>,
-                      {' '}<code className={styles.postbackTokenCode}>country</code>.
+                      {' '}<code className={styles.postbackTokenCode}>country</code>. Publisher ID and offer ID are required.
                     </p>
                     <div className={styles.postbackFormGroup}>
                       <label className={styles.postbackFormLabel} htmlFor="marketplace-postback-name">
@@ -4980,6 +5018,29 @@ export default function DashboardOverview() {
                           placeholder="e.g. Affmine"
                         />
                       </div>
+                    </div>
+                    <div className={styles.marketplaceTokenGrid}>
+                      {MARKETPLACE_POSTBACK_TOKEN_FIELDS.map((field) => {
+                        const inputId = `marketplace-postback-token-${field.key}`
+                        return (
+                          <label className={styles.marketplaceTokenField} htmlFor={inputId} key={field.key}>
+                            <span>{field.label}{field.required ? ' *' : ''}</span>
+                            <input
+                              id={inputId}
+                              type="text"
+                              className={`${styles.postbackUrlInput} ${styles.marketplaceTokenInput}`}
+                              value={newMarketplaceTokens[field.key]}
+                              maxLength={128}
+                              required={field.required}
+                              placeholder={field.example}
+                              onChange={(event) => setNewMarketplaceTokens((current) => ({
+                                ...current,
+                                [field.key]: event.target.value,
+                              }))}
+                            />
+                          </label>
+                        )
+                      })}
                     </div>
                   </>
                 ) : null}
@@ -5045,17 +5106,27 @@ export default function DashboardOverview() {
                   <button
                     type="button"
                     className={styles.postbackSaveButton}
-                    disabled={marketplacePostbackCreating || !newMarketplaceName.trim()}
+                    disabled={
+                      marketplacePostbackCreating
+                      || !newMarketplaceName.trim()
+                      || !newMarketplaceTokens.s1.trim()
+                      || !newMarketplaceTokens.s2.trim()
+                    }
                     onClick={async () => {
                       const label = newMarketplaceName.trim()
-                      if (!label || marketplacePostbackCreating) return
+                      if (
+                        !label
+                        || !newMarketplaceTokens.s1.trim()
+                        || !newMarketplaceTokens.s2.trim()
+                        || marketplacePostbackCreating
+                      ) return
                       setMarketplacePostbackCreating(true)
                       try {
                         const response = await fetch('/api/postback/config', {
                           method: 'POST',
                           credentials: 'include',
                           headers: { 'content-type': 'application/json' },
-                          body: JSON.stringify({ label }),
+                          body: JSON.stringify({ label, tokens: newMarketplaceTokens }),
                         })
                         const payload = await response.json().catch(() => null) as {
                           error?: string
@@ -5068,6 +5139,8 @@ export default function DashboardOverview() {
                         const createdMarketplace = payload.marketplace
                         setMarketplacePostbacks((current) => [...current, createdMarketplace])
                         setNewMarketplaceName('')
+                        setNewMarketplaceTokens(EMPTY_MARKETPLACE_POSTBACK_TOKENS)
+                        setMarketplacePostbackLoadError('')
                         setPageNotice(`${createdMarketplace.label} postback URL created.`)
                       } catch (error) {
                         console.error('Unable to create marketplace postback URL:', error)
@@ -5113,6 +5186,8 @@ export default function DashboardOverview() {
                 <div className={styles.marketplacePostbackList} role="list" aria-label="Marketplace postback URLs">
                   {marketplacePostbackLoading ? (
                     <p className={styles.postbackManagerNote}>Loading marketplace URLs…</p>
+                  ) : marketplacePostbackLoadError ? (
+                    <p className={styles.postbackNotice} role="alert">{marketplacePostbackLoadError}</p>
                   ) : marketplacePostbacks.length ? marketplacePostbacks.map((marketplace) => (
                     <article className={styles.marketplacePostbackItem} key={marketplace.id} role="listitem">
                       <div className={styles.marketplacePostbackItemHeader}>

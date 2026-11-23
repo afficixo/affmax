@@ -8,74 +8,74 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(cuid())
-  username         String      @unique
-  slugPrefix      String?     @unique
-  email            String      @unique
-  googleProfilePicture String?
-  googleEmailVerified Boolean  @default(false)
-  googleEmailVerifiedAt DateTime?
-  fullName         String?
-  firstName        String?
-  lastName         String?
-  address           String?
-  city             String?
-  state            String?
-  zipCode          String?
-  country          String?
-  companyName      String?
-  companyAddress   String?
-  companyCity      String?
-  companyState     String?
-  companyZipCode   String?
-  companyCountry   String?
-  source           String?
-  contractNumber   String?
-  telegramUsername String?
-  bkashNumber      String?
-  publisherNumber  Int?        @unique
-  leadNotifications Boolean    @default(true)
-  campaignEmailUpdates Boolean @default(true)
-  clickRate        Float?      @default(0)
-  commissionRate   Float?      @default(20)
-  referralCommissionRate Float  @default(5)
-  canUseSecretRedirect Boolean  @default(true)
-  payoutMethod     String?
-  payoutAccount    String?
-  paymentPasswordHash String?
-  password         String
-  botFallbackUrl   String?
+  id                     String     @id @default(cuid())
+  username               String     @unique
+  slugPrefix             String?    @unique
+  email                  String     @unique
+  googleProfilePicture   String?
+  googleEmailVerified    Boolean    @default(false)
+  googleEmailVerifiedAt  DateTime?
+  fullName               String?
+  firstName              String?
+  lastName               String?
+  address                String?
+  city                   String?
+  state                  String?
+  zipCode                String?
+  country                String?
+  companyName            String?
+  companyAddress         String?
+  companyCity            String?
+  companyState           String?
+  companyZipCode         String?
+  companyCountry         String?
+  source                 String?
+  contractNumber         String?
+  telegramUsername       String?
+  bkashNumber            String?
+  publisherNumber        Int?       @unique
+  leadNotifications      Boolean    @default(true)
+  campaignEmailUpdates   Boolean    @default(true)
+  clickRate              Float?     @default(0)
+  commissionRate         Float?     @default(20)
+  referralCommissionRate Float      @default(5)
+  canUseSecretRedirect   Boolean    @default(true)
+  payoutMethod           String?
+  payoutAccount          String?
+  paymentPasswordHash    String?
+  password               String
+  botFallbackUrl         String?
   // Publisher Global S2S postback URL (Developer Tools > Postback)
-  globalPostbackUrl     String  @default("")
-  globalPostbackEnabled Boolean @default(true)
-  role             UserRole    @default(PUBLISHER)
-  status           UserStatus  @default(PENDING)
-  referralCode     String?     @unique
-  referredById     String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  lastLogin        DateTime?
-  
-  linkAccounts  LinkAccount[]
-  offerVault    OfferVault[]
-  customDomains CustomDomain[]
-  landingPageTemplates    LandingPageTemplate[] @relation("TemplateCreatedBy")
-  landingPages           LandingPage[] @relation("LandingPagesCreatedBy")
-  managerPayouts         ManagerPayout[]
-  publisherInvoices      PublisherPaymentInvoice[] @relation("PublisherInvoices")
-  processedInvoices      PublisherPaymentInvoice[] @relation("ProcessedPublisherInvoices")
-  referredBy             User?                  @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals              User[]                 @relation("UserReferrals")
-  referralCommissionsEarned ReferralCommission[] @relation("ReferralCommissionReferrer")
-  referralCommissionsGenerated ReferralCommission[] @relation("ReferralCommissionReferred")
-  countryClickRates CountryClickRate[]
-  postbackConfigs         PostbackConfig[]
-  conversionLeads         ConversionLead[]
-  telegramNotification    TelegramNotification?
-  ownedSupportConversations SupportConversation[] @relation("SupportConversationManager")
-  publisherSupportConversations SupportConversation[] @relation("SupportConversationPublisher")
-  sentSupportMessages      SupportMessage[] @relation("SupportMessageSender")
-  
+  globalPostbackUrl      String     @default("")
+  globalPostbackEnabled  Boolean    @default(true)
+  role                   UserRole   @default(PUBLISHER)
+  status                 UserStatus @default(PENDING)
+  referralCode           String?    @unique
+  referredById           String?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  lastLogin              DateTime?
+
+  linkAccounts                  LinkAccount[]
+  offerVault                    OfferVault[]
+  customDomains                 CustomDomain[]
+  landingPageTemplates          LandingPageTemplate[]     @relation("TemplateCreatedBy")
+  landingPages                  LandingPage[]             @relation("LandingPagesCreatedBy")
+  managerPayouts                ManagerPayout[]
+  publisherInvoices             PublisherPaymentInvoice[] @relation("PublisherInvoices")
+  processedInvoices             PublisherPaymentInvoice[] @relation("ProcessedPublisherInvoices")
+  referredBy                    User?                     @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals                     User[]                    @relation("UserReferrals")
+  referralCommissionsEarned     ReferralCommission[]      @relation("ReferralCommissionReferrer")
+  referralCommissionsGenerated  ReferralCommission[]      @relation("ReferralCommissionReferred")
+  countryClickRates             CountryClickRate[]
+  postbackConfigs               PostbackConfig[]
+  conversionLeads               ConversionLead[]
+  telegramNotification          TelegramNotification?
+  ownedSupportConversations     SupportConversation[]     @relation("SupportConversationManager")
+  publisherSupportConversations SupportConversation[]     @relation("SupportConversationPublisher")
+  sentSupportMessages           SupportMessage[]          @relation("SupportMessageSender")
+
   @@map("users")
 }
 
@@ -136,17 +136,17 @@ model CampaignOffer {
 
 /// Publisher tracking-link clicks (before marketplace conversion postback).
 model OfferClick {
-  id               String   @id @default(cuid())
-  publisherNumber  Int
-  publisherUserId  String?
-  offerId          String
-  sub1             String?
-  sub2             String?
-  ipAddress        String?
-  countryCode      String?
-  userAgent        String?
-  isUnique         Boolean  @default(true)
-  createdAt        DateTime @default(now())
+  id              String   @id @default(cuid())
+  publisherNumber Int
+  publisherUserId String?
+  offerId         String
+  sub1            String?
+  sub2            String?
+  ipAddress       String?
+  countryCode     String?
+  userAgent       String?
+  isUnique        Boolean  @default(true)
+  createdAt       DateTime @default(now())
 
   @@index([publisherUserId, createdAt])
   @@index([publisherNumber, createdAt])
@@ -189,59 +189,59 @@ enum UserStatus {
 }
 
 model LinkAccount {
-  id              String      @id @default(cuid())
-  accountName     String
-  slug            String      @unique
-  customDomainId  String?
-  customDomain    CustomDomain? @relation(fields: [customDomainId], references: [id], onDelete: SetNull)
-  offerGroupName  String?
-  userId          String
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  isActive        Boolean     @default(true)
+  id             String        @id @default(cuid())
+  accountName    String
+  slug           String        @unique
+  customDomainId String?
+  customDomain   CustomDomain? @relation(fields: [customDomainId], references: [id], onDelete: SetNull)
+  offerGroupName String?
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  isActive       Boolean       @default(true)
 
-  payoutMethod          String?
-  payoutAccount         String?
-  paymentPasswordHash   String?
-  
-  totalClicks     Int         @default(0)
-  uniqueClicks    Int         @default(0)
-  botClicks       Int         @default(0)
+  payoutMethod        String?
+  payoutAccount       String?
+  paymentPasswordHash String?
+
+  totalClicks                  Int @default(0)
+  uniqueClicks                 Int @default(0)
+  botClicks                    Int @default(0)
   usaSecretRedirectAccumulator Int @default(0)
-  
+
   clicks          Click[]
   geoStats        GeoStat[]
   publicDashboard PublicDashboard?
 
   // Opposite relation fields for analytics and stats
-  dailyAnalytics   DailyAnalytics[]
-  hourlyAnalytics  HourlyAnalytics[]
-  browserStats     BrowserStat[]
-  osStats          OSStat[]
-  deviceStats      DeviceStat[]
-  referrerStats    ReferrerStat[]
-  invoices         Invoice[]
-  
+  dailyAnalytics  DailyAnalytics[]
+  hourlyAnalytics HourlyAnalytics[]
+  browserStats    BrowserStat[]
+  osStats         OSStat[]
+  deviceStats     DeviceStat[]
+  referrerStats   ReferrerStat[]
+  invoices        Invoice[]
+
   @@unique([slug, customDomainId])
   @@index([userId, offerGroupName])
   @@map("link_accounts")
 }
 
 model CustomDomain {
-  id              String        @id @default(cuid())
-  domain          String        @unique
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verified        Boolean       @default(false)
-  verifiedAt      DateTime?
-  sslEnabled      Boolean       @default(false)
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  linkAccounts    LinkAccount[]
-  
+  id         String    @id @default(cuid())
+  domain     String    @unique
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified   Boolean   @default(false)
+  verifiedAt DateTime?
+  sslEnabled Boolean   @default(false)
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  linkAccounts LinkAccount[]
+
   @@map("custom_domains")
 }
 
@@ -259,22 +259,22 @@ enum OfferRotationMode {
 }
 
 model OfferVault {
-  id              String              @id @default(cuid())
-  country         String
-  groupName       String?
-  offerUrl        String
-  isActive        Boolean             @default(true)
-  isGlobal        Boolean             @default(false)
-  isContentLocker Boolean             @default(false)
-  usaSecretRedirectEnabled Boolean    @default(false)
-  usaSecretRedirectPercentage Int      @default(50)
-  usaSecretRedirectAccumulator Int      @default(0)
-  priority        Int                 @default(100)
-  rotationMode    OfferRotationMode   @default(PRIORITY)
-  userId          String
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id                           String            @id @default(cuid())
+  country                      String
+  groupName                    String?
+  offerUrl                     String
+  isActive                     Boolean           @default(true)
+  isGlobal                     Boolean           @default(false)
+  isContentLocker              Boolean           @default(false)
+  usaSecretRedirectEnabled     Boolean           @default(false)
+  usaSecretRedirectPercentage  Int               @default(50)
+  usaSecretRedirectAccumulator Int               @default(0)
+  priority                     Int               @default(100)
+  rotationMode                 OfferRotationMode @default(PRIORITY)
+  userId                       String
+  user                         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                    DateTime          @default(now())
+  updatedAt                    DateTime          @updatedAt
 
   @@index([userId, country, isActive])
   @@index([userId, groupName, isActive])
@@ -283,49 +283,49 @@ model OfferVault {
 }
 
 model PublicDashboard {
-  id              String        @id @default(cuid())
-  publicId        String        @unique
-  linkAccountId   String        @unique
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  isPrivate       Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  id            String      @id @default(cuid())
+  publicId      String      @unique
+  linkAccountId String      @unique
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+  isPrivate     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
   @@map("public_dashboards")
 }
 
 model Click {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  timestamp       DateTime      @default(now())
-  clickSignature  String?
-  ipAddress       String
-  country         String?
-  region          String?
-  city            String?
-  isp             String?
-  
-  browser         String?
-  browserVersion  String?
-  os              String?
-  deviceType      String?
-  deviceBrand     String?
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  timestamp      DateTime @default(now())
+  clickSignature String?
+  ipAddress      String
+  country        String?
+  region         String?
+  city           String?
+  isp            String?
+
+  browser          String?
+  browserVersion   String?
+  os               String?
+  deviceType       String?
+  deviceBrand      String?
   screenResolution String?
-  
-  referrer        String?
-  language        String?
-  timeZone        String?
-  userAgent       String?
-  
-  isUnique        Boolean       @default(false)
-  isBot           Boolean       @default(false)
-  botScore        Float?        @default(0)
-  botReason       String?
-  
-  createdAt       DateTime      @default(now())
-  
+
+  referrer  String?
+  language  String?
+  timeZone  String?
+  userAgent String?
+
+  isUnique  Boolean @default(false)
+  isBot     Boolean @default(false)
+  botScore  Float?  @default(0)
+  botReason String?
+
+  createdAt DateTime @default(now())
+
   @@index([linkAccountId])
   @@index([userAgent])
   @@index([clickSignature])
@@ -341,150 +341,150 @@ model Click {
 }
 
 model GeoStat {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  country         String
-  countryCode     String
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
-  updatedAt       DateTime      @updatedAt
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  country      String
+  countryCode  String
+  clicks       Int    @default(0)
+  uniqueClicks Int    @default(0)
+  botClicks    Int    @default(0)
+
+  updatedAt DateTime @updatedAt
+
   @@unique([linkAccountId, country])
   @@map("geo_stats")
 }
 
 model DailyAnalytics {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  date            DateTime
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  date         DateTime
+  clicks       Int      @default(0)
+  uniqueClicks Int      @default(0)
+  botClicks    Int      @default(0)
+
   @@unique([linkAccountId, date])
   @@map("daily_analytics")
 }
 
 model HourlyAnalytics {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  hour            DateTime
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  hour         DateTime
+  clicks       Int      @default(0)
+  uniqueClicks Int      @default(0)
+  botClicks    Int      @default(0)
+
   @@unique([linkAccountId, hour])
   @@map("hourly_analytics")
 }
 
 model BrowserStat {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  browser         String
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  browser      String
+  clicks       Int    @default(0)
+  uniqueClicks Int    @default(0)
+  botClicks    Int    @default(0)
+
   @@unique([linkAccountId, browser])
   @@map("browser_stats")
 }
 
 model OSStat {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  os              String
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  os           String
+  clicks       Int    @default(0)
+  uniqueClicks Int    @default(0)
+  botClicks    Int    @default(0)
+
   @@unique([linkAccountId, os])
   @@map("os_stats")
 }
 
 model DeviceStat {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  deviceType      String
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  deviceType   String
+  clicks       Int    @default(0)
+  uniqueClicks Int    @default(0)
+  botClicks    Int    @default(0)
+
   @@unique([linkAccountId, deviceType])
   @@map("device_stats")
 }
 
 model ReferrerStat {
-  id              String        @id @default(cuid())
-  linkAccountId   String
-  linkAccount     LinkAccount   @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  
-  referrer        String
-  clicks          Int           @default(0)
-  uniqueClicks    Int           @default(0)
-  botClicks       Int           @default(0)
-  
+  id            String      @id @default(cuid())
+  linkAccountId String
+  linkAccount   LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+
+  referrer     String
+  clicks       Int    @default(0)
+  uniqueClicks Int    @default(0)
+  botClicks    Int    @default(0)
+
   @@unique([linkAccountId, referrer])
   @@map("referrer_stats")
 }
 
 model LandingPageTemplate {
-  id              String        @id @default(cuid())
-  name            String
-  description     String?
-  thumbnail       String?
-  htmlContent     String        // Template HTML structure
-  customText      String?       // Custom text to include with link when copied
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  createdBy       String
-  user            User          @relation("TemplateCreatedBy", fields: [createdBy], references: [id], onDelete: Cascade)
-  
-  landingPages    LandingPage[]
-  
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  thumbnail   String?
+  htmlContent String // Template HTML structure
+  customText  String? // Custom text to include with link when copied
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  user        User     @relation("TemplateCreatedBy", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  landingPages LandingPage[]
+
   @@index([isActive])
   @@map("landing_page_templates")
 }
 
 model LandingPage {
-  id              String        @id @default(cuid())
-  subdomain       String        @unique
-  trackingUrl     String
-  templateId      String
-  template        LandingPageTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  userId          String
-  user            User          @relation("LandingPagesCreatedBy", fields: [userId], references: [id], onDelete: Cascade)
-  
+  id          String              @id @default(cuid())
+  subdomain   String              @unique
+  trackingUrl String
+  templateId  String
+  template    LandingPageTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                @relation("LandingPagesCreatedBy", fields: [userId], references: [id], onDelete: Cascade)
+
   // Customization
-  headline        String?
-  description     String?
-  imageUrl        String?
-  primaryColor    String        @default("#06B6D4")  // Cyan
-  secondaryColor  String        @default("#8B5CF6") // Violet
-  buttonText      String        @default("Get Started")
-  
-  isPublished     Boolean       @default(false)
-  publishedAt     DateTime?
-  
-  totalClicks     Int           @default(0)
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  headline       String?
+  description    String?
+  imageUrl       String?
+  primaryColor   String  @default("#06B6D4") // Cyan
+  secondaryColor String  @default("#8B5CF6") // Violet
+  buttonText     String  @default("Get Started")
+
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  totalClicks Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
   @@index([subdomain])
   @@index([isPublished])
@@ -492,42 +492,42 @@ model LandingPage {
 }
 
 model Invoice {
-  id                   String      @id @default(cuid())
-  invoiceNumber        String      @unique
-  linkAccountId        String
-  linkAccount          LinkAccount @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
-  qualifiedClicks      Int
-  clickRate            Float
-  totalEarning         Float
-  payoutMethod         String?
-  payoutAccount        String?
-  paymentReference     String?
-  isPaid               Boolean     @default(false)
-  paidAt               DateTime?
-  createdAt            DateTime    @default(now())
-  managerPayouts       ManagerPayoutInvoice[]
-  referralCommission   ReferralCommission?
+  id                 String                 @id @default(cuid())
+  invoiceNumber      String                 @unique
+  linkAccountId      String
+  linkAccount        LinkAccount            @relation(fields: [linkAccountId], references: [id], onDelete: Cascade)
+  qualifiedClicks    Int
+  clickRate          Float
+  totalEarning       Float
+  payoutMethod       String?
+  payoutAccount      String?
+  paymentReference   String?
+  isPaid             Boolean                @default(false)
+  paidAt             DateTime?
+  createdAt          DateTime               @default(now())
+  managerPayouts     ManagerPayoutInvoice[]
+  referralCommission ReferralCommission?
 
   @@index([linkAccountId, createdAt])
   @@map("invoices")
 }
 
 model ManagerPayout {
-  id               String               @id @default(cuid())
-  payoutNumber     String               @unique
-  managerId        String
-  manager          User                 @relation(fields: [managerId], references: [id], onDelete: Cascade)
-  totalEarning     Float
-  invoiceCount     Int
-  payoutMethod     String?
-  payoutAccount    String?
-  paymentReference String?
-  isPaid           Boolean              @default(false)
-  paidAt           DateTime?
-  createdAt        DateTime             @default(now())
-  invoices         ManagerPayoutInvoice[]
-  sourceReferralCommissions ReferralCommission[] @relation("ReferralCommissionSourcePayout")
-  paidReferralCommissions   ReferralCommission[] @relation("ReferralCommissionPaidPayout")
+  id                        String                 @id @default(cuid())
+  payoutNumber              String                 @unique
+  managerId                 String
+  manager                   User                   @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  totalEarning              Float
+  invoiceCount              Int
+  payoutMethod              String?
+  payoutAccount             String?
+  paymentReference          String?
+  isPaid                    Boolean                @default(false)
+  paidAt                    DateTime?
+  createdAt                 DateTime               @default(now())
+  invoices                  ManagerPayoutInvoice[]
+  sourceReferralCommissions ReferralCommission[]   @relation("ReferralCommissionSourcePayout")
+  paidReferralCommissions   ReferralCommission[]   @relation("ReferralCommissionPaidPayout")
 
   @@index([managerId, createdAt])
   @@map("manager_payouts")
@@ -574,16 +574,23 @@ enum PostbackProvider {
 }
 
 model PostbackConfig {
-  id          String           @id @default(cuid())
-  userId      String
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider    PostbackProvider
-  label       String
-  token       String           @unique
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  leads       ConversionLead[]
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      PostbackProvider
+  label         String
+  token         String           @unique
+  s1Token       String           @default("#s1#")
+  s2Token       String           @default("#s2#")
+  s3Token       String           @default("#s3#")
+  s4Token       String           @default("#s4#")
+  datetimeToken String           @default("#datetime#")
+  ipToken       String           @default("#ip#")
+  countryToken  String           @default("#country#")
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  leads         ConversionLead[]
 
   @@index([token, isActive])
   @@map("postback_configs")
@@ -591,32 +598,32 @@ model PostbackConfig {
 
 /// Inbound marketplace conversion credited to a publisher for one of our offers.
 model ConversionLead {
-  id             String         @id @default(cuid())
-  userId         String
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postbackId     String
-  postback       PostbackConfig @relation(fields: [postbackId], references: [id], onDelete: Cascade)
-  offerId        String?
-  campaignId     String?
-  campaignName   String?
-  payout         Float?
-  country        String?
-  city           String?
-  device         String?
-  os             String?
-  userAgent      String?
-  status         String?
-  externalTxId   String?
-  ipAddress      String?
-  sub1           String?
-  sub2           String?
-  sub3           String?
-  sub4           String?
-  occurredAt     DateTime?
-  externalKey    String?        @unique
+  id                 String                   @id @default(cuid())
+  userId             String
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postbackId         String
+  postback           PostbackConfig           @relation(fields: [postbackId], references: [id], onDelete: Cascade)
+  offerId            String?
+  campaignId         String?
+  campaignName       String?
+  payout             Float?
+  country            String?
+  city               String?
+  device             String?
+  os                 String?
+  userAgent          String?
+  status             String?
+  externalTxId       String?
+  ipAddress          String?
+  sub1               String?
+  sub2               String?
+  sub3               String?
+  sub4               String?
+  occurredAt         DateTime?
+  externalKey        String?                  @unique
   publisherInvoiceId String?
-  publisherInvoice PublisherPaymentInvoice? @relation(fields: [publisherInvoiceId], references: [id], onDelete: SetNull)
-  createdAt      DateTime       @default(now())
+  publisherInvoice   PublisherPaymentInvoice? @relation(fields: [publisherInvoiceId], references: [id], onDelete: SetNull)
+  createdAt          DateTime                 @default(now())
 
   @@index([userId, createdAt])
   @@index([postbackId, createdAt])
@@ -635,7 +642,7 @@ model PublisherPaymentInvoice {
   conversionCount Int
   payoutMethod    String?
   payoutAccount   String?
-  status          PublisherInvoiceStatus  @default(PENDING)
+  status          PublisherInvoiceStatus @default(PENDING)
   createdAt       DateTime               @default(now())
   paidAt          DateTime?
   paidById        String?
@@ -697,14 +704,14 @@ model SupportMessage {
 }
 
 model ContactInquiry {
-  id        String                @id @default(cuid())
+  id        String               @id @default(cuid())
   firstName String
   lastName  String
   email     String
   message   String
-  status    ContactInquiryStatus  @default(OPEN)
-  createdAt DateTime              @default(now())
-  updatedAt DateTime              @updatedAt
+  status    ContactInquiryStatus @default(OPEN)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([status, createdAt])
   @@map("contact_inquiries")

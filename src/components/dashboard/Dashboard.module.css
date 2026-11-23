@@ -2574,6 +2574,28 @@ input.reportRangeInput {
   margin-top: 14px;
 }
 
+.marketplaceTokenGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin: 0 0 16px;
+}
+
+.marketplaceTokenField {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  color: #58666e;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.marketplaceTokenInput {
+  min-width: 0;
+  font-size: 13px;
+}
+
 .marketplacePostbackItem {
   min-width: 0;
   border: 1px solid #dfe4e7;
@@ -8438,6 +8460,11 @@ a.offerAction {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .marketplaceTokenGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .postbackTokenCol {

@@ -5,9 +5,27 @@ import {
   buildMarketplacePostbackUrl,
   createPostbackToken,
   ensureMarketplacePostbackConfig,
+  getMarketplacePostbackTokens,
   sumPublisherEarnings,
 } from '@/lib/marketplace-postback'
+import type { MarketplacePostbackTokens } from '@/lib/postback-tokens'
 import { getTrackingDomainOrigin } from '@/lib/tracking'
+
+const marketplaceTokenKeys: Array<keyof MarketplacePostbackTokens> = [
+  's1',
+  's2',
+  's3',
+  's4',
+  'datetime',
+  'ip',
+  'country',
+]
+
+function isMarketplacePostbackTokens(value: unknown): value is MarketplacePostbackTokens {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const tokens = value as Record<string, unknown>
+  return marketplaceTokenKeys.every((key) => typeof tokens[key] === 'string')
+}
 
 function resolveAppOrigin(request: Request): string {
   const configured = getTrackingDomainOrigin()
@@ -57,14 +75,26 @@ export async function GET(request: Request) {
       const configs = await prisma.postbackConfig.findMany({
         where: { userId: config.userId, provider: 'MARKETPLACE' },
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-        select: { id: true, label: true, isActive: true, token: true },
+        select: {
+          id: true,
+          label: true,
+          isActive: true,
+          token: true,
+          s1Token: true,
+          s2Token: true,
+          s3Token: true,
+          s4Token: true,
+          datetimeToken: true,
+          ipToken: true,
+          countryToken: true,
+        },
       })
       return NextResponse.json({
         role,
         provider: config.provider,
         isActive: config.isActive,
         token: config.token,
-        inboundUrl: buildMarketplacePostbackUrl(appOrigin, config.token),
+        inboundUrl: buildMarketplacePostbackUrl(appOrigin, config.token, getMarketplacePostbackTokens(config)),
         mapping: {
           s1: 'publisher_id',
           s2: 'offer_id',
@@ -78,7 +108,12 @@ export async function GET(request: Request) {
           id: marketplace.id,
           label: marketplace.label,
           isActive: marketplace.isActive,
-          inboundUrl: buildMarketplacePostbackUrl(appOrigin, marketplace.token),
+          tokens: getMarketplacePostbackTokens(marketplace),
+          inboundUrl: buildMarketplacePostbackUrl(
+            appOrigin,
+            marketplace.token,
+            getMarketplacePostbackTokens(marketplace),
+          ),
         })),
       }, { headers: getCorsHeaders(origin) })
     }
@@ -129,9 +164,9 @@ export async function POST(request: Request) {
       })
     }
 
-    let body: { label?: unknown } | null
+    let body: { label?: unknown; tokens?: unknown } | null
     try {
-      body = await request.json() as { label?: unknown } | null
+      body = await request.json() as { label?: unknown; tokens?: unknown } | null
     } catch {
       return NextResponse.json({ error: 'A marketplace name is required.' }, {
         status: 400,
@@ -147,6 +182,40 @@ export async function POST(request: Request) {
       })
     }
 
+    const rawTokens = body?.tokens
+    if (!isMarketplacePostbackTokens(rawTokens)) {
+      return NextResponse.json({ error: 'Marketplace postback tokens are required.' }, {
+        status: 400,
+        headers: getCorsHeaders(origin),
+      })
+    }
+
+    const tokens: MarketplacePostbackTokens = {
+      s1: rawTokens.s1.trim(),
+      s2: rawTokens.s2.trim(),
+      s3: rawTokens.s3.trim(),
+      s4: rawTokens.s4.trim(),
+      datetime: rawTokens.datetime.trim(),
+      ip: rawTokens.ip.trim(),
+      country: rawTokens.country.trim(),
+    }
+    if (!tokens.s1 || !tokens.s2) {
+      return NextResponse.json({ error: 'Publisher ID (s1) and offer ID (s2) tokens are required.' }, {
+        status: 400,
+        headers: getCorsHeaders(origin),
+      })
+    }
+    if (marketplaceTokenKeys.some((key) => (
+      tokens[key].length > 128 || /[\u0000-\u0020\u007f&=?]/.test(tokens[key])
+    ))) {
+      return NextResponse.json({
+        error: 'Tokens must be 128 characters or fewer and cannot contain spaces, &, =, or ?.',
+      }, {
+        status: 400,
+        headers: getCorsHeaders(origin),
+      })
+    }
+
     const { prisma } = await import('@/lib/db/prisma')
     const primaryConfig = await ensureMarketplacePostbackConfig(user.id)
     const config = await prisma.postbackConfig.create({
@@ -155,17 +224,38 @@ export async function POST(request: Request) {
         provider: 'MARKETPLACE',
         label,
         token: createPostbackToken(),
+        s1Token: tokens.s1,
+        s2Token: tokens.s2,
+        s3Token: tokens.s3,
+        s4Token: tokens.s4,
+        datetimeToken: tokens.datetime,
+        ipToken: tokens.ip,
+        countryToken: tokens.country,
         isActive: true,
       },
-      select: { id: true, label: true, isActive: true, token: true },
+      select: {
+        id: true,
+        label: true,
+        isActive: true,
+        token: true,
+        s1Token: true,
+        s2Token: true,
+        s3Token: true,
+        s4Token: true,
+        datetimeToken: true,
+        ipToken: true,
+        countryToken: true,
+      },
     })
     const appOrigin = resolveAppOrigin(request)
+    const configTokens = getMarketplacePostbackTokens(config)
     return NextResponse.json({
       marketplace: {
         id: config.id,
         label: config.label,
         isActive: config.isActive,
-        inboundUrl: buildMarketplacePostbackUrl(appOrigin, config.token),
+        tokens: configTokens,
+        inboundUrl: buildMarketplacePostbackUrl(appOrigin, config.token, configTokens),
       },
     }, { status: 201, headers: getCorsHeaders(origin) })
   } catch (error) {
@@ -249,7 +339,12 @@ export async function PATCH(request: Request) {
             id: updated.id,
             label: updated.label,
             isActive: updated.isActive,
-            inboundUrl: buildMarketplacePostbackUrl(appOrigin, updated.token),
+            tokens: getMarketplacePostbackTokens(updated),
+            inboundUrl: buildMarketplacePostbackUrl(
+              appOrigin,
+              updated.token,
+              getMarketplacePostbackTokens(updated),
+            ),
           },
         }, { headers: getCorsHeaders(origin) })
       }
@@ -265,7 +360,11 @@ export async function PATCH(request: Request) {
         provider: updated.provider,
         isActive: updated.isActive,
         token: updated.token,
-        inboundUrl: buildMarketplacePostbackUrl(appOrigin, updated.token),
+        inboundUrl: buildMarketplacePostbackUrl(
+          appOrigin,
+          updated.token,
+          getMarketplacePostbackTokens(updated),
+        ),
       }, { headers: getCorsHeaders(origin) })
     }
 
