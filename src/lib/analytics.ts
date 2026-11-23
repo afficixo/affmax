@@ -175,21 +175,27 @@ export async function getOverviewStats(scope: AnalyticsScope) {
 export async function getReportData(
   scope: AnalyticsScope,
   type: 'daily' | 'campaign' | 'geo' | 'subid' | 'conversions' | 'tool',
-  range?: { from?: string | null; to?: string | null },
+  range?: { from?: string | null; to?: string | null; allTime?: boolean },
 ) {
-  const from = range?.from
-    ? new Date(`${range.from}T00:00:00.000Z`)
-    : daysAgoUtc(6)
-  const toExclusive = range?.to
-    ? new Date(`${range.to}T00:00:00.000Z`)
-    : null
+  const from = range?.allTime
+    ? undefined
+    : range?.from
+      ? new Date(`${range.from}T00:00:00.000Z`)
+      : type === 'daily'
+        ? daysAgoUtc(29)
+        : startOfDayUtc()
+  const toExclusive = range?.allTime
+    ? null
+    : range?.to
+      ? new Date(`${range.to}T00:00:00.000Z`)
+      : null
   if (toExclusive) toExclusive.setUTCDate(toExclusive.getUTCDate() + 1)
 
   const reportDateFilter = {
-    gte: from,
+    ...(from ? { gte: from } : {}),
     ...(toExclusive ? { lt: toExclusive } : {}),
   }
-  const reportLeadWhere = type === 'conversions'
+  const reportLeadWhere = type === 'conversions' && (from || toExclusive)
     ? {
         ...leadWhere(scope),
         OR: [
@@ -459,7 +465,8 @@ export async function getReportData(
   const chartEnd = range?.to
     ? new Date(`${range.to}T00:00:00.000Z`)
     : startOfDayUtc()
-  const chartStart = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()))
+  const chartStartDate = from || chartEnd
+  const chartStart = new Date(Date.UTC(chartStartDate.getUTCFullYear(), chartStartDate.getUTCMonth(), chartStartDate.getUTCDate()))
   const dayCount = Math.max(
     1,
     Math.floor((chartEnd.getTime() - chartStart.getTime()) / 86400000) + 1,

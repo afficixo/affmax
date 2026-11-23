@@ -84,7 +84,7 @@ import { toCampaignImageSource } from '@/lib/campaign-images'
 import {
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
-import ReportDateRangePicker from './ReportDateRangePicker'
+import ReportDateRangePicker, { type ReportDatePreset } from './ReportDateRangePicker'
 import PaymentDashboard from './PaymentDashboard'
 import styles from './Dashboard.module.css'
 
@@ -814,6 +814,7 @@ const reportRangePresets = [
   { label: 'This Month', days: 'month' as const },
   { label: 'Last Month', days: 'last-month' as const },
 ] as const
+const allTimeReportPreset = { label: 'All Time', days: 'all-time' } as const
 
 /** Crack Bounty `#reportrange` label: "Nov 5, 2026" */
 function formatReportDateLabel(value: string) {
@@ -833,11 +834,18 @@ function getInitialReportDateRange() {
   const end = new Date()
   end.setUTCHours(12, 0, 0, 0)
   const start = new Date(end)
-  start.setUTCDate(start.getUTCDate() - 6)
+  start.setUTCDate(start.getUTCDate() - 29)
   return {
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
   }
+}
+
+function getTodayReportDateRange() {
+  const today = new Date()
+  today.setUTCHours(12, 0, 0, 0)
+  const date = today.toISOString().slice(0, 10)
+  return { start: date, end: date }
 }
 
 /** Crack Bounty daily table / chart axis: "11/11/2026" */
@@ -1036,13 +1044,15 @@ export default function DashboardOverview() {
   const [campaignSort, setCampaignSort] = useState<{ key: 'id' | 'name' | 'payout' | 'featured'; direction: 'asc' | 'desc' }>({ key: 'featured', direction: 'asc' })
   const [campaignPage, setCampaignPage] = useState(1)
   const [initialReportDates] = useState(getInitialReportDateRange)
-  const [reportStartDate, setReportStartDate] = useState(initialReportDates.start)
-  const [reportEndDate, setReportEndDate] = useState(initialReportDates.end)
-  const [reportRange, setReportRange] = useState(
-    `${formatReportDateLabel(initialReportDates.start)} - ${formatReportDateLabel(initialReportDates.end)}`,
-  )
+  const [todayReportDates] = useState(getTodayReportDateRange)
+  const defaultReportDates = pathname === '/reports/daily' ? initialReportDates : todayReportDates
+  const [reportStartDate, setReportStartDate] = useState(defaultReportDates.start)
+  const [reportEndDate, setReportEndDate] = useState(defaultReportDates.end)
+  const [reportDateMode, setReportDateMode] = useState<'default' | 'range' | 'all-time'>('default')
   const [showReportDates, setShowReportDates] = useState(false)
-  const [reportPresetLabel, setReportPresetLabel] = useState('Last 7 Days')
+  const [reportPresetLabel, setReportPresetLabel] = useState(
+    pathname === '/reports/daily' ? 'Last 30 Days' : 'Today',
+  )
   const reportRangeAnchorRef = useRef<HTMLInputElement>(null)
   const [pageSearch, setPageSearch] = useState('')
   const [postbackEnabled, setPostbackEnabled] = useState(true)
@@ -1872,6 +1882,16 @@ export default function DashboardOverview() {
   }, [pathname])
 
   useEffect(() => {
+    if (!pathname.startsWith('/reports/')) return
+    const defaultDates = pathname === '/reports/daily' ? initialReportDates : todayReportDates
+    setReportStartDate(defaultDates.start)
+    setReportEndDate(defaultDates.end)
+    setReportPresetLabel(pathname === '/reports/daily' ? 'Last 30 Days' : 'Today')
+    setReportDateMode('default')
+    setShowReportDates(false)
+  }, [pathname, initialReportDates, todayReportDates])
+
+  useEffect(() => {
     const reportType = pathname.startsWith('/reports/')
       ? pathname.replace('/reports/', '')
       : ''
@@ -1880,11 +1900,14 @@ export default function DashboardOverview() {
       return
     }
     let active = true
-    const params = new URLSearchParams({
-      type: reportType,
-      from: reportStartDate,
-      to: reportEndDate,
-    })
+    const params = new URLSearchParams({ type: reportType })
+    const shouldFilterByDate = reportDateMode !== 'all-time'
+    if (shouldFilterByDate) {
+      params.set('from', reportStartDate)
+      params.set('to', reportEndDate)
+    } else {
+      params.set('allTime', '1')
+    }
     void fetch(`/api/analytics/reports?${params.toString()}`, {
       credentials: 'include',
       cache: 'no-store',
@@ -1915,7 +1938,7 @@ export default function DashboardOverview() {
         console.error('Unable to load report analytics:', requestError)
       })
     return () => { active = false }
-  }, [pathname, reportStartDate, reportEndDate])
+  }, [pathname, reportStartDate, reportEndDate, reportDateMode])
 
   useEffect(() => {
     if (pathname === '/incentive_offers') {
@@ -2300,7 +2323,7 @@ export default function DashboardOverview() {
     setReportStartDate(start)
     setReportEndDate(end)
     setReportPresetLabel(presetLabel)
-    setReportRange(`${formatReportDateLabel(start)} - ${formatReportDateLabel(end)}`)
+    setReportDateMode(presetLabel === 'All Time' ? 'all-time' : 'range')
     setShowReportDates(false)
   }
 
@@ -2311,6 +2334,17 @@ export default function DashboardOverview() {
     ? styles.featuredSlideExitToLeft
     : styles.featuredSlideExitToRight
   const reportPage = reportPages[pathname]
+  const reportPresets: readonly ReportDatePreset[] = pathname === '/reports/daily'
+    ? reportRangePresets
+    : [allTimeReportPreset, ...reportRangePresets]
+  const reportPreset = reportDateMode === 'all-time'
+    ? 'All Time'
+    : reportDateMode === 'default'
+      ? pathname === '/reports/daily' ? 'Last 30 Days' : 'Today'
+      : reportPresetLabel
+  const reportRangeValue = reportPreset === 'All Time'
+    ? 'All Time'
+    : `${formatReportDateLabel(reportStartDate)} - ${formatReportDateLabel(reportEndDate)}`
   const tablePage = tablePages[pathname]
   const campaignDetail = pathname.match(/^\/campaigns\/(\d+)$/)
   const allCampaignOffers = [...seedCampaignOffers, ...seedIncentiveOffers, ...customCampaignOffers]
@@ -3095,7 +3129,7 @@ export default function DashboardOverview() {
                     readOnly
                     id="reportrange"
                     className={styles.reportRangeInput}
-                    value={reportRange}
+                    value={reportRangeValue}
                     aria-expanded={showReportDates}
                     aria-label="Report date range"
                     onClick={() => setShowReportDates((open) => !open)}
@@ -3104,8 +3138,8 @@ export default function DashboardOverview() {
                     <ReportDateRangePicker
                       startDate={reportStartDate}
                       endDate={reportEndDate}
-                      presetLabel={reportPresetLabel}
-                      presets={reportRangePresets}
+                      presetLabel={reportPreset}
+                      presets={reportPresets}
                       anchorRef={reportRangeAnchorRef}
                       onApply={applyReportDates}
                       onCancel={() => setShowReportDates(false)}

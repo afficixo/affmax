@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       publisherNumber: user.publisherNumber,
     },
     type as 'daily' | 'campaign' | 'geo' | 'subid' | 'conversions' | 'tool',
-    { from, to },
+    { from, to, allTime: url.searchParams.get('allTime') === '1' },
   )
 
   return NextResponse.json(report, { headers: getCorsHeaders(origin) })

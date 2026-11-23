@@ -6,7 +6,7 @@ import '@/styles/daterangepicker-bs3.css'
 
 export type ReportDatePreset = {
   label: string
-  days: number | 'month' | 'last-month'
+  days: number | 'month' | 'last-month' | 'all-time'
   span?: number
 }
 
@@ -100,6 +100,8 @@ function rangeFromPreset(preset: ReportDatePreset) {
   } else if (preset.days === 'last-month') {
     start.setMonth(start.getMonth() - 1, 1)
     end.setDate(0)
+  } else if (preset.days === 'all-time') {
+    return { start: toIso(start), end: toIso(end) }
   } else if (preset.label === 'Yesterday') {
     start.setDate(start.getDate() - 1)
     end.setDate(end.getDate() - 1)
@@ -227,6 +229,10 @@ export default function ReportDateRangePicker({
   const onPresetClick = (preset: ReportDatePreset | { label: 'Custom Range' }) => {
     if (preset.label === 'Custom Range') {
       setActivePreset('Custom Range')
+      return
+    }
+    if ('days' in preset && preset.days === 'all-time') {
+      onApply(startDate, endDate, preset.label)
       return
     }
     const next = rangeFromPreset(preset as ReportDatePreset)
