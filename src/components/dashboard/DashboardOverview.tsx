@@ -4494,7 +4494,14 @@ export default function DashboardOverview() {
                         }}><X size={18} /></button>
                       </header>
                       <div className={styles.campaignDialogBody}>
-                        <Image className={styles.campaignPreviewLarge} src={`/affmine/campaigns/${detailedCampaign.id}.png`} alt="Full offer preview" width={700} height={440} />
+                        <Image
+                          className={styles.campaignPreviewLarge}
+                          src={toCampaignImageSource(detailedCampaign.id, detailedCampaign.imageSource ?? `/affmine/campaigns/${detailedCampaign.id}.png`)}
+                          alt="Full offer preview"
+                          width={700}
+                          height={440}
+                          loading="eager"
+                        />
                       </div>
                     </section>
                   </div>
