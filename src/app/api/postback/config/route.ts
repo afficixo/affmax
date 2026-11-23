@@ -8,7 +8,7 @@ import {
   getMarketplacePostbackTokens,
   sumPublisherEarnings,
 } from '@/lib/marketplace-postback'
-import type { MarketplacePostbackTokens } from '@/lib/postback-tokens'
+import { isPublisherGlobalPostbackActive, type MarketplacePostbackTokens } from '@/lib/postback-tokens'
 import { getTrackingDomainOrigin } from '@/lib/tracking'
 
 const marketplaceTokenKeys: Array<keyof MarketplacePostbackTokens> = [
@@ -123,10 +123,11 @@ export async function GET(request: Request) {
     `
     const publisher = publisherRows[0]
     const earnings = await sumPublisherEarnings(user.id)
+    const url = publisher?.globalPostbackUrl?.trim() || ''
     return NextResponse.json({
       role,
-      isActive: publisher?.globalPostbackEnabled !== false,
-      url: publisher?.globalPostbackUrl || '',
+      isActive: isPublisherGlobalPostbackActive(url, publisher?.globalPostbackEnabled),
+      url,
       earningsSinceLastInvoice: earnings,
     }, { headers: getCorsHeaders(origin) })
   } catch (error) {
@@ -450,7 +451,11 @@ export async function PATCH(request: Request) {
       UPDATE "users"
       SET
         "globalPostbackUrl" = COALESCE(${nextUrl}, "globalPostbackUrl"),
-        "globalPostbackEnabled" = COALESCE(${nextActive}, "globalPostbackEnabled"),
+        "globalPostbackEnabled" = CASE
+          WHEN NULLIF(BTRIM(COALESCE(${nextUrl}, "globalPostbackUrl")), '') IS NULL THEN false
+          WHEN ${nextActive} IS NULL THEN COALESCE("globalPostbackEnabled", true)
+          ELSE ${nextActive}
+        END,
         "updatedAt" = NOW()
       WHERE "id" = ${user.id}
     `
@@ -464,11 +469,12 @@ export async function PATCH(request: Request) {
       LIMIT 1
     `
     const updated = updatedRows[0]
+    const url = updated?.globalPostbackUrl?.trim() || ''
 
     return NextResponse.json({
       role: 'PUBLISHER',
-      isActive: updated?.globalPostbackEnabled !== false,
-      url: updated?.globalPostbackUrl || '',
+      isActive: isPublisherGlobalPostbackActive(url, updated?.globalPostbackEnabled),
+      url,
     }, { headers: getCorsHeaders(origin) })
   } catch (error) {
     console.error('PATCH /api/postback/config failed:', error)

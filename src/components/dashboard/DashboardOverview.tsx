@@ -1051,8 +1051,16 @@ export default function DashboardOverview() {
   )
   const reportRangeAnchorRef = useRef<HTMLInputElement>(null)
   const [pageSearch, setPageSearch] = useState('')
-  const [postbackEnabled, setPostbackEnabled] = useState(true)
+  const [postbackEnabled, setPostbackEnabled] = useState(false)
   const [postbackUrl, setPostbackUrl] = useState('')
+  const [savedPostbackUrl, setSavedPostbackUrl] = useState('')
+  const [postbackSaving, setPostbackSaving] = useState(false)
+  const [postbackStatusUpdating, setPostbackStatusUpdating] = useState(false)
+  const [postbackTesting, setPostbackTesting] = useState(false)
+  const [postbackTestResult, setPostbackTestResult] = useState<{
+    tone: 'success' | 'warning' | 'error'
+    message: string
+  } | null>(null)
   const [marketplacePostbacks, setMarketplacePostbacks] = useState<MarketplacePostbackRecord[]>([])
   const [newMarketplaceName, setNewMarketplaceName] = useState('')
   const [newMarketplaceTokens, setNewMarketplaceTokens] = useState<MarketplacePostbackTokens>(
@@ -1803,8 +1811,13 @@ export default function DashboardOverview() {
           setMarketplacePostbacks(data.marketplaces || [])
         }
         if (data.role === 'PUBLISHER') {
-          setPostbackEnabled(data.isActive !== false)
-          if (typeof data.url === 'string') setPostbackUrl(data.url)
+          if (typeof data.url === 'string') {
+            setPostbackUrl(data.url)
+            setSavedPostbackUrl(data.url)
+            setPostbackEnabled(Boolean(data.url.trim()) && data.isActive !== false)
+          } else {
+            setPostbackEnabled(false)
+          }
         }
       })
       .catch((requestError: unknown) => {
@@ -2992,7 +3005,7 @@ export default function DashboardOverview() {
           if (pathname !== '/campaigns/browse') router.push('/campaigns/browse')
         }}>
           <button type="submit" className={styles.searchButton} aria-label="Search offers"><i className="fa fa-search" aria-hidden="true" /></button>
-          <input name="qcmp" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search offers" />
+          <input name="qcmp" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search offers" placeholder="Search offers..." />
         </form>
         <div className={styles.updates}>
           <span className={styles.updatesLabel}>Updates:</span>{' '}
@@ -5061,32 +5074,52 @@ export default function DashboardOverview() {
                 {userRole !== 'MANAGER' ? (
                   <>
                     <div className={styles.postbackFormGroup}>
-                      <label className={styles.postbackFormLabel}>Postback status</label>
+                      <label className={styles.postbackFormLabel}>Automatic postback status</label>
                       <div className={styles.postbackFormControl}>
                         <button
                           type="button"
                           role="switch"
                           aria-checked={postbackEnabled}
+                          disabled={
+                            postbackStatusUpdating
+                            || postbackSaving
+                            || marketplacePostbackLoading
+                            || !savedPostbackUrl.trim()
+                            || postbackUrl.trim() !== savedPostbackUrl.trim()
+                          }
                           className={`${styles.postbackSwitch} ${postbackEnabled ? styles.postbackSwitchOn : styles.postbackSwitchOff}`}
-                          onClick={() => {
+                          onClick={async () => {
                             const next = !postbackEnabled
                             setPostbackEnabled(next)
-                            void fetch('/api/postback/config', {
-                              method: 'PATCH',
-                              credentials: 'include',
-                              headers: { 'content-type': 'application/json' },
-                              body: JSON.stringify({ isActive: next }),
-                            }).then(async (response) => {
-                              if (!response.ok) {
+                            setPostbackStatusUpdating(true)
+                            try {
+                              const response = await fetch('/api/postback/config', {
+                                method: 'PATCH',
+                                credentials: 'include',
+                                headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({ isActive: next }),
+                              })
+                              const payload = await response.json().catch(() => null) as {
+                                isActive?: boolean
+                                url?: string
+                              } | null
+                              if (!response.ok || !payload) {
                                 setPostbackEnabled(!next)
                                 setPageNotice('Unable to update postback status.')
                                 return
                               }
-                              setPageNotice(next ? 'Postback enabled.' : 'Postback disabled.')
-                            }).catch(() => {
+                              const configuredUrl = typeof payload.url === 'string'
+                                ? payload.url
+                                : savedPostbackUrl
+                              const isActive = Boolean(configuredUrl.trim()) && payload.isActive !== false
+                              setPostbackEnabled(isActive)
+                              setPageNotice(isActive ? 'Postback enabled.' : 'Postback disabled.')
+                            } catch {
                               setPostbackEnabled(!next)
                               setPageNotice('Unable to update postback status.')
-                            })
+                            } finally {
+                              setPostbackStatusUpdating(false)
+                            }
                           }}
                         >
                           <span className={styles.postbackSwitchGroup} aria-hidden="true">
@@ -5107,7 +5140,10 @@ export default function DashboardOverview() {
                           type="text"
                           className={styles.postbackUrlInput}
                           value={postbackUrl}
-                          onChange={(event) => setPostbackUrl(event.target.value)}
+                          onChange={(event) => {
+                            setPostbackUrl(event.target.value)
+                            setPostbackTestResult(null)
+                          }}
                         />
                       </div>
                     </div>
@@ -5168,34 +5204,113 @@ export default function DashboardOverview() {
                     {marketplacePostbackCreating ? 'Creating…' : 'Create postback URL'}
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    className={styles.postbackSaveButton}
-                    onClick={() => {
-                      void fetch('/api/postback/config', {
-                        method: 'PATCH',
-                        credentials: 'include',
-                        headers: { 'content-type': 'application/json' },
-                        body: JSON.stringify({ url: postbackUrl, isActive: postbackEnabled }),
-                      }).then(async (response) => {
-                        if (!response.ok) {
-                          const payload = await response.json().catch(() => null) as { error?: string } | null
-                          setPageNotice(payload?.error || 'Unable to save postback settings.')
-                          return
+                  <>
+                    <button
+                      type="button"
+                      className={`${styles.postbackSaveButton} ${styles.postbackTestButton}`}
+                      disabled={
+                        postbackTesting
+                        || marketplacePostbackLoading
+                        || !savedPostbackUrl.trim()
+                        || postbackUrl.trim() !== savedPostbackUrl.trim()
+                      }
+                      onClick={async () => {
+                        if (postbackTesting) return
+                        setPostbackTesting(true)
+                        setPostbackTestResult(null)
+                        try {
+                          const response = await fetch('/api/postback/config/test', {
+                            method: 'POST',
+                            credentials: 'include',
+                          })
+                          const payload = await response.json().catch(() => null) as {
+                            connected?: boolean
+                            successful?: boolean
+                            status?: number
+                            error?: string
+                          } | null
+                          if (!response.ok || !payload) {
+                            setPostbackTestResult({
+                              tone: 'error',
+                              message: payload?.error || 'Unable to test the postback URL.',
+                            })
+                          } else if (payload.connected && payload.successful) {
+                            setPostbackTestResult({
+                              tone: 'success',
+                              message: `Connected successfully (HTTP ${payload.status}).`,
+                            })
+                          } else if (payload.connected) {
+                            setPostbackTestResult({
+                              tone: 'warning',
+                              message: `Endpoint responded with HTTP ${payload.status}; check its response handling.`,
+                            })
+                          } else {
+                            setPostbackTestResult({
+                              tone: 'error',
+                              message: payload.error || 'Could not reach the saved postback URL.',
+                            })
+                          }
+                        } catch (error) {
+                          console.error('Unable to test publisher postback:', error)
+                          setPostbackTestResult({
+                            tone: 'error',
+                            message: 'Unable to test the postback URL. Try again.',
+                          })
+                        } finally {
+                          setPostbackTesting(false)
                         }
-                        const data = await response.json() as { url?: string; isActive?: boolean }
-                        if (typeof data.url === 'string') setPostbackUrl(data.url)
-                        if (typeof data.isActive === 'boolean') setPostbackEnabled(data.isActive)
-                        setPageNotice('Postback settings saved.')
-                      }).catch(() => {
-                        setPageNotice('Unable to save postback settings.')
-                      })
-                    }}
-                  >
-                    <i className="fa fa-save" aria-hidden="true" />Save
-                  </button>
+                      }}
+                    >
+                      {postbackTesting ? 'Testing…' : 'Test'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.postbackSaveButton}
+                      disabled={postbackSaving}
+                      onClick={async () => {
+                        setPostbackSaving(true)
+                        try {
+                          const response = await fetch('/api/postback/config', {
+                            method: 'PATCH',
+                            credentials: 'include',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify({ url: postbackUrl, isActive: postbackEnabled }),
+                          })
+                          if (!response.ok) {
+                            const payload = await response.json().catch(() => null) as { error?: string } | null
+                            setPageNotice(payload?.error || 'Unable to save postback settings.')
+                            return
+                          }
+                          const data = await response.json() as { url?: string; isActive?: boolean }
+                          if (typeof data.url === 'string') {
+                            setPostbackUrl(data.url)
+                            setSavedPostbackUrl(data.url)
+                          }
+                          const savedUrl = typeof data.url === 'string' ? data.url : postbackUrl
+                          setPostbackEnabled(Boolean(savedUrl.trim()) && data.isActive !== false)
+                          setPostbackTestResult(null)
+                          setPageNotice('Postback settings saved.')
+                        } catch {
+                          setPageNotice('Unable to save postback settings.')
+                        } finally {
+                          setPostbackSaving(false)
+                        }
+                      }}
+                    >
+                      <i className="fa fa-save" aria-hidden="true" />
+                      {postbackSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </>
                 )}
               </div>
+              ) : null}
+              {userRole !== 'MANAGER' && postbackTestResult ? (
+                <p
+                  className={`${styles.postbackTestResult} ${styles[`postbackTestResult${postbackTestResult.tone[0].toUpperCase()}${postbackTestResult.tone.slice(1)}`]}`}
+                  role="status"
+                >
+                  {postbackTestResult.message}
+                </p>
               ) : null}
               {userRole === 'MANAGER' ? (
                 <div className={styles.marketplacePostbackList} role="list" aria-label="Marketplace postback URLs">
@@ -5471,11 +5586,16 @@ export default function DashboardOverview() {
                         ['#s4#', 'SubID 4 (publisher sub 2)'],
                         ['#ip#', 'Conversion IP'],
                       ] : [
-                        ['#s1#', 'SubID 1'],
-                        ['#s2#', 'SubID 2'],
-                        ['#s3#', 'SubID 3'],
-                        ['#s4#', 'SubID 4'],
-                        ['#ip#', 'Conversion IP'],
+                        ['#datetime#', 'Conversion date and time (Unix timestamp)'],
+                        ['#cmpname#', 'Campaign name'],
+                        ['#cmpid#', 'Campaign/offer ID'],
+                        ['#country#', 'Conversion country code'],
+                        ['#s1#', 'Conversion report SubID 1'],
+                        ['#s2#', 'Conversion report SubID 2'],
+                        ['#ip#', 'Conversion IP address'],
+                        ['#payout#', 'Conversion revenue'],
+                        ['#amount#', 'Offerwall amount (falls back to revenue)'],
+                        ['#status#', 'Status code: 1 credited, 0 rejected, 2 pending'],
                       ]).map(([token, description]) => (
                         <tr key={token}>
                           <th scope="row"><code className={styles.postbackTokenCode}>{token}</code></th>

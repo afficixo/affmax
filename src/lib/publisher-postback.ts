@@ -18,6 +18,8 @@ export type PublisherPostbackLead = {
   /** Optional extra publisher subs (Crack Bounty #s3# / #s4#). */
   publisherSub3?: string | null
   publisherSub4?: string | null
+  /** Marks manually sent test events for endpoints that support a test flag. */
+  isTest?: boolean
   occurredAt?: Date | null
   createdAt: Date
 }
@@ -75,6 +77,7 @@ export function buildPublisherPostbackUrl(template: string, lead: PublisherPostb
     '#s3#': tokenValue(sub3),
     '#s4#': tokenValue(sub4),
     '#status#': tokenValue(status),
+    '#test#': lead.isTest ? '1' : '0',
   }
 
   let url = template
@@ -146,6 +149,89 @@ export async function firePublisherGlobalPostback(
       skipped: 'request_failed',
       url: target.toString(),
       error: error instanceof Error ? error.message : 'request_failed',
+    }
+  }
+}
+
+export type PublisherPostbackTestResult =
+  | { connected: true; successful: boolean; status: number }
+  | {
+      connected: false
+      code: 'publisher_not_found' | 'url_not_configured' | 'invalid_url' | 'invalid_protocol' | 'request_failed'
+      error: string
+    }
+
+export async function testPublisherGlobalPostback(
+  userId: string,
+): Promise<PublisherPostbackTestResult> {
+  const publisherRows = await prisma.$queryRaw<Array<{
+    globalPostbackUrl: string | null
+  }>>`
+    SELECT "globalPostbackUrl"
+    FROM "users"
+    WHERE "id" = ${userId}
+    LIMIT 1
+  `
+  const template = (publisherRows[0]?.globalPostbackUrl || '').trim()
+  if (!publisherRows[0]) {
+    return { connected: false, code: 'publisher_not_found', error: 'Publisher account not found.' }
+  }
+  if (!template) {
+    return { connected: false, code: 'url_not_configured', error: 'Save a postback URL before testing.' }
+  }
+
+  const now = new Date()
+  const testLead: PublisherPostbackLead = {
+    offerId: 'TEST_OFFER',
+    campaignId: 'TEST_OFFER',
+    campaignName: 'Leadsyner Test Conversion',
+    payout: 0,
+    amount: 0,
+    country: 'ZZ',
+    ipAddress: '192.0.2.1',
+    status: 'pending',
+    sub3: 'TEST_SUBID_1',
+    sub4: 'TEST_SUBID_2',
+    isTest: true,
+    occurredAt: now,
+    createdAt: now,
+  }
+  const resolved = buildPublisherPostbackUrl(template, testLead)
+  let target: URL
+  try {
+    target = new URL(resolved)
+  } catch {
+    return { connected: false, code: 'invalid_url', error: 'The saved postback URL is invalid.' }
+  }
+  if (!/^https?:$/i.test(target.protocol)) {
+    return {
+      connected: false,
+      code: 'invalid_protocol',
+      error: 'The saved postback URL must use HTTP or HTTPS.',
+    }
+  }
+
+  try {
+    const response = await fetch(target.toString(), {
+      method: 'GET',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'user-agent': 'LeadsynerPostbackTest/1.0',
+        accept: '*/*',
+      },
+    })
+    return {
+      connected: true,
+      successful: response.ok,
+      status: response.status,
+    }
+  } catch (error) {
+    console.error('Publisher postback test failed:', error)
+    return {
+      connected: false,
+      code: 'request_failed',
+      error: 'Could not reach the saved postback URL.',
     }
   }
 }
