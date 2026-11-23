@@ -2568,6 +2568,45 @@ input.reportRangeInput {
   line-height: 1.4;
 }
 
+.marketplacePostbackList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.marketplacePostbackItem {
+  min-width: 0;
+  border: 1px solid #dfe4e7;
+  border-radius: 4px;
+  padding: 12px;
+  background: #fff;
+}
+
+.marketplacePostbackItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.marketplacePostbackName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.marketplacePostbackUrl {
+  min-width: 0;
+  font-size: 12px;
+}
+
+.marketplacePostbackActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* bootstrap-toggle mini (57×25) */
 .postbackSwitch {
   position: relative;

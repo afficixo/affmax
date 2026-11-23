@@ -7,10 +7,10 @@ export function createPostbackToken(): string {
 }
 
 /**
- * Manager inbound URL using only main-marketplace Crack Bounty tokens:
+ * Shared manager inbound URL fields for every configured marketplace:
  * #s1# #s2# #s3# #s4# #datetime# #ip# #country#
  *
- * Our tracking map on main offer links:
+ * Our tracking map on offer links:
  *   s1 = publisher id, s2 = offer id, s3 = publisher sub1, s4 = publisher sub2
  */
 export function buildMarketplacePostbackUrl(origin: string, token: string): string {
@@ -47,13 +47,9 @@ export async function ensureMarketplacePostbackConfig(managerId: string) {
     }
   }
 
-  const existing = await prisma.postbackConfig.findUnique({
-    where: {
-      userId_provider: {
-        userId,
-        provider: 'MARKETPLACE',
-      },
-    },
+  const existing = await prisma.postbackConfig.findFirst({
+    where: { userId, provider: 'MARKETPLACE' },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
   })
   if (existing) return existing
 
@@ -69,13 +65,9 @@ export async function ensureMarketplacePostbackConfig(managerId: string) {
     })
   } catch (error) {
     console.error('ensureMarketplacePostbackConfig create failed:', error)
-    const raced = await prisma.postbackConfig.findUnique({
-      where: {
-        userId_provider: {
-          userId,
-          provider: 'MARKETPLACE',
-        },
-      },
+    const raced = await prisma.postbackConfig.findFirst({
+      where: { userId, provider: 'MARKETPLACE' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     })
     if (!raced) {
       throw new Error(

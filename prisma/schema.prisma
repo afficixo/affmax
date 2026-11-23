@@ -585,7 +585,6 @@ model PostbackConfig {
   updatedAt   DateTime         @updatedAt
   leads       ConversionLead[]
 
-  @@unique([userId, provider])
   @@index([token, isActive])
   @@map("postback_configs")
 }
