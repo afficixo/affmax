@@ -11,9 +11,7 @@ type StoredMarketplacePostbackTokens = {
   s2Token: string
   s3Token: string
   s4Token: string
-  datetimeToken: string
   ipToken: string
-  countryToken: string
 }
 
 export function createPostbackToken(): string {
@@ -22,7 +20,7 @@ export function createPostbackToken(): string {
 
 /**
  * Shared manager inbound URL fields for every configured marketplace:
- * #s1# #s2# #s3# #s4# #datetime# #ip# #country#
+ * #s1# #s2# #s3# #s4# #ip#
  *
  * Our tracking map on offer links:
  *   s1 = publisher id, s2 = offer id, s3 = publisher sub1, s4 = publisher sub2
@@ -35,9 +33,7 @@ export function getMarketplacePostbackTokens(
     s2: config.s2Token,
     s3: config.s3Token,
     s4: config.s4Token,
-    datetime: config.datetimeToken,
     ip: config.ipToken,
-    country: config.countryToken,
   }
 }
 
@@ -49,8 +45,7 @@ export function buildMarketplacePostbackUrl(
   const base = origin.replace(/\/$/, '')
   // Keep the marketplace macro syntax intact so its system can substitute values.
   return `${base}/api/postback/in/${encodeURIComponent(token)}`
-    + `?s1=${tokens.s1}&s2=${tokens.s2}&s3=${tokens.s3}&s4=${tokens.s4}`
-    + `&datetime=${tokens.datetime}&ip=${tokens.ip}&country=${tokens.country}`
+    + `?s1=${tokens.s1}&s2=${tokens.s2}&s3=${tokens.s3}&s4=${tokens.s4}&ip=${tokens.ip}`
 }
 
 export async function ensureMarketplacePostbackConfig(managerId: string) {

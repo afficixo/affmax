@@ -104,9 +104,7 @@ const EMPTY_MARKETPLACE_POSTBACK_TOKENS: MarketplacePostbackTokens = {
   s2: '',
   s3: '',
   s4: '',
-  datetime: '',
   ip: '',
-  country: '',
 }
 
 const MARKETPLACE_POSTBACK_TOKEN_FIELDS: Array<{
@@ -119,9 +117,7 @@ const MARKETPLACE_POSTBACK_TOKEN_FIELDS: Array<{
   { key: 's2', label: 'Offer ID (s2)', example: '#S2#', required: true },
   { key: 's3', label: 'Sub ID 1 (s3)', example: '#S3#' },
   { key: 's4', label: 'Sub ID 2 (s4)', example: '#S4#' },
-  { key: 'datetime', label: 'Conversion time', example: '#DATETIME#' },
   { key: 'ip', label: 'Conversion IP', example: '#IP#' },
-  { key: 'country', label: 'Country', example: '#COUNTRY#' },
 ]
 
 /** Crack Bounty Daily Reports only — Chart.js grouped bar (`#canvas` in `#container`). */
@@ -4999,9 +4995,7 @@ export default function DashboardOverview() {
                       {' '}<code className={styles.postbackTokenCode}>s2=offer_id</code>,
                       {' '}<code className={styles.postbackTokenCode}>s3=sub1</code>,
                       {' '}<code className={styles.postbackTokenCode}>s4=sub2</code>,
-                      {' '}<code className={styles.postbackTokenCode}>datetime</code>,
-                      {' '}<code className={styles.postbackTokenCode}>ip</code>,
-                      {' '}<code className={styles.postbackTokenCode}>country</code>. Publisher ID and offer ID are required.
+                      {' '}<code className={styles.postbackTokenCode}>ip</code>. Publisher ID and offer ID are required.
                     </p>
                     <div className={styles.postbackFormGroup}>
                       <label className={styles.postbackFormLabel} htmlFor="marketplace-postback-name">
@@ -5296,39 +5290,18 @@ export default function DashboardOverview() {
                       <tr><th>Token</th><th>Description</th></tr>
                     </thead>
                     <tbody>
-                      {([
-                        ['#datetime#', 'Conversion date & time (Unix timestamp format)'],
-                        ['#ip#', 'Conversion IP'],
-                        ['#country#', 'Conversion country'],
-                      ] as const).map(([token, description]) => (
-                        <tr key={token}>
-                          <th scope="row"><code className={styles.postbackTokenCode}>{token}</code></th>
-                          <td>{description}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className={styles.postbackTokenCol}>
-                  <table className={styles.postbackTokenTable}>
-                    <colgroup>
-                      <col className={styles.postbackTokenColNarrow} />
-                      <col />
-                    </colgroup>
-                    <thead>
-                      <tr><th>Token</th><th>Description</th></tr>
-                    </thead>
-                    <tbody>
                       {(userRole === 'MANAGER' ? [
                         ['#s1#', 'SubID 1 (our publisher ID)'],
                         ['#s2#', 'SubID 2 (our offer ID)'],
                         ['#s3#', 'SubID 3 (publisher sub 1)'],
                         ['#s4#', 'SubID 4 (publisher sub 2)'],
+                        ['#ip#', 'Conversion IP'],
                       ] : [
                         ['#s1#', 'SubID 1'],
                         ['#s2#', 'SubID 2'],
                         ['#s3#', 'SubID 3'],
                         ['#s4#', 'SubID 4'],
+                        ['#ip#', 'Conversion IP'],
                       ]).map(([token, description]) => (
                         <tr key={token}>
                           <th scope="row"><code className={styles.postbackTokenCode}>{token}</code></th>

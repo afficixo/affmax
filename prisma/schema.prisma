@@ -584,9 +584,7 @@ model PostbackConfig {
   s2Token       String           @default("#s2#")
   s3Token       String           @default("#s3#")
   s4Token       String           @default("#s4#")
-  datetimeToken String           @default("#datetime#")
   ipToken       String           @default("#ip#")
-  countryToken  String           @default("#country#")
   isActive      Boolean          @default(true)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt

@@ -16,9 +16,7 @@ const marketplaceTokenKeys: Array<keyof MarketplacePostbackTokens> = [
   's2',
   's3',
   's4',
-  'datetime',
   'ip',
-  'country',
 ]
 
 function isMarketplacePostbackTokens(value: unknown): value is MarketplacePostbackTokens {
@@ -84,9 +82,7 @@ export async function GET(request: Request) {
           s2Token: true,
           s3Token: true,
           s4Token: true,
-          datetimeToken: true,
           ipToken: true,
-          countryToken: true,
         },
       })
       return NextResponse.json({
@@ -100,9 +96,7 @@ export async function GET(request: Request) {
           s2: 'offer_id',
           s3: 'publisher_sub_id_1',
           s4: 'publisher_sub_id_2',
-          datetime: 'unix_timestamp',
           ip: 'conversion_ip',
-          country: 'conversion_country',
         },
         marketplaces: configs.map((marketplace) => ({
           id: marketplace.id,
@@ -195,9 +189,7 @@ export async function POST(request: Request) {
       s2: rawTokens.s2.trim(),
       s3: rawTokens.s3.trim(),
       s4: rawTokens.s4.trim(),
-      datetime: rawTokens.datetime.trim(),
       ip: rawTokens.ip.trim(),
-      country: rawTokens.country.trim(),
     }
     if (!tokens.s1 || !tokens.s2) {
       return NextResponse.json({ error: 'Publisher ID (s1) and offer ID (s2) tokens are required.' }, {
@@ -228,9 +220,7 @@ export async function POST(request: Request) {
         s2Token: tokens.s2,
         s3Token: tokens.s3,
         s4Token: tokens.s4,
-        datetimeToken: tokens.datetime,
         ipToken: tokens.ip,
-        countryToken: tokens.country,
         isActive: true,
       },
       select: {
@@ -242,9 +232,7 @@ export async function POST(request: Request) {
         s2Token: true,
         s3Token: true,
         s4Token: true,
-        datetimeToken: true,
         ipToken: true,
-        countryToken: true,
       },
     })
     const appOrigin = resolveAppOrigin(request)
