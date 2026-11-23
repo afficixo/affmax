@@ -1,30 +1,30 @@
 import type { Metadata } from "next";
 import HomePageClient from "./HomePageClient";
 
-const pageTitle = "Afficix | CPC Affiliate Network for Publishers & Advertisers";
+const pageTitle = "Crack Bounty | Affiliate Marketing Network";
 const pageDescription =
-  "Discover CPC campaigns, create tracking links, and monitor clicks with Afficix, a private affiliate network for publishers and advertisers.";
+  "Crack Bounty connects publishers and advertisers through a private affiliate network with quality offers, campaign tracking, and clear reporting.";
 
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,
   alternates: {
-    canonical: "https://afficix.com/",
+    canonical: "https://crackbounty.afficix.com/",
   },
   openGraph: {
     title: pageTitle,
     description: pageDescription,
     type: "website",
-    url: "https://afficix.com/",
-    siteName: "Afficix",
+    url: "https://crackbounty.afficix.com/",
+    siteName: "Crack Bounty",
     locale: "en_US",
     images: [
       {
-        url: "/afficix-preview.png",
-        secureUrl: "https://afficix.com/afficix-preview.png",
-        width: 768,
-        height: 768,
-        alt: "Afficix Pay Per Click Affiliate Marketplace",
+        url: "https://crackbounty.afficix.com/logo.png",
+        secureUrl: "https://crackbounty.afficix.com/logo.png",
+        width: 2172,
+        height: 724,
+        alt: "Crack Bounty logo",
         type: "image/png",
       },
     ],
@@ -33,14 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: pageTitle,
     description: pageDescription,
-    images: [
-      {
-        url: "https://afficix.com/afficix-preview.png",
-        alt: "Afficix Pay Per Click Affiliate Marketplace",
-      },
-    ],
-    site: "@afficixo",
-    creator: "@afficixo",
+    images: ["https://crackbounty.afficix.com/logo.png"],
   },
 };
 
@@ -49,14 +42,16 @@ const structuredData = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://afficix.com/#organization",
-      name: "Afficix",
-      url: "https://afficix.com/",
+      "@id": "https://crackbounty.afficix.com/#organization",
+      name: "Crack Bounty",
+      url: "https://crackbounty.afficix.com/",
       logo: {
         "@type": "ImageObject",
-        url: "https://afficix.com/afficixlogo.png",
+        url: "https://crackbounty.afficix.com/logo.png",
       },
-      email: "contact@afficix.com",
+      email: "contact@crackbounty.afficix.com",
+      description:
+        "A private affiliate network connecting publishers and advertisers with quality offers, campaign tracking, and actionable performance insights.",
       address: {
         "@type": "PostalAddress",
         streetAddress: "16192 Coastal Highway",
@@ -65,25 +60,24 @@ const structuredData = {
         postalCode: "19958",
         addressCountry: "US",
       },
-      description:
-        "A CPC affiliate marketplace for publishers and advertisers to discover campaigns and manage click tracking.",
     },
     {
       "@type": "WebSite",
-      "@id": "https://afficix.com/#website",
-      name: "Afficix",
-      url: "https://afficix.com/",
-      publisher: { "@id": "https://afficix.com/#organization" },
+      "@id": "https://crackbounty.afficix.com/#website",
+      name: "Crack Bounty",
+      url: "https://crackbounty.afficix.com/",
+      description: pageDescription,
+      publisher: { "@id": "https://crackbounty.afficix.com/#organization" },
       inLanguage: "en",
     },
     {
       "@type": "WebPage",
-      "@id": "https://afficix.com/#webpage",
-      url: "https://afficix.com/",
+      "@id": "https://crackbounty.afficix.com/#webpage",
+      url: "https://crackbounty.afficix.com/",
       name: pageTitle,
       description: pageDescription,
-      isPartOf: { "@id": "https://afficix.com/#website" },
-      about: { "@id": "https://afficix.com/#organization" },
+      isPartOf: { "@id": "https://crackbounty.afficix.com/#website" },
+      about: { "@id": "https://crackbounty.afficix.com/#organization" },
       inLanguage: "en",
     },
   ],

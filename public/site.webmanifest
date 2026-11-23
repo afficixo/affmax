@@ -1,10 +1,10 @@
 {
-  "name": "Afficix",
-  "short_name": "Afficix",
+  "name": "Crack Bounty",
+  "short_name": "Crack Bounty",
   "icons": [
     {
-      "src": "/afficix_favicon.png",
-      "sizes": "any",
+      "src": "/favicon.png",
+      "sizes": "768x768",
       "type": "image/png",
       "purpose": "any"
     }

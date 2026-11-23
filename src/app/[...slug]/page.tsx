@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     .map((part) => part.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()))
     .join(' - ')
 
-  return { title: `Affmine - ${title}` }
+  return { title: `Crack Bounty - ${title}` }
 }
 
 export default function AppPage() {

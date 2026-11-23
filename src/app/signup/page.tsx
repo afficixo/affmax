@@ -3,42 +3,42 @@ import { Suspense } from "react"
 import SignupClient from "./SignupClient"
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://afficix.com'),
-  title: 'Join Afficix — Become a CPC Affiliate Publisher',
+  metadataBase: new URL('https://crackbounty.afficix.com'),
+  title: 'Join Crack Bounty | Publisher Sign Up',
   description:
-    'Create your Afficix publisher account to access CPC offers, track campaign performance, and monetize your traffic.',
+    'Create a Crack Bounty publisher account to explore affiliate offers, track campaign performance, and grow your business.',
   robots: {
     index: false,
     follow: true,
   },
   alternates: {
-    canonical: 'https://afficix.com/signup',
+    canonical: 'https://crackbounty.afficix.com/signup',
   },
   openGraph: {
-    title: 'Join Afficix — Become a CPC Affiliate Publisher',
+    title: 'Join Crack Bounty | Publisher Sign Up',
     description:
-      'Create your Afficix publisher account to access CPC offers, track campaign performance, and monetize your traffic.',
+      'Create a Crack Bounty publisher account to explore affiliate offers, track campaign performance, and grow your business.',
     type: 'website',
-    url: 'https://afficix.com/signup',
-    siteName: 'Afficix',
+    url: 'https://crackbounty.afficix.com/signup',
+    siteName: 'Crack Bounty',
     images: [
       {
-        url: 'https://afficix.com/afficix-preview.png',
-        secureUrl: 'https://afficix.com/afficix-preview.png',
-        width: 768,
-        height: 768,
-        alt: 'Afficix Pay Per Click Affiliate Marketplace',
+        url: 'https://crackbounty.afficix.com/logo.png',
+        secureUrl: 'https://crackbounty.afficix.com/logo.png',
+        width: 2172,
+        height: 724,
+        alt: 'Crack Bounty logo',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Join Afficix — Become a CPC Affiliate Publisher',
+    title: 'Join Crack Bounty | Publisher Sign Up',
     description:
-      'Create your Afficix publisher account to access CPC offers, track campaign performance, and monetize your traffic.',
-    images: ['https://afficix.com/afficix-preview.png'],
-    creator: 'Afficix',
+      'Create a Crack Bounty publisher account to explore affiliate offers, track campaign performance, and grow your business.',
+    images: ['https://crackbounty.afficix.com/logo.png'],
+    creator: 'Crack Bounty',
   },
 }
 

@@ -1,4 +1,4 @@
-/** Affmine-style publisher tracking → main offer postback mapping. */
+/** Crack Bounty-style publisher tracking → main offer postback mapping. */
 
 export const DEFAULT_MAIN_OFFER_BASE = 'https://www.af9m8trk.com/6HH112BV/UQ711VGP/'
 
@@ -132,7 +132,7 @@ export function isTrackingPath(pathname: string): { publisherId: string; offerId
   const reserved = new Set([
     'api', 'dashboard', 'campaigns', 'account', 'payments', 'support', 'login', 'signup',
     'reports', 'terms', 'privacy', 'incentive_offers', 'contentlocker', 'offerwall',
-    'tools', 'locker', 'wall', 'affmine', '_next', 'favicon.ico',
+    'tools', 'locker', 'wall', 'crackbounty', '_next', 'favicon.ico',
   ])
   if (reserved.has(publisherId.toLowerCase())) return null
   return { publisherId, offerId }

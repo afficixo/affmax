@@ -88,7 +88,7 @@ export default function HomePage() {
               transition={{ duration: 0.7, ease: "easeOut" }}
               className="font-[Montserrat] mb-6 max-w-[12ch] text-3xl font-black leading-[1.1] tracking-tight text-white sm:mb-7 sm:max-w-none sm:text-5xl md:text-6xl lg:text-7xl"
             >
-              Join the <span className="text-[#5ff442]">leading</span>
+              Join a <span className="text-[#5ff442]">private</span>
               <br className="hidden sm:block" />
               affiliate network
             </motion.h1>
@@ -99,8 +99,8 @@ export default function HomePage() {
               transition={{ duration: 0.7, delay: 0.12 }}
               className="mb-8 max-w-2xl text-sm leading-relaxed text-white/80 sm:mb-10 sm:text-base md:text-lg lg:text-lg"
             >
-              Discover our exclusive private network. Even if you are a publisher or
-              advertiser we have solutions for everyone.
+              Crack Bounty connects publishers and advertisers with quality campaigns,
+              clear performance insights, and responsive support.
             </motion.p>
 
             <div className="home-hero-actions-shell">
@@ -382,8 +382,8 @@ export default function HomePage() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-[#6b7c87] mb-1">Email</p>
-                      <a href="mailto:contact@afficix.com" className="text-sm font-medium text-[#0e7a4d] hover:text-[#359f25] transition-colors">
-                        contact@afficix.com
+                      <a href="mailto:contact@crackbounty.afficix.com" className="text-sm font-medium text-[#0e7a4d] hover:text-[#359f25] transition-colors">
+                        contact@crackbounty.afficix.com
                       </a>
                     </div>
                   </div>

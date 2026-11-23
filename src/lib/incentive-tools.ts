@@ -32,12 +32,55 @@ export type IncentiveWidgetOffer = {
   device?: string[]
 }
 
-export const contentLockersStorageKey = 'affmine-content-lockers'
-export const offerwallsStorageKey = 'affmine-offerwalls'
-export const activeIncentiveOffersStorageKey = 'affmine-active-incentive-offers'
-export const customOffersStorageKey = 'affmine-custom-offers'
-export const campaignOverridesStorageKey = 'affmine-campaign-overrides'
-export const deletedCampaignsStorageKey = 'affmine-deleted-campaigns'
+export const contentLockersStorageKey = 'crackbounty-content-lockers'
+export const offerwallsStorageKey = 'crackbounty-offerwalls'
+export const activeIncentiveOffersStorageKey = 'crackbounty-active-incentive-offers'
+export const customOffersStorageKey = 'crackbounty-custom-offers'
+export const campaignOverridesStorageKey = 'crackbounty-campaign-overrides'
+export const deletedCampaignsStorageKey = 'crackbounty-deleted-campaigns'
+export const dashboardNoticeStorageKey = 'crackbounty.dashboardNotice'
+
+const legacyStorageKeys = [
+  [contentLockersStorageKey, 'affmine-content-lockers'],
+  [offerwallsStorageKey, 'affmine-offerwalls'],
+  [activeIncentiveOffersStorageKey, 'affmine-active-incentive-offers'],
+  [customOffersStorageKey, 'affmine-custom-offers'],
+  [campaignOverridesStorageKey, 'affmine-campaign-overrides'],
+  [deletedCampaignsStorageKey, 'affmine-deleted-campaigns'],
+] as const
+
+let legacyStorageMigrated = false
+
+export function migrateLegacyIncentiveToolStorage() {
+  if (typeof window === 'undefined' || legacyStorageMigrated) return
+  legacyStorageMigrated = true
+
+  for (const [key, legacyKey] of legacyStorageKeys) {
+    try {
+      const legacyValue = window.localStorage.getItem(legacyKey)
+      if (legacyValue === null) continue
+
+      if (window.localStorage.getItem(key) === null) {
+        window.localStorage.setItem(key, legacyValue)
+      }
+      window.localStorage.removeItem(legacyKey)
+    } catch (error) {
+      console.error(`Unable to migrate saved data from ${legacyKey}`, error)
+    }
+  }
+
+  try {
+    const legacyNotice = window.sessionStorage.getItem('affmine.dashboardNotice')
+    if (legacyNotice !== null) {
+      if (window.sessionStorage.getItem(dashboardNoticeStorageKey) === null) {
+        window.sessionStorage.setItem(dashboardNoticeStorageKey, legacyNotice)
+      }
+      window.sessionStorage.removeItem('affmine.dashboardNotice')
+    }
+  } catch (error) {
+    console.error('Unable to migrate the saved dashboard notice', error)
+  }
+}
 
 export const defaultLockerFields: Record<string, string> = {
   lockerName: '',
@@ -86,7 +129,7 @@ export const defaultOfferwallToggles: IncentiveToolToggles = {
 export function incentiveOfferDestination(offer: Pick<IncentiveWidgetOffer, 'id' | 'offerLink'>) {
   const link = (offer.offerLink || '').trim()
   if (link) return link
-  return `https://go.affmine.com/click/${offer.id}?src=incentive`
+  return `https://crackbounty.afficix.com/click/${offer.id}?src=incentive`
 }
 
 export function toolPublicPath(tool: Pick<IncentiveToolRecord, 'id' | 'kind'>) {
@@ -103,6 +146,7 @@ export function toolEmbedCode(tool: IncentiveToolRecord, origin = '') {
 
 export function readJsonArray<T>(key: string): T[] {
   if (typeof window === 'undefined') return []
+  migrateLegacyIncentiveToolStorage()
   try {
     const raw = window.localStorage.getItem(key)
     const parsed = raw ? JSON.parse(raw) as unknown : []

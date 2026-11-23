@@ -1,6 +1,6 @@
-const AFFMINE_IMAGE_ORIGIN = 'https://network.affmine.com'
+const CRACK_BOUNTY_IMAGE_ORIGIN = 'https://crackbounty.afficix.com'
 
-export function getAffmineImageUrl(imageSource: string | null | undefined): string | null {
+export function getCrackBountyImageUrl(imageSource: string | null | undefined): string | null {
   if (!imageSource) return null
 
   let url: URL
@@ -11,7 +11,7 @@ export function getAffmineImageUrl(imageSource: string | null | undefined): stri
   }
 
   if (
-    url.origin !== AFFMINE_IMAGE_ORIGIN
+    url.origin !== CRACK_BOUNTY_IMAGE_ORIGIN
     || url.search
     || url.hash
     || url.username
@@ -21,7 +21,7 @@ export function getAffmineImageUrl(imageSource: string | null | undefined): stri
   }
 
   return /^\/(?:preview|preview_i)\/\d+\.png$/.test(url.pathname)
-    ? `${AFFMINE_IMAGE_ORIGIN}${url.pathname}`
+    ? `${CRACK_BOUNTY_IMAGE_ORIGIN}${url.pathname}`
     : null
 }
 
@@ -36,7 +36,7 @@ export function toCampaignImageSource(
   imageSource: string | null | undefined,
 ): string | undefined {
   if (!imageSource) return undefined
-  return getAffmineImageUrl(imageSource)
+  return getCrackBountyImageUrl(imageSource)
     ? getCampaignImageProxyPath(campaignId)
     : imageSource
 }

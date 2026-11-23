@@ -56,7 +56,7 @@ export function shutdownIntercomMessenger() {
   if (window.Intercom) {
     window.Intercom.booted = false
   }
-  // Strip leftover Affmine Intercom chrome so it cannot cover the project messenger.
+  // Strip leftover Crack Bounty Intercom chrome so it cannot cover the project messenger.
   document
     .querySelectorAll(
       '.intercom-lightweight-app, .intercom-namespace, #intercom-container, #intercom-css-container, #intercom-modal-container, #intercom-frame, iframe[name="intercom-messenger-frame"], iframe[name="intercom-launcher-frame"]',
@@ -71,7 +71,7 @@ function buildSettings(user: IntercomBootUser): Record<string, unknown> {
     : undefined
   const hasIdentityHash = Boolean(user.userHash)
 
-  // Affmine network.affmine.com intercomSettings keys.
+  // Crack Bounty Intercom app settings.
   // This app_id enforces Identity Verification: identified boots without a valid
   // user_hash never mount a launcher. Without INTERCOM_IDENTITY_SECRET, boot as
   // a visitor so Support + the floating launcher still work.
@@ -80,7 +80,7 @@ function buildSettings(user: IntercomBootUser): Record<string, unknown> {
     manager: user.managerName || 'John',
     total_paid: user.totalPaid != null ? String(user.totalPaid) : '0',
     custom_launcher_selector: '.launch_help',
-    // Affmine launcher: 20px from bottom, 35px from right.
+    // Crack Bounty launcher: 20px from bottom, 35px from right.
     vertical_padding: 20,
     horizontal_padding: 35,
   }
@@ -110,8 +110,8 @@ function loadIntercomWidgetScript() {
 }
 
 /**
- * Pixel/behavior match for Affmine: set window.intercomSettings, then run the
- * official Intercom snippet (same stub shape Affmine uses).
+ * Pixel/behavior match for Crack Bounty: set window.intercomSettings, then run the
+ * official Intercom snippet (same stub shape Crack Bounty uses).
  */
 export function bootIntercomMessenger(user: IntercomBootUser) {
   if (typeof window === 'undefined' || !INTERCOM_APP_ID) return
@@ -126,7 +126,7 @@ export function bootIntercomMessenger(user: IntercomBootUser) {
   }
 
   const d = document
-  // Official stub from Intercom/Affmine — must use .c(arguments), not a custom queue.
+  // Official stub from Intercom/Crack Bounty — must use .c(arguments), not a custom queue.
   const i = function () {
     // eslint-disable-next-line prefer-rest-params
     i.c(arguments)

@@ -8,7 +8,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
-  return { title: `Affmine - OfferWall ${id}` }
+  return { title: `Crack Bounty - OfferWall ${id}` }
 }
 
 export default async function OfferWallPage({ params }: PageProps) {

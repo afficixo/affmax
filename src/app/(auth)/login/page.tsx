@@ -3,42 +3,42 @@ import { Suspense } from "react";
 import LoginClient from "./LoginClient";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://network.affmine.com'),
-  title: 'Publisher Login — Affmine',
+  metadataBase: new URL('https://crackbounty.afficix.com'),
+  title: 'Publisher Login — Crack Bounty',
   description:
-    'Log in to your Affmine publisher account to manage campaigns, performance, and payouts.',
+    'Log in to your Crack Bounty publisher account to manage campaigns, performance, and payouts.',
   robots: {
     index: false,
     follow: true,
   },
   alternates: {
-    canonical: 'https://network.affmine.com/login',
+    canonical: 'https://crackbounty.afficix.com/login',
   },
   openGraph: {
-    title: 'Publisher Login — Affmine',
+    title: 'Publisher Login — Crack Bounty',
     description:
-      'Log in to your Affmine publisher account to manage campaigns, performance, and payouts.',
+      'Log in to your Crack Bounty publisher account to manage campaigns, performance, and payouts.',
     type: 'website',
-    url: 'https://network.affmine.com/login',
-    siteName: 'Affmine',
+    url: 'https://crackbounty.afficix.com/login',
+    siteName: 'Crack Bounty',
     images: [
       {
-        url: 'https://network.affmine.com/affmine-preview.png',
-        secureUrl: 'https://network.affmine.com/affmine-preview.png',
-        width: 768,
-        height: 768,
-        alt: 'Affmine affiliate dashboard preview',
+        url: 'https://crackbounty.afficix.com/logo.png',
+        secureUrl: 'https://crackbounty.afficix.com/logo.png',
+        width: 2172,
+        height: 724,
+        alt: 'Crack Bounty logo',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Publisher Login — Affmine',
+    title: 'Publisher Login — Crack Bounty',
     description:
-      'Log in to your Affmine publisher account to manage campaigns, performance, and payouts.',
-    images: ['https://network.affmine.com/affmine-preview.png'],
-    creator: 'Affmine',
+      'Log in to your Crack Bounty publisher account to manage campaigns, performance, and payouts.',
+    images: ['https://crackbounty.afficix.com/logo.png'],
+    creator: 'Crack Bounty',
   },
 };
 

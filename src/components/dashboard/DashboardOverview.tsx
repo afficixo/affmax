@@ -55,13 +55,19 @@ import {
 } from '@/lib/intercom'
 import {
   type IncentiveToolRecord,
+  activeIncentiveOffersStorageKey,
+  campaignOverridesStorageKey,
   contentLockersStorageKey,
+  customOffersStorageKey,
   createToolId,
+  dashboardNoticeStorageKey,
+  deletedCampaignsStorageKey,
   defaultLockerFields,
   defaultLockerToggles,
   defaultOfferwallFields,
   defaultOfferwallToggles,
   incentiveOfferDestination,
+  migrateLegacyIncentiveToolStorage,
   offerwallsStorageKey,
   parseToolList,
   toolDisplayName,
@@ -73,7 +79,7 @@ import {
   buildPublicTrackingUrl,
   getTrackingDomainOrigin,
 } from '@/lib/tracking'
-import { withoutLegacyAffmineDemoOffers } from '@/lib/campaign-offers'
+import { withoutLegacyCrackBountyDemoOffers } from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import { PUBLISHER_POSTBACK_URL_EXAMPLE } from '@/lib/postback-tokens'
 import ReportDateRangePicker from './ReportDateRangePicker'
@@ -82,7 +88,7 @@ import styles from './Dashboard.module.css'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler)
 
-/** Affmine Daily Reports only — Chart.js grouped bar (`#canvas` in `#container`). */
+/** Crack Bounty Daily Reports only — Chart.js grouped bar (`#canvas` in `#container`). */
 function ReportDailyBarChart({
   labels,
   clicks,
@@ -445,7 +451,7 @@ type CampaignOffer = {
   name: string
   payout: number
   country: string
-  /** Extra geos shown as flags (Affmine multi-country rows). */
+  /** Extra geos shown as flags (Crack Bounty multi-country rows). */
   countries?: string[]
   action: 'Apply' | 'Pending' | 'View'
   /** When true, publishers must apply and wait for manager approval before opening/using the offer. */
@@ -486,17 +492,13 @@ type OfferDraft = {
   requiresApproval: boolean
   category?: string
   country?: string
-  /** Extra geos for Affmine-style multi-country incentive rows. */
+  /** Extra geos for Crack Bounty-style multi-country incentive rows. */
   countries?: string[]
   device: string[]
   description?: string
   offerLink?: string
 }
 
-const customOffersStorageKey = 'affmine-custom-offers'
-const campaignOverridesStorageKey = 'affmine-campaign-overrides'
-const deletedCampaignsStorageKey = 'affmine-deleted-campaigns'
-const activeIncentiveOffersStorageKey = 'affmine-active-incentive-offers'
 const allOfferDevices = ['Windows', 'Mac', 'Android', 'iPhone', 'iPad', 'Mobile (Other)'] as const
 
 const resolvePublicTrackingOrigin = () => {
@@ -576,7 +578,7 @@ const CampaignDeviceIcons = ({ devices }: { devices: string[] }) => {
     showMobile ? 'Other mobile' : null,
   ].filter(Boolean).join(', ') || 'No devices'
 
-  // Affmine device strip: fa-lg fa-desktop, fa-robot, fa-apple, fa-mobile-alt
+  // Crack Bounty device strip: fa-lg fa-desktop, fa-robot, fa-apple, fa-mobile-alt
   return (
     <span className={styles.deviceIcons} aria-label={label} title={formatCampaignDevices(devices)}>
       {showDesktop && <i className={`fas fa-lg fa-desktop ${styles.deviceIcon}`} title="Desktop" aria-hidden="true" />}
@@ -631,7 +633,7 @@ const mergeCampaignOverride = (source: CampaignOffer, override?: CampaignOffer):
     status: override.status ?? source.status,
     countries: override.countries ?? source.countries,
   }
-  // Prefer Affmine preview_i thumbs for incentive seeds when an old campaigns/ override is stuck in localStorage.
+  // Prefer Crack Bounty preview_i thumbs for incentive seeds when an old campaigns/ override is stuck in localStorage.
   if (
     source.placement === 'INCENTIVE'
     && source.imageSource?.includes('/affmine/preview_i/')
@@ -680,7 +682,7 @@ const PENDING_OFFER_HINT = 'Awaiting manager approval'
 const pendingOfferNotice = (offerId: string) => (
   `Offer #${offerId} is awaiting manager approval.`
 )
-const DASHBOARD_NOTICE_KEY = 'affmine.dashboardNotice'
+const DASHBOARD_NOTICE_KEY = dashboardNoticeStorageKey
 
 const reportPages: Record<string, { title: string; columns: string[] }> = {
   '/reports/daily': { title: 'Daily Reports', columns: ['Date', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
@@ -782,7 +784,7 @@ const reportRangePresets = [
   { label: 'Last Month', days: 'last-month' as const },
 ] as const
 
-/** Affmine `#reportrange` label: "Nov 5, 2026" */
+/** Crack Bounty `#reportrange` label: "Nov 5, 2026" */
 function formatReportDateLabel(value: string) {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
     ? new Date(`${value}T12:00:00Z`)
@@ -807,8 +809,8 @@ function getInitialReportDateRange() {
   }
 }
 
-/** Affmine daily table / chart axis: "11/11/2026" */
-/** Affmine daily table date: `YYYY-MM-DD`. */
+/** Crack Bounty daily table / chart axis: "11/11/2026" */
+/** Crack Bounty daily table date: `YYYY-MM-DD`. */
 function formatReportTableDate(value: string) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
   const date = new Date(value)
@@ -816,7 +818,7 @@ function formatReportTableDate(value: string) {
   return date.toISOString().slice(0, 10)
 }
 
-/** Affmine conversions DATE & TIME (EST): `09/11/2026 19:31:40` (DD/MM/YYYY). */
+/** Crack Bounty conversions DATE & TIME (EST): `09/11/2026 19:31:40` (DD/MM/YYYY). */
 function formatReportDateTime(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -843,11 +845,11 @@ function formatConversionCampaignLabel(name: string, offerId: string) {
   return cleaned || name || '—'
 }
 
-function formatAffmineMoney(value: number) {
+function formatCrackBountyMoney(value: number) {
   return `$${Number(value || 0).toFixed(2)}`
 }
 
-/** Affmine CR cells: `10%` / `5.56%` (no trailing .00). */
+/** Crack Bounty CR cells: `10%` / `5.56%` (no trailing .00). */
 function formatReportCr(value: number) {
   const n = Math.round((Number(value) || 0) * 100) / 100
   return Number.isInteger(n) ? `${n}%` : `${n.toFixed(2)}%`
@@ -879,7 +881,7 @@ function ReportCampaignFlag({ country, size = 25 }: { country: string; size?: nu
   )
 }
 
-/** Affmine dashboard feed device label: Android / iOS. */
+/** Crack Bounty dashboard feed device label: Android / iOS. */
 function formatConversionDevice(raw?: string) {
   const value = String(raw || '').trim()
   if (!value || value === '—') return '—'
@@ -1157,7 +1159,7 @@ export default function DashboardOverview() {
         setSupportComposerNew(false)
       }
     } else {
-      // Affmine Intercom: "Send us a message" starts a new conversation composer.
+      // Crack Bounty Intercom: "Send us a message" starts a new conversation composer.
       setSelectedSupportId(null)
       setSupportConversation(null)
       setSupportComposerNew(true)
@@ -1198,6 +1200,7 @@ export default function DashboardOverview() {
 
   useEffect(() => {
     let cancelled = false
+    migrateLegacyIncentiveToolStorage()
 
     const isOffer = (offer: unknown): offer is CampaignOffer => (
       typeof (offer as CampaignOffer)?.id === 'string'
@@ -1237,12 +1240,12 @@ export default function DashboardOverview() {
         const response = await fetch('/api/campaigns', { credentials: 'include', cache: 'no-store' })
         if (!response.ok) throw new Error('catalog_unavailable')
         const payload = await response.json() as { offers?: CampaignOffer[] }
-        const remoteOffers = withoutLegacyAffmineDemoOffers(
+        const remoteOffers = withoutLegacyCrackBountyDemoOffers(
           Array.isArray(payload.offers) ? payload.offers.filter(isOffer) : [],
         )
 
-        // Migrate only manager-created local offers (never the old Affmine demo catalog).
-        const localOffers = withoutLegacyAffmineDemoOffers(readLocalOffers())
+        // Migrate only manager-created local offers (never the old Crack Bounty demo catalog).
+        const localOffers = withoutLegacyCrackBountyDemoOffers(readLocalOffers())
         if (!remoteOffers.length && localOffers.length) {
           const migrate = await fetch('/api/campaigns', {
             method: 'POST',
@@ -1260,7 +1263,7 @@ export default function DashboardOverview() {
           if (migrate.ok) {
             const migrated = await migrate.json() as { offers?: CampaignOffer[] }
             if (!cancelled) {
-              applyOffers(withoutLegacyAffmineDemoOffers(
+              applyOffers(withoutLegacyCrackBountyDemoOffers(
                 Array.isArray(migrated.offers) ? migrated.offers.filter(isOffer) : localOffers,
               ))
             }
@@ -1271,7 +1274,7 @@ export default function DashboardOverview() {
         if (!cancelled) applyOffers(remoteOffers)
       } catch {
         // Fall back to local-only so the manager still sees what they just created offline.
-        if (!cancelled) applyOffers(withoutLegacyAffmineDemoOffers(readLocalOffers()))
+        if (!cancelled) applyOffers(withoutLegacyCrackBountyDemoOffers(readLocalOffers()))
       }
     }
 
@@ -1304,7 +1307,7 @@ export default function DashboardOverview() {
   }, [])
 
   useEffect(() => {
-    // Match Affmine: new Typed(".new-updates", { strings, typeSpeed: 70, loop: true })
+    // Match Crack Bounty: new Typed(".new-updates", { strings, typeSpeed: 70, loop: true })
     // Typed.js defaults: backSpeed: 0, backDelay: 700
     let messageIndex = 0
     let characterIndex = 0
@@ -1972,13 +1975,13 @@ export default function DashboardOverview() {
   }, [openOfferActionsId])
 
   useEffect(() => {
-    // Affmine Intercom without identity secret mounts a blank overlay that
+    // Crack Bounty Intercom without identity secret mounts a blank overlay that
     // blocks clicks. Tear it down and use the project Support messenger.
     shutdownIntercomMessenger()
   }, [])
 
   useEffect(() => {
-    // Only boot Affmine Intercom when identity hash is available.
+    // Only boot Crack Bounty Intercom when identity hash is available.
     if (!intercomEnabled || !userId || !userRole) return
     let active = true
     const boot = async () => {
@@ -2014,7 +2017,7 @@ export default function DashboardOverview() {
 
   useEffect(() => {
     if (!isSupportPage) return
-    // Affmine Support opens the messenger popup (not a blank page).
+    // Crack Bounty Support opens the messenger popup (not a blank page).
     if (userRole === 'PUBLISHER') {
       router.replace('/dashboard')
     }
@@ -2889,8 +2892,8 @@ export default function DashboardOverview() {
   return (
     <div className={styles.app}>
       <header className={styles.topbar}>
-        <Link href="/dashboard" className={styles.brand} aria-label="Affmine dashboard">
-          <Image src="/affmine/logo.png" alt="affmine" width={150} height={38} priority />
+        <Link href="/dashboard" className={styles.brand} aria-label="Crack Bounty dashboard">
+          <Image src="/logo.png" alt="Crack Bounty" width={2172} height={724} priority />
         </Link>
         <button
           type="button"
@@ -3017,7 +3020,7 @@ export default function DashboardOverview() {
             href="#support"
             className={`${styles.navLink} ${supportMessengerOpen ? styles.navActive : ''}`}
             onClick={(event) => {
-              // Affmine: Support opens the messenger popup.
+              // Crack Bounty: Support opens the messenger popup.
               event.preventDefault()
               event.stopPropagation()
               openSupportMessenger()
@@ -3032,12 +3035,12 @@ export default function DashboardOverview() {
           <p>
             Your Affiliate Manager<br />
             <a href="https://teams.live.com/l/invite/FEApzEOIWDUIoFRhwI" target="_blank" rel="noreferrer">Chat on Teams</a><br />
-            <i className="fa fa-envelope" aria-hidden="true" /> <a href="mailto:john@affmine.com">john@affmine.com</a>
+            <i className="fa fa-envelope" aria-hidden="true" /> <a href="mailto:john@crackbounty.afficix.com">john@crackbounty.afficix.com</a>
           </p>
         </section>
         <div className={styles.sidebarFooter}>
           <Link href="/terms">Terms</Link><span>|</span><Link href="/privacy">Privacy</Link>
-          <p>© 2026 Affmine LLC</p>
+          <p>© 2026 Crack Bounty LLC</p>
         </div>
       </aside>
 
@@ -3615,7 +3618,7 @@ export default function DashboardOverview() {
                         if (index === 0) return <th key={column}>Total</th>
                         if (column === 'Name' || column === 'Tool ID') return <th key={column}></th>
                         if (column === 'Revenue' || column === 'EPC') {
-                          return <th key={column}>{formatAffmineMoney(column === 'Revenue' ? reportData!.totals!.revenue : reportData!.totals!.epc)}</th>
+                          return <th key={column}>{formatCrackBountyMoney(column === 'Revenue' ? reportData!.totals!.revenue : reportData!.totals!.epc)}</th>
                         }
                         if (column === 'CR') return <th key={column}>{formatReportCr(reportData!.totals!.cr)}</th>
                         if (column === 'Clicks') return <th key={column}>{reportData!.totals!.clicks}</th>
@@ -3674,7 +3677,7 @@ export default function DashboardOverview() {
                               )
                             }
                             if (column === 'IP') return <td key={column}>{String(row.ip || '—')}</td>
-                            if (column === 'Revenue') return <td key={column}>{formatAffmineMoney(Number(row.revenue || 0))}</td>
+                            if (column === 'Revenue') return <td key={column}>{formatCrackBountyMoney(Number(row.revenue || 0))}</td>
                             if (column === 'Status') {
                               return (
                                 <td key={column}>
@@ -3724,7 +3727,7 @@ export default function DashboardOverview() {
                             const label = String(row.label ?? '')
                             return <td key={column}>{pathname === '/reports/daily' ? formatReportTableDate(label) : label}</td>
                           }
-                          if (column === 'Revenue' || column === 'EPC') return <td key={column}>{formatAffmineMoney(Number(column === 'Revenue' ? row.revenue : row.epc) || 0)}</td>
+                          if (column === 'Revenue' || column === 'EPC') return <td key={column}>{formatCrackBountyMoney(Number(column === 'Revenue' ? row.revenue : row.epc) || 0)}</td>
                           if (column === 'CR') return <td key={column}>{formatReportCr(Number(row.cr || 0))}</td>
                           if (column === 'Clicks') return <td key={column}>{Number(row.clicks || 0)}</td>
                           if (column === 'Leads') return <td key={column}>{Number(row.leads || 0)}</td>
@@ -4448,9 +4451,9 @@ export default function DashboardOverview() {
                       </header>
                       {campaignNoticeOpen ? (
                         <div className={styles.campaignDialogBody}>
-                          <p><strong>Affmine is required to provide notice that you are prohibited from engaging in acts or practices in violation of the Federal Trade Commission Consent Order while promoting RewardZone USA and related offers. All advertising material must meet the requirements in the Advertising &amp; Marketing Requirements policy, including its pre-approved examples. Violations may result in disciplinary action, including immediate termination and forfeiture of monies owed.</strong></p>
-                          <p><a href="https://network.affmine.com/notice/FTC-Consent-Order.pdf" target="_blank" rel="noreferrer">Federal Trade Commission Consent Order</a></p>
-                          <p><a href="https://network.affmine.com/notice/RZ-Advertising-Marketing-Requirements.pdf" target="_blank" rel="noreferrer">Advertising &amp; Marketing Requirements</a></p>
+                          <p><strong>Crack Bounty is required to provide notice that you are prohibited from engaging in acts or practices in violation of the Federal Trade Commission Consent Order while promoting RewardZone USA and related offers. All advertising material must meet the requirements in the Advertising &amp; Marketing Requirements policy, including its pre-approved examples. Violations may result in disciplinary action, including immediate termination and forfeiture of monies owed.</strong></p>
+                          <p><a href="https://crackbounty.afficix.com/notice/FTC-Consent-Order.pdf" target="_blank" rel="noreferrer">Federal Trade Commission Consent Order</a></p>
+                          <p><a href="https://crackbounty.afficix.com/notice/RZ-Advertising-Marketing-Requirements.pdf" target="_blank" rel="noreferrer">Advertising &amp; Marketing Requirements</a></p>
                         </div>
                       ) : (
                         <div className={styles.campaignDialogBody}>
@@ -5389,13 +5392,13 @@ export default function DashboardOverview() {
                 <div><span>Referral commission</span><strong>5%</strong></div>
               </div>
               <div className={styles.referralLink}>
-                <label className={styles.dataField}>Referral link<input value="https://www.affmine.com/r/63460" readOnly /></label>
+                <label className={styles.dataField}>Referral link<input value="https://crackbounty.afficix.com/r/63460" readOnly /></label>
                 <button
                   type="button"
                   className={styles.pagePrimaryButton}
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText('https://www.affmine.com/r/63460')
+                      await navigator.clipboard.writeText('https://crackbounty.afficix.com/r/63460')
                       setPageNotice('Referral link copied.')
                     } catch {
                       setPageNotice('Unable to copy referral link.')
@@ -5520,7 +5523,7 @@ export default function DashboardOverview() {
                       return (
                         <tr key={lead.id}>
                           <td>
-                            New <b className={styles.colorAdd}>{formatAffmineMoney(lead.payout)}</b>
+                            New <b className={styles.colorAdd}>{formatCrackBountyMoney(lead.payout)}</b>
                             {' '}conversion on{' '}
                             {offerId ? (
                               <Link id={offerId} href={`/campaigns/${offerId}`} target="_blank" className={styles.conversionCampaignLink}>
@@ -5818,7 +5821,7 @@ export default function DashboardOverview() {
                           <span>
                             {isManagerSupport
                               ? (selectedPublisherEmail || 'Publisher conversation')
-                              : (supportConversation?.manager?.fullName || 'Affmine Support')}
+                              : (supportConversation?.manager?.fullName || 'Crack Bounty Support')}
                           </span>
                         </div>
                       </div>

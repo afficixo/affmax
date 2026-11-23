@@ -15,7 +15,7 @@ export type PublisherPostbackLead = {
   sub3?: string | null
   /** Publisher tracking sub2 (marketplace inbound s4 / OfferClick.sub2). */
   sub4?: string | null
-  /** Optional extra publisher subs (Affmine #s3# / #s4#). */
+  /** Optional extra publisher subs (Crack Bounty #s3# / #s4#). */
   publisherSub3?: string | null
   publisherSub4?: string | null
   occurredAt?: Date | null
@@ -43,7 +43,7 @@ function statusCode(status?: string | null): string {
   return '1'
 }
 
-/** Affmine-style token replace for publisher Global S2S postback. */
+/** Crack Bounty-style token replace for publisher Global S2S postback. */
 export function buildPublisherPostbackUrl(template: string, lead: PublisherPostbackLead): string {
   const occurred = lead.occurredAt || lead.createdAt
   const unix = Math.floor(occurred.getTime() / 1000)
@@ -60,7 +60,7 @@ export function buildPublisherPostbackUrl(template: string, lead: PublisherPostb
   const status = statusCode(lead.status)
 
   const replacements: Record<string, string> = {
-    // Affmine publisher macros — campaign = our offer
+    // Crack Bounty publisher macros — campaign = our offer
     '#cmpid#': tokenValue(campaignId),
     '#cmpname#': tokenValue(campaignName),
     '#payout#': tokenValue(payout),

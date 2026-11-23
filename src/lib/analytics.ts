@@ -419,7 +419,7 @@ export async function getReportData(
   totals.epc = totals.clicks > 0 ? totals.revenue / totals.clicks : 0
   totals.cr = totals.clicks > 0 ? (totals.leads / totals.clicks) * 100 : (totals.leads > 0 ? 100 : 0)
 
-  // Chart spans the selected report range (Affmine Chart.js axis)
+  // Chart spans the selected report range (Crack Bounty Chart.js axis)
   const chartEnd = range?.to
     ? new Date(`${range.to}T00:00:00.000Z`)
     : startOfDayUtc()
@@ -455,7 +455,7 @@ export async function getReportData(
     const day = new Date(chartStart.getTime())
     day.setUTCDate(chartStart.getUTCDate() + i)
     const key = dayKey(day)
-    // Affmine daily chart axis: DD/MM/YYYY
+    // Crack Bounty daily chart axis: DD/MM/YYYY
     chartLabels.push(`${String(day.getUTCDate()).padStart(2, '0')}/${String(day.getUTCMonth() + 1).padStart(2, '0')}/${day.getUTCFullYear()}`)
     const bucket = dailyChart.get(key)
     chartClicks.push(bucket?.clicks ?? 0)

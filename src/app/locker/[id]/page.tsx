@@ -8,7 +8,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
-  return { title: `Affmine - Content Locker ${id}` }
+  return { title: `Crack Bounty - Content Locker ${id}` }
 }
 
 export default async function LockerPage({ params }: PageProps) {

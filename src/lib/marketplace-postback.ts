@@ -7,7 +7,7 @@ export function createPostbackToken(): string {
 }
 
 /**
- * Manager inbound URL using only main-marketplace Affmine tokens:
+ * Manager inbound URL using only main-marketplace Crack Bounty tokens:
  * #s1# #s2# #s3# #s4# #datetime# #ip# #country#
  *
  * Our tracking map on main offer links:
@@ -276,7 +276,7 @@ export async function ingestMarketplacePostback(
       },
     })
 
-    // Affmine: credit then fire publisher Global S2S with full conversion tokens.
+    // Crack Bounty: credit then fire publisher Global S2S with full conversion tokens.
     let publisherPostback: { fired: boolean; status?: number; skipped?: string; url?: string } | undefined
     try {
       const { firePublisherGlobalPostback } = await import('@/lib/publisher-postback')

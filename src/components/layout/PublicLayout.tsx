@@ -113,10 +113,10 @@ export default function PublicLayout({
               className="flex shrink-0 items-center"
             >
               <Image
-                src="/affmine/logo.png"
-                alt="Affmine"
-                width={150}
-                height={38}
+                src="/logo.png"
+                alt="Crack Bounty"
+                width={2172}
+                height={724}
                 sizes="120px"
                 className="h-9 w-[120px] object-contain sm:h-10 sm:w-[132px]"
                 priority
@@ -251,7 +251,7 @@ export default function PublicLayout({
           <footer className="mt-auto bg-[#e9ecef]">
             <div className="mx-auto max-w-7xl px-4 py-5 text-center sm:px-6 lg:px-8">
               <p className="text-[13px] leading-relaxed text-[#6c757d]">
-                © 2019 - 2026 Affmine LLC - All rights reserved
+                © 2019 - 2026 Crack Bounty LLC - All rights reserved
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-[#6c757d]">
                 <Link href="/privacy" className="hover:text-[#495057] hover:underline">
@@ -270,7 +270,7 @@ export default function PublicLayout({
           <footer className="mt-auto border-t border-white/10 bg-[#1a2429]">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 sm:px-6 md:flex-row lg:px-8">
               <p className="text-center text-xs leading-relaxed text-white/55 md:text-left">
-                <span className="font-semibold text-white/85">Affmine</span>
+                <span className="font-semibold text-white/85">Crack Bounty</span>
                 <span className="mx-2 text-[#5ff442]/70" aria-hidden="true">•</span>
                 © 2019–2026. All rights reserved.
               </p>

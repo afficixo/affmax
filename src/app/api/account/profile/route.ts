@@ -55,7 +55,7 @@ const profileSelect = {
   lastLogin: true,
 } as const
 
-/** Split legacy "street, city, state, zip, country" blobs into Affmine fields. */
+/** Split legacy "street, city, state, zip, country" blobs into Crack Bounty fields. */
 function expandPackedAddress(fields: {
   address: string
   city: string

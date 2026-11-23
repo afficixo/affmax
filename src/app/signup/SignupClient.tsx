@@ -445,7 +445,7 @@ export default function SignupClient() {
                   <Link href="/privacy" target="_blank">
                     Privacy Policy
                   </Link>{" "}
-                  of Affmine LLC.
+                  of Crack Bounty LLC.
                 </label>
               </div>
             </div>

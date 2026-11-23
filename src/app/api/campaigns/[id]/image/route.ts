@@ -1,4 +1,4 @@
-import { getAffmineImageUrl } from '@/lib/campaign-images'
+import { getCrackBountyImageUrl } from '@/lib/campaign-images'
 import { prisma } from '@/lib/db/prisma'
 
 type RouteContext = { params: Promise<{ id: string }> }
@@ -51,8 +51,8 @@ export async function GET(_request: Request, context: RouteContext) {
         orderBy: { createdAt: 'desc' },
       }),
     ])
-    const imageUrl = getAffmineImageUrl(offer?.imageSource)
-      ?? getAffmineImageUrl(application?.campaignImage)
+    const imageUrl = getCrackBountyImageUrl(offer?.imageSource)
+      ?? getCrackBountyImageUrl(application?.campaignImage)
     if (!imageUrl) return new Response(null, { status: 404 })
 
     const upstream = await fetch(imageUrl, {

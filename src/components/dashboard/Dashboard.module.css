@@ -20,19 +20,20 @@
 }
 
 .brand {
-  display: block;
+  display: flex;
   position: relative;
   width: var(--sidebar-width);
   height: 60px;
   flex: 0 0 var(--sidebar-width);
-  padding: 10px 0 0;
+  align-items: center;
+  justify-content: center;
   background: rgba(0, 0, 0, 0.14);
   text-align: center;
 }
 
 .brand img {
-  display: inline-block;
-  width: 150px;
+  display: block;
+  width: 170px;
   height: auto;
   filter: drop-shadow(0 1px 0 rgba(255,255,255,0.2));
 }
@@ -80,7 +81,7 @@
   outline-offset: -2px;
 }
 
-/* Affmine .searchform — transparent shell, white pill input */
+/* Crack Bounty .searchform — transparent shell, white pill input */
 .searchForm {
   position: relative;
   display: block;
@@ -130,7 +131,7 @@
   box-shadow: none;
 }
 
-/* Affmine .updatesbox — width 35%, overflow visible so long typed lines fit under icons */
+/* Crack Bounty .updatesbox — width 35%, overflow visible so long typed lines fit under icons */
 .updates {
   display: block;
   position: relative;
@@ -912,7 +913,7 @@ input.reportRangeInput {
   border-bottom: 1px solid #eceeef;
 }
 
-/* Affmine `.panel.panel-default.wide` on reports */
+/* Crack Bounty `.panel.panel-default.wide` on reports */
 .reportPanel.dataPage {
   position: relative;
   min-height: 0;
@@ -2426,7 +2427,7 @@ input.reportRangeInput {
   accent-color: #5cb85c;
 }
 
-/* Affmine /tools/postback — panel.panel-default + form-horizontal + bootstrap-toggle */
+/* Crack Bounty /tools/postback — panel.panel-default + form-horizontal + bootstrap-toggle */
 .postbackEditPanel {
   min-height: 0;
   margin: 0 0 10px;
@@ -2879,7 +2880,7 @@ input.reportRangeInput {
   gap: 8px 14px;
 }
 
-/* Affmine account form: label #58666e 13/500, value #555 14/400 */
+/* Crack Bounty account form: label #58666e 13/500, value #555 14/400 */
 .accountDetailsPanel .dataField {
   gap: 3px;
   color: #58666e;
@@ -5345,7 +5346,7 @@ input.reportRangeInput {
 .campaignTableManager th:nth-child(8),
 .campaignTableManager td:nth-child(8) { width: 16%; }
 
-/* Affmine incentive column proportions: Active | ID | View | Name* | Payout | Category | Geo | Device | Action */
+/* Crack Bounty incentive column proportions: Active | ID | View | Name* | Payout | Category | Geo | Device | Action */
 .campaignTableIncentive th,
 .campaignTableIncentive td {
   padding: 5px 2px;
@@ -5412,7 +5413,7 @@ input.reportRangeInput {
   vertical-align: middle;
 }
 
-/* Affmine .checkbox-success Active column */
+/* Crack Bounty .checkbox-success Active column */
 .incentiveCheckbox {
   position: relative;
   display: inline-block;
@@ -6751,7 +6752,7 @@ a.offerAction {
   text-align: center;
 }
 
-/* Affmine dashboard `.panel.panel-widget.wide` Conversions feed */
+/* Crack Bounty dashboard `.panel.panel-widget.wide` Conversions feed */
 .conversionsPanel {
   display: flex;
   height: auto;
@@ -6877,7 +6878,7 @@ a.offerAction {
   display: none;
 }
 
-/* Affmine Intercom messenger: exact shell 400×704, radius 24, bottom 84 / right 35 */
+/* Crack Bounty Intercom messenger: exact shell 400×704, radius 24, bottom 84 / right 35 */
 .supportMessenger {
   --support-action: #2e6bff;
   --support-ink: #0f172a;
@@ -6963,7 +6964,7 @@ a.offerAction {
   color: #fff;
 }
 
-/* Publisher Intercom home — Affmine design-region match; manager keeps overrides above untouched */
+/* Publisher Intercom home — Crack Bounty design-region match; manager keeps overrides above untouched */
 .supportMessenger:not(.supportMessengerManager) .supportMessengerHomeTop {
   padding: 18px 20px 28px;
   background:
@@ -7587,7 +7588,7 @@ a.offerAction {
   backdrop-filter: blur(8px);
 }
 
-/* Affmine Intercom Messages inbox (publisher) — sampled from live + design crop */
+/* Crack Bounty Intercom Messages inbox (publisher) — sampled from live + design crop */
 .supportMessengerMessagesListHeader {
   display: flex;
   flex-shrink: 0;
@@ -8443,7 +8444,7 @@ a.offerAction {
 
   .brand img {
     display: block;
-    width: 150px;
+    width: 170px;
     height: auto;
     object-fit: contain;
     object-position: center;
@@ -8808,7 +8809,7 @@ a.offerAction {
   }
 
   .supportMessenger {
-    /* Keep Affmine Intercom offsets whenever the panel fits */
+    /* Keep Crack Bounty Intercom offsets whenever the panel fits */
     right: 35px;
     bottom: 84px;
     width: min(400px, calc(100vw - 70px));

@@ -15,7 +15,7 @@ import {
   contentLockersStorageKey,
   offerwallsStorageKey,
 } from '@/lib/incentive-tools'
-import { withoutLegacyAffmineDemoOffers } from '@/lib/campaign-offers'
+import { withoutLegacyCrackBountyDemoOffers } from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import styles from './IncentiveWidget.module.css'
 
@@ -28,13 +28,13 @@ type IncentiveWidgetProps = {
 }
 
 function mergeOffers(seedOffers: SeedOffer[], preferRemoteOnly = false): IncentiveWidgetOffer[] {
-  const custom = preferRemoteOnly ? [] : withoutLegacyAffmineDemoOffers(readJsonArray<SeedOffer>(customOffersStorageKey))
+  const custom = preferRemoteOnly ? [] : withoutLegacyCrackBountyDemoOffers(readJsonArray<SeedOffer>(customOffersStorageKey))
   const overrides = readJsonArray<SeedOffer>(campaignOverridesStorageKey)
   const deleted = new Set(readJsonArray<string>(deletedCampaignsStorageKey))
   const overrideMap = new Map(overrides.map((offer) => [offer.id, offer]))
 
   const byId = new Map<string, SeedOffer>()
-  for (const offer of withoutLegacyAffmineDemoOffers([...seedOffers, ...custom])) {
+  for (const offer of withoutLegacyCrackBountyDemoOffers([...seedOffers, ...custom])) {
     if (deleted.has(offer.id)) continue
     const override = overrideMap.get(offer.id)
     byId.set(offer.id, override ? { ...offer, ...override, id: offer.id } : offer)
@@ -79,7 +79,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
 
     const applyCatalog = (remoteOffers: SeedOffer[], preferRemoteOnly = false) => {
       const catalogAll = mergeOffers(
-        withoutLegacyAffmineDemoOffers([...seedOffers, ...remoteOffers]),
+        withoutLegacyCrackBountyDemoOffers([...seedOffers, ...remoteOffers]),
         preferRemoteOnly,
       )
       const activeIds = readJsonArray<string>(activeIncentiveOffersStorageKey)
@@ -113,7 +113,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
         const response = await fetch('/api/campaigns/public?placement=INCENTIVE', { cache: 'no-store' })
         if (!response.ok) throw new Error('public_catalog_unavailable')
         const payload = await response.json() as { offers?: SeedOffer[] }
-        // Prefer DB catalog only so browser-cached Affmine demo offers cannot resurface.
+        // Prefer DB catalog only so browser-cached Crack Bounty demo offers cannot resurface.
         applyCatalog(Array.isArray(payload.offers) ? payload.offers : [], true)
       } catch {
         applyCatalog([], true)
@@ -313,7 +313,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
       {launchNotice ? <p className={styles.notice} role="status">{launchNotice}</p> : null}
       <footer className={styles.footer}>
         <span>{toolDisplayName(tool)}</span>
-        <span>Powered by Affmine Incentive Tools</span>
+        <span>Powered by Crack Bounty Incentive Tools</span>
       </footer>
     </div>
   )

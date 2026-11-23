@@ -13,7 +13,7 @@
   color-scheme: light;
   --page-bg: #3d464d;
 
-  /* AFFMINE brand palette */
+  /* CRACK BOUNTY brand palette */
   --aff-accent: #5ff442;
   --aff-accent-hover: #4dd935;
   --aff-accent-dark: #0e7a4d;
@@ -199,7 +199,7 @@ body {
 }
 
 .public-site[data-mobile-menu-open="true"] .home-hero-content {
-  /* Keep hero visible under Affmine-style right dropdown */
+  /* Keep hero visible under Crack Bounty-style right dropdown */
   pointer-events: none;
 }
 
@@ -342,7 +342,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   AFFMINE PUBLIC + AUTH SURFACES
+   CRACK BOUNTY PUBLIC + AUTH SURFACES
    ═══════════════════════════════════════════════════════════════ */
 .public-site,
 .auth-site {
@@ -369,7 +369,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   AFFMINE COMPONENT CLASSES
+   CRACK BOUNTY COMPONENT CLASSES
    ═══════════════════════════════════════════════════════════════ */
 .aff-btn {
   display: inline-flex;

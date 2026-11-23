@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getCorsHeaders } from '@/config/cors'
 import {
-  LEGACY_AFFMINE_DEMO_OFFER_IDS,
-  purgeLegacyAffmineDemoOffers,
+  LEGACY_CRACK_BOUNTY_DEMO_OFFER_IDS,
+  purgeLegacyCrackBountyDemoOffers,
   toCampaignOfferRecord,
 } from '@/lib/campaign-offers'
 import { prisma } from '@/lib/db/prisma'
@@ -15,14 +15,14 @@ export async function GET(request: Request) {
   const placementFilter = placement === 'INCENTIVE' || placement === 'STANDARD' ? placement : 'INCENTIVE'
 
   try {
-    await purgeLegacyAffmineDemoOffers(prisma)
+    await purgeLegacyCrackBountyDemoOffers(prisma)
 
     const offers = await prisma.campaignOffer.findMany({
       where: {
         placement: placementFilter,
         status: 'ACTIVE',
         ...(placementFilter === 'INCENTIVE' ? { incentiveActive: true } : {}),
-        id: { notIn: [...LEGACY_AFFMINE_DEMO_OFFER_IDS] },
+        id: { notIn: [...LEGACY_CRACK_BOUNTY_DEMO_OFFER_IDS] },
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 500,

@@ -1,29 +1,29 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  getAffmineImageUrl,
+  getCrackBountyImageUrl,
   getCampaignImageProxyPath,
   isCampaignImageProxyPath,
   toCampaignImageSource,
 } from './campaign-images'
 
-test('proxies supported Affmine preview images without exposing the source URL', () => {
-  const imageSource = 'https://network.affmine.com/preview/35677.png'
+test('proxies supported Crack Bounty preview images without exposing the source URL', () => {
+  const imageSource = 'https://crackbounty.afficix.com/preview/35677.png'
 
-  assert.equal(getAffmineImageUrl(imageSource), imageSource)
+  assert.equal(getCrackBountyImageUrl(imageSource), imageSource)
   assert.equal(toCampaignImageSource('35677', imageSource), '/api/campaigns/35677/image')
 })
 
 test('does not proxy URLs outside the supported image host and paths', () => {
   const imageSources = [
     'https://example.com/image.png',
-    'http://network.affmine.com/preview/35677.png',
-    'https://network.affmine.com/preview/35677.png?token=secret',
-    'https://network.affmine.com/preview/35677.svg',
+    'http://crackbounty.afficix.com/preview/35677.png',
+    'https://crackbounty.afficix.com/preview/35677.png?token=secret',
+    'https://crackbounty.afficix.com/preview/35677.svg',
   ]
 
   for (const imageSource of imageSources) {
-    assert.equal(getAffmineImageUrl(imageSource), null)
+    assert.equal(getCrackBountyImageUrl(imageSource), null)
     assert.equal(toCampaignImageSource('35677', imageSource), imageSource)
   }
 })

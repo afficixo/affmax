@@ -71,7 +71,7 @@
   border: none;
 }
 
-/* Bootstrap .table-condensed cell padding Affmine relies on */
+/* Bootstrap .table-condensed cell padding Crack Bounty relies on */
 .daterangepicker .table-condensed > thead > tr > th,
 .daterangepicker .table-condensed > tbody > tr > th,
 .daterangepicker .table-condensed > tfoot > tr > th,
@@ -372,7 +372,7 @@
   width: auto;
 }
 
-/* Affmine bootstrap dropdown + button chrome used by the picker */
+/* Crack Bounty bootstrap dropdown + button chrome used by the picker */
 .daterangepicker.dropdown-menu {
   display: block;
   float: left;

@@ -10,14 +10,14 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  applicationName: 'Affmine',
-  metadataBase: new URL('https://network.affmine.com'),
-  title: 'Affmine | Affiliate Network for Publishers & Advertisers',
+  applicationName: 'Crack Bounty',
+  metadataBase: new URL('https://crackbounty.afficix.com'),
+  title: 'Crack Bounty | Private Affiliate Network',
   description:
-    'Discover high-converting campaigns, track your performance, and manage your affiliate account with Affmine.',
-  authors: [{ name: 'Affmine', url: 'https://network.affmine.com' }],
-  creator: 'Affmine',
-  publisher: 'Affmine',
+    "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
+  authors: [{ name: 'Crack Bounty', url: 'https://crackbounty.afficix.com' }],
+  creator: 'Crack Bounty',
+  publisher: 'Crack Bounty',
   category: 'Business',
   referrer: 'strict-origin-when-cross-origin',
   formatDetection: {
@@ -27,10 +27,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Affmine',
+    title: 'Crack Bounty',
   },
   alternates: {
-    canonical: 'https://network.affmine.com',
+    canonical: 'https://crackbounty.afficix.com',
   },
   robots: {
     index: true,
@@ -46,39 +46,37 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/afficix_favicon.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png' },
     ],
-    apple: [{ url: '/afficix_favicon.png', type: 'image/png' }],
-    shortcut: '/afficix_favicon.png',
+    apple: [{ url: '/favicon.png', type: 'image/png' }],
+    shortcut: '/favicon.png',
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Affmine | Affiliate Network for Publishers & Advertisers',
+    title: 'Crack Bounty | Private Affiliate Network',
     description:
-      'Discover high-converting campaigns, monitor performance, and manage your affiliate account with Affmine.',
+      "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
     type: 'website',
-    url: 'https://network.affmine.com',
-    siteName: 'Affmine',
+    url: 'https://crackbounty.afficix.com',
+    siteName: 'Crack Bounty',
     locale: 'en_US',
     images: [
       {
-        url: '/affmine-preview.png',
-        secureUrl: 'https://network.affmine.com/affmine-preview.png',
-        width: 768,
-        height: 768,
-        alt: 'Affmine affiliate network dashboard',
+        url: 'https://crackbounty.afficix.com/logo.png',
+        secureUrl: 'https://crackbounty.afficix.com/logo.png',
+        width: 2172,
+        height: 724,
+        alt: 'Crack Bounty logo',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Affmine | Affiliate Network for Publishers & Advertisers',
+    title: 'Crack Bounty | Private Affiliate Network',
     description:
-      'Discover high-converting campaigns, monitor performance, and manage your affiliate account with Affmine.',
-    images: ['/affmine-preview.png'],
-    site: '@affmine',
-    creator: '@affmine',
+      "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
+    images: ['https://crackbounty.afficix.com/logo.png'],
   },
 }
 
