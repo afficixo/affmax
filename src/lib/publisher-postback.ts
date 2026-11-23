@@ -37,12 +37,8 @@ function tokenValue(raw: string): string {
   return encodeURIComponent(raw)
 }
 
-function statusCode(status?: string | null): string {
-  const value = (status || '').trim().toLowerCase()
-  if (!value || value === 'approved' || value === '1' || value === 'ok') return '1'
-  if (value === 'rejected' || value === '0' || value === 'declined') return '0'
-  if (value === 'pending') return '2'
-  return '1'
+function postbackStatus(status?: string | null): 'created' | 'reversed' {
+  return (status || '').trim().toLowerCase() === 'reversed' ? 'reversed' : 'created'
 }
 
 /** Crack Bounty-style token replace for publisher Global S2S postback. */
@@ -59,7 +55,7 @@ export function buildPublisherPostbackUrl(template: string, lead: PublisherPostb
   const sub2 = String(lead.sub4 || '')
   const sub3 = String(lead.publisherSub3 || '')
   const sub4 = String(lead.publisherSub4 || '')
-  const status = statusCode(lead.status)
+  const status = postbackStatus(lead.status)
 
   const replacements: Record<string, string> = {
     // Crack Bounty publisher macros — campaign = our offer

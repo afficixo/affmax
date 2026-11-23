@@ -5715,7 +5715,7 @@ export default function DashboardOverview() {
                         ['#ip#', 'Conversion IP address'],
                         ['#payout#', 'Conversion revenue'],
                         ['#amount#', 'Offerwall amount (falls back to revenue)'],
-                        ['#status#', 'Status code: 1 credited, 0 rejected, 2 pending'],
+                        ['#status#', 'Conversion event: created or reversed'],
                       ]).map(([token, description]) => (
                         <tr key={token}>
                           <th scope="row"><code className={styles.postbackTokenCode}>{token}</code></th>

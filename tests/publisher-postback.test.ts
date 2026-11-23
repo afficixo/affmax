@@ -36,8 +36,21 @@ test('builds a publisher postback with conversion fields and an explicit test ma
   assert.equal(
     url,
     'https://publisher.example/postback?campaign=Summer%20Offer&id=offer-42&revenue=2'
-      + '&s1=test-sub-1&s2=test-sub-2&status=2&test=1',
+    + '&s1=test-sub-1&s2=test-sub-2&status=created&test=1',
   )
+})
+
+test('uses reversed as the postback status without numeric codes', () => {
+  const url = buildPublisherPostbackUrl(
+    'https://publisher.example/postback?status=#status#',
+    {
+    status: 'Reversed',
+    createdAt: new Date('2026-11-24T00:00:00.000Z'),
+    },
+  )
+
+  assert.equal(url, 'https://publisher.example/postback?status=reversed')
+  assert.doesNotMatch(url, /status=[01](?:&|$)/)
 })
 
 test('marks normal conversion postbacks as non-test', () => {

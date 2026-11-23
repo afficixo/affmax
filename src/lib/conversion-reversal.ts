@@ -31,13 +31,23 @@ export function calculatePendingInvoiceTotals(
 }
 
 export async function reversePublisherConversion(conversionId: string) {
-  return prisma.$transaction(async (transaction) => {
+  const reversal = await prisma.$transaction(async (transaction) => {
     const conversion = await transaction.conversionLead.findUnique({
       where: { id: conversionId },
       select: {
         id: true,
+        userId: true,
+        offerId: true,
+        campaignId: true,
+        campaignName: true,
         status: true,
         payout: true,
+        country: true,
+        ipAddress: true,
+        sub3: true,
+        sub4: true,
+        occurredAt: true,
+        createdAt: true,
         publisherInvoiceId: true,
       },
     })
@@ -108,6 +118,29 @@ export async function reversePublisherConversion(conversionId: string) {
       invoiceId,
       invoiceRemoved,
       invoiceTotal,
+      publisherId: conversion.userId,
+      postbackLead: {
+        offerId: conversion.offerId,
+        campaignId: conversion.campaignId,
+        campaignName: conversion.campaignName,
+        payout: conversion.payout,
+        country: conversion.country,
+        ipAddress: conversion.ipAddress,
+        status: 'Reversed',
+        sub3: conversion.sub3,
+        sub4: conversion.sub4,
+        occurredAt: conversion.occurredAt,
+        createdAt: conversion.createdAt,
+      },
     }
   })
+
+  const { publisherId, postbackLead, ...result } = reversal
+  try {
+    const { firePublisherGlobalPostback } = await import('@/lib/publisher-postback')
+    await firePublisherGlobalPostback(publisherId, postbackLead)
+  } catch (error) {
+    console.error('Publisher reversal postback dispatch failed:', error)
+  }
+  return result
 }
