@@ -722,7 +722,7 @@ const reportPages: Record<string, { title: string; columns: string[] }> = {
   '/reports/geo': { title: 'Geo Reports', columns: ['Country', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/tool': { title: 'Tool Reports', columns: ['Tool ID', 'Name', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/subid': { title: 'SubID Reports', columns: ['SubID 1', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
-  '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'Device', 'SubID 1', 'SubID 2', 'IP', 'Revenue', 'Status'] },
+  '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'SubID 1', 'SubID 2', 'IP', 'Revenue', 'Status'] },
 }
 
 const tablePages: Record<string, { title: string; columns: string[] }> = {
@@ -913,18 +913,6 @@ function ReportCampaignFlag({ country, size = 25 }: { country: string; size?: nu
   )
 }
 
-/** Crack Bounty dashboard feed device label: Android / iOS. */
-function formatConversionDevice(raw?: string) {
-  const value = String(raw || '').trim()
-  if (!value || value === '—') return '—'
-  const lower = value.toLowerCase()
-  if (lower.includes('android')) return 'Android'
-  if (lower.includes('iphone') || lower.includes('ipad') || lower.includes('ios')) return 'iOS'
-  if (lower.includes('mac')) return 'Mac'
-  if (lower.includes('windows')) return 'Windows'
-  return value
-}
-
 function toDateInputValue(date: Date) {
   return date.toISOString().slice(0, 10)
 }
@@ -1088,7 +1076,6 @@ export default function DashboardOverview() {
     campaign: string
     payout: number
     country: string
-    device?: string
     subId: string
     createdAt: string
     status: string
@@ -1854,7 +1841,6 @@ export default function DashboardOverview() {
             campaign: string
             payout: number
             country: string
-            device?: string
             subId: string
             createdAt: string
             status: string
@@ -5706,7 +5692,6 @@ export default function DashboardOverview() {
                     {recentConversions.map((lead) => {
                       const countryCode = String(lead.country || '').toUpperCase()
                       const countryName = campaignCountryLabels[countryCode] || countryCode || '—'
-                      const deviceLabel = formatConversionDevice(lead.device)
                       const offerId = lead.offerId && /^\d+$/.test(lead.offerId) ? lead.offerId : ''
                       return (
                         <tr key={lead.id}>
@@ -5722,7 +5707,6 @@ export default function DashboardOverview() {
                             <ReportCampaignFlag country={countryCode} size={18} />
                             {' '}
                             <b>{countryName}</b>
-                            {' '}using <b>{deviceLabel}</b>
                             {' '}on {formatReportDateTime(lead.createdAt)}
                           </td>
                         </tr>

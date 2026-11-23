@@ -56,11 +56,16 @@ function subIdReportParts(first: string | null) {
   }
 }
 
+function usableCountryCode(country: string | null | undefined): string {
+  const code = String(country || '').trim().toUpperCase()
+  return /^[A-Z]{2}$/.test(code) ? code : ''
+}
+
 export async function getOverviewStats(scope: AnalyticsScope) {
   const todayStart = startOfDayUtc()
   const monthStart = startOfMonthUtc()
 
-  const [todayAgg, monthAgg, todayClicks, recentLeads, hourlyLeads, hourlyClicks] = await Promise.all([
+  const [todayAgg, monthAgg, todayClicks, recentLeads, hourlyLeads, hourlyClicks, campaignOffers] = await Promise.all([
     prisma.conversionLead.aggregate({
       where: leadWhere(scope, todayStart),
       _sum: { payout: true },
@@ -83,7 +88,6 @@ export async function getOverviewStats(scope: AnalyticsScope) {
         campaignName: true,
         payout: true,
         country: true,
-        device: true,
         status: true,
         sub1: true,
         sub2: true,
@@ -100,6 +104,9 @@ export async function getOverviewStats(scope: AnalyticsScope) {
     prisma.offerClick.findMany({
       where: clickWhere(scope, todayStart),
       select: { createdAt: true },
+    }),
+    prisma.campaignOffer.findMany({
+      select: { id: true, country: true, countries: true },
     }),
   ])
 
@@ -126,6 +133,13 @@ export async function getOverviewStats(scope: AnalyticsScope) {
     hourly[hour].revenue += Number(lead.payout ?? 0)
   }
 
+  const campaignCountries = new Map(
+    campaignOffers.map((offer) => [
+      offer.id,
+      (offer.countries?.find((code) => /^[A-Z]{2}$/i.test(code)) || offer.country || '').toUpperCase(),
+    ]),
+  )
+
   return {
     today: {
       revenue,
@@ -147,8 +161,9 @@ export async function getOverviewStats(scope: AnalyticsScope) {
         offerId: lead.offerId,
         campaign,
         payout: Number(lead.payout ?? 0),
-        country: (lead.country || '—').toUpperCase(),
-        device: lead.device || '—',
+        country: usableCountryCode(lead.country)
+          || campaignCountries.get(lead.offerId || '')
+          || '—',
         subId: lead.sub3 || '—',
         createdAt: (lead.occurredAt || lead.createdAt).toISOString(),
         status: lead.status || 'Approved',
@@ -193,7 +208,6 @@ export async function getReportData(
       campaignName: true,
       payout: true,
       country: true,
-      device: true,
       status: true,
       sub1: true,
       sub2: true,
@@ -216,6 +230,24 @@ export async function getReportData(
   })
 
   if (type === 'conversions') {
+    const offerIds = [...new Set(
+      leads
+        .map((lead) => lead.offerId)
+        .filter((offerId): offerId is string => Boolean(offerId)),
+    )]
+    const campaignOffers = await prisma.campaignOffer.findMany({
+      where: { id: { in: offerIds } },
+      select: { id: true, country: true, countries: true },
+    })
+    const campaignCountries = new Map(
+      campaignOffers.map((offer) => [
+        offer.id,
+        usableCountryCode(
+          offer.countries?.find((code) => usableCountryCode(code))
+          || offer.country,
+        ),
+      ]),
+    )
     const formatConversionCampaign = (name: string, offerId: string) => {
       const cleaned = (name || '').replace(/\s*\(#\d+\)\s*$/, '').trim()
       if (offerId && /^\d+$/.test(offerId)) {
@@ -229,8 +261,9 @@ export async function getReportData(
       rows: leads.map((lead) => ({
         offerId: lead.offerId || '',
         campaign: formatConversionCampaign(lead.campaignName || '', lead.offerId || ''),
-        country: (lead.country || '—').toUpperCase(),
-        device: lead.device || '—',
+        country: usableCountryCode(lead.country)
+          || campaignCountries.get(lead.offerId || '')
+          || '—',
         // Publisher SubIDs 1 and 2 arrive as inbound postback s3 and s4.
         subId: lead.sub3 || '—',
         subId2: lead.sub4 || '—',
