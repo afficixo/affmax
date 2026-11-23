@@ -568,7 +568,7 @@ model ReferralCommission {
 }
 
 enum PostbackProvider {
-  CRACK_BOUNTY
+  CRACK_BOUNTY @map("AFFMINE")
   ADBLUMEDIA
   MARKETPLACE
 }
