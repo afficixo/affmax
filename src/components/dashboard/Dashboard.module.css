@@ -33,7 +33,7 @@
 
 .brand img {
   display: block;
-  width: 130px;
+  width: 160px;
   height: auto;
   filter: drop-shadow(0 1px 0 rgba(255,255,255,0.2));
 }
@@ -280,6 +280,14 @@
   width: min(390px, calc(100vw - 24px));
 }
 
+.newsPopoverManager {
+  display: flex;
+  width: min(430px, calc(100vw - 24px));
+  max-height: min(620px, calc(100vh - 76px));
+  flex-direction: column;
+  border-radius: 14px;
+}
+
 .popoverTitle {
   padding: 11px 14px;
   border-bottom: 1px solid #e8ebed;
@@ -288,31 +296,378 @@
   font-weight: 700;
 }
 
-.newsList {
+.newsListPublisher {
   max-height: 440px;
   overflow: auto;
   padding: 0 14px;
 }
 
-.newsList article {
+.newsPublisherPost {
   padding: 12px 0;
   border-bottom: 1px solid #edf0f1;
   line-height: 1.5;
 }
 
-.newsList article:last-child {
+.newsPublisherPost:last-child {
   border-bottom: 0;
 }
 
-.newsList strong {
+.newsPublisherPost strong {
   color: #3d93ce;
   font-size: 12px;
 }
 
-.newsList p {
+.newsPublisherPost p {
   margin-top: 4px;
   color: #65727a;
   font-size: 12px;
+}
+
+.newsPopoverHeader {
+  display: flex;
+  min-height: 70px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #edf0f2;
+  background: linear-gradient(135deg, #fff 0%, #f8fbf8 100%);
+}
+
+.newsEyebrow,
+.newsStaticHeading {
+  color: #718078;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.newsPopoverHeader h2 {
+  margin: 3px 0 0;
+  color: #263238;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.newsComposeToggle,
+.newsPublishButton {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 8px;
+  background: #e8f7e5;
+  color: #28652f;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.newsComposeToggle {
+  padding: 0 11px;
+}
+
+.newsComposeToggle:hover,
+.newsPublishButton:hover:not(:disabled) {
+  background: #d7f0d2;
+}
+
+.newsComposeToggle:active,
+.newsPublishButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.newsListManager {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 14px 16px 16px;
+  overscroll-behavior: contain;
+}
+
+.newsComposer {
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #dfece0;
+  border-radius: 11px;
+  background: #f8fcf7;
+}
+
+.newsComposerHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.newsComposerHeading strong {
+  color: #2f3c35;
+  font-size: 13px;
+}
+
+.newsComposerHeading span,
+.newsComposerFooter > span {
+  color: #77837b;
+  font-size: 10px;
+}
+
+.newsField {
+  display: block;
+  margin-top: 10px;
+}
+
+.newsField > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #526057;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.newsField input,
+.newsField textarea {
+  display: block;
+  width: 100%;
+  border: 1px solid #dbe3dc;
+  border-radius: 7px;
+  outline: 0;
+  background: #fff;
+  color: #263238;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.newsField input {
+  height: 38px;
+  padding: 0 10px;
+}
+
+.newsField textarea {
+  min-height: 88px;
+  padding: 9px 10px;
+  resize: vertical;
+}
+
+.newsField input:focus,
+.newsField textarea:focus {
+  border-color: #83c97b;
+  box-shadow: 0 0 0 3px rgba(95, 244, 66, 0.14);
+}
+
+.newsComposerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.newsPublishButton {
+  padding: 0 12px;
+}
+
+.newsPublishButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.newsError,
+.newsStatus {
+  margin: 0 0 10px;
+  padding: 9px 11px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.newsError {
+  background: #fff1f0;
+  color: #a22e27;
+}
+
+.newsStatus {
+  background: #eff9ed;
+  color: #32683a;
+}
+
+.newsLoading {
+  padding: 6px 0 12px;
+  color: #758078;
+  font-size: 12px;
+}
+
+.newsEmptyState {
+  display: grid;
+  justify-items: center;
+  padding: 20px 12px 22px;
+  border: 1px dashed #dfe6e0;
+  border-radius: 10px;
+  background: #fbfcfb;
+  text-align: center;
+}
+
+.newsEmptyIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: #eef7ec;
+  color: #54834e;
+}
+
+.newsEmptyState strong {
+  color: #405047;
+  font-size: 12px;
+}
+
+.newsEmptyState p {
+  max-width: 260px;
+  margin-top: 4px;
+  color: #7a857e;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.newsPost {
+  padding: 13px 0;
+  border-bottom: 1px solid #edf0f1;
+}
+
+.newsPostMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #7b8880;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+
+.newsPostMeta > span {
+  color: #39813f;
+}
+
+.newsPostMeta time {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.newsPostHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.newsPostHeading h3,
+.newsInfoPost h3 {
+  color: #303d35;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.newsPostHeading h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.newsDeleteButton {
+  display: inline-flex;
+  min-height: 30px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 7px;
+  background: #fff3f2;
+  color: #a33a32;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.newsDeleteButton:hover:not(:disabled) {
+  background: #ffe5e2;
+  color: #8f211b;
+}
+
+.newsDeleteButton:focus-visible,
+.newsComposeToggle:focus-visible,
+.newsPublishButton:focus-visible {
+  outline: 2px solid #68a85e;
+  outline-offset: 2px;
+}
+
+.newsDeleteButton:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.newsPostBody,
+.newsInfoPost p {
+  margin-top: 4px;
+  color: #647169;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.newsAuthor {
+  display: block;
+  margin-top: 7px;
+  color: #8a948d;
+  font-size: 10px;
+}
+
+.newsStaticHeading {
+  padding: 15px 0 2px;
+}
+
+.newsInfoPost {
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f1;
+}
+
+.newsInfoPost:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.newsInfoLabel {
+  display: inline-block;
+  margin-bottom: 4px;
+  color: #88938b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+
+.newsInfoPost h3 {
+  font-size: 12px;
+}
+
+.newsInfoPost p {
+  margin-top: 3px;
+  font-size: 11px;
 }
 
 .profilePopover {
@@ -511,44 +866,10 @@
   font-weight: 600;
 }
 
-.managerCard {
-  height: 160px;
-  flex: 0 0 160px;
-  margin: auto 0 -20px;
-  padding: 0;
-  color: #eef0f1;
-  font-family: 'Montserrat', sans-serif;
-  text-align: center;
-}
-
-.managerCard h2 {
-  margin: 20px 0 10px;
-  color: #f5f5f5;
-  font-size: 22.75px;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
-.managerCard p {
-  margin: 0 0 10px;
-  font-size: 13px;
-  line-height: 22.1px;
-}
-
-.managerCard a {
-  color: #f5f5f5;
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.managerCard p svg {
-  display: inline-block;
-  vertical-align: -2px;
-}
-
 .sidebarFooter {
   height: 64.2px;
   flex: 0 0 64.2px;
+  margin-top: auto;
   padding: 10px 0;
   color: rgba(255, 255, 255, 0.6);
   font-family: 'Montserrat', sans-serif;
@@ -8644,7 +8965,7 @@ a.offerAction {
 
   .brand img {
     display: block;
-    width: 130px;
+    width: 160px;
     height: auto;
     object-fit: contain;
     object-position: center;
@@ -8804,21 +9125,6 @@ a.offerAction {
   .submenu a {
     min-height: 46px;
     padding: 11px 24px 11px 0;
-    font-size: 15px;
-    line-height: 24px;
-  }
-
-  .managerCard {
-    height: 176px;
-    flex-basis: 176px;
-  }
-
-  .managerCard h2 {
-    font-size: 24px;
-  }
-
-  .managerCard p,
-  .managerCard a {
     font-size: 15px;
     line-height: 24px;
   }

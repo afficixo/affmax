@@ -75,8 +75,22 @@ model User {
   ownedSupportConversations     SupportConversation[]     @relation("SupportConversationManager")
   publisherSupportConversations SupportConversation[]     @relation("SupportConversationPublisher")
   sentSupportMessages           SupportMessage[]          @relation("SupportMessageSender")
+  authoredNewsPosts             DashboardNewsPost[]        @relation("DashboardNewsAuthor")
 
   @@map("users")
+}
+
+model DashboardNewsPost {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  authorId  String
+  author    User     @relation("DashboardNewsAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@map("dashboard_news_posts")
 }
 
 model OfferApplication {

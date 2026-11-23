@@ -19,7 +19,6 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
-  Mail,
   MessageCircle,
   MoreHorizontal,
   MousePointer2,
@@ -85,6 +84,7 @@ import {
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
 import ReportDateRangePicker, { type ReportDatePreset } from './ReportDateRangePicker'
+import NewsUpdatesPopover from './NewsUpdatesPopover'
 import PaymentDashboard from './PaymentDashboard'
 import styles from './Dashboard.module.css'
 
@@ -418,11 +418,6 @@ type PublisherAccountRecord = {
   lastLogin?: string | null
   referredBy?: { id: string; username: string } | null
 }
-
-const newsItems = [
-  { title: 'Welcome', body: 'Your catalog is ready. Add offers from Campaigns or Incentive Offers to start promoting.' },
-  { title: 'Need help?', body: 'Contact your affiliate manager anytime if you need assistance with offers or payouts.' },
-]
 
 /** Dashboard topbar ticker strings */
 const topbarUpdateStrings = [
@@ -2995,19 +2990,14 @@ export default function DashboardOverview() {
           <span className={`${styles.updatesCursor}${tickerTyping ? ` ${styles.updatesCursorTyping}` : ''}`} aria-hidden="true">|</span>
         </div>
         <div className={styles.topActions}>
-          <div className={styles.popoverWrap}>
-            <button type="button" className={styles.iconButton} aria-label="News and notifications" aria-expanded={newsOpen} onClick={() => { setNewsOpen(!newsOpen); setProfileOpen(false) }}>
-              <Mail size={16} />
-            </button>
-            {newsOpen && (
-              <div className={`${styles.popover} ${styles.newsPopover}`}>
-                <div className={styles.popoverTitle}>NEWS &amp; UPDATES</div>
-                <div className={styles.newsList}>
-                  {newsItems.map((item) => <article key={item.title}><strong>{item.title}</strong><p>{item.body}</p></article>)}
-                </div>
-              </div>
-            )}
-          </div>
+          <NewsUpdatesPopover
+            isOpen={newsOpen}
+            isManager={userRole === 'MANAGER'}
+            onToggle={() => {
+              setNewsOpen(!newsOpen)
+              setProfileOpen(false)
+            }}
+          />
           <div className={styles.popoverWrap}>
             <button type="button" className={styles.profileButton} aria-label={userName ? `Profile for ${userName}` : 'Profile'} aria-expanded={profileOpen} onClick={() => { setProfileOpen(!profileOpen); setNewsOpen(false) }}>
               <CircleUserRound size={17} />
@@ -3099,14 +3089,6 @@ export default function DashboardOverview() {
           </a>
         </nav>
 
-        <section className={styles.managerCard}>
-          <h2>John</h2>
-          <p>
-            Your Affiliate Manager<br />
-            <a href="https://teams.live.com/l/invite/FEApzEOIWDUIoFRhwI" target="_blank" rel="noreferrer">Chat on Teams</a><br />
-            <i className="fa fa-envelope" aria-hidden="true" /> <a href="mailto:john@crackbounty.afficix.com">john@crackbounty.afficix.com</a>
-          </p>
-        </section>
         <div className={styles.sidebarFooter}>
           <Link href="/terms">Terms</Link><span>|</span><Link href="/privacy">Privacy</Link>
           <p>© 2026 Crack Bounty LLC</p>
