@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db/prisma'
 import { lookupCountryCode } from '@/lib/ip2location'
+import { isCreditedConversionStatus } from '@/lib/conversion-reversal'
 
 export type AnalyticsScope = {
   role: 'MANAGER' | 'PUBLISHER'
@@ -21,9 +22,12 @@ function daysAgoUtc(days: number, from = new Date()) {
   return start
 }
 
-function leadWhere(scope: AnalyticsScope, from?: Date, to?: Date) {
+function leadWhere(scope: AnalyticsScope, from?: Date, to?: Date, includeReversed = false) {
   const where: Record<string, unknown> = {}
   if (scope.role === 'PUBLISHER') where.userId = scope.userId
+  if (!includeReversed) {
+    where.OR = [{ status: { not: 'Reversed' } }, { status: null }]
+  }
   if (from || to) {
     where.createdAt = {
       ...(from ? { gte: from } : {}),
@@ -197,13 +201,13 @@ export async function getReportData(
   }
   const reportLeadWhere = type === 'conversions' && (from || toExclusive)
     ? {
-        ...leadWhere(scope),
+        ...leadWhere(scope, undefined, undefined, true),
         OR: [
           { occurredAt: reportDateFilter },
           { occurredAt: null, createdAt: reportDateFilter },
         ],
       }
-    : leadWhere(scope, from, toExclusive || undefined)
+    : leadWhere(scope, from, toExclusive || undefined, type === 'conversions')
 
   const leads = await prisma.conversionLead.findMany({
     where: reportLeadWhere,
@@ -265,6 +269,7 @@ export async function getReportData(
     return {
       type,
       rows: leads.map((lead) => ({
+        id: lead.id,
         offerId: lead.offerId || '',
         campaign: formatConversionCampaign(lead.campaignName || '', lead.offerId || ''),
         country: usableCountryCode(lead.country)
@@ -273,9 +278,9 @@ export async function getReportData(
         // Publisher SubIDs 1 and 2 arrive as inbound postback s3 and s4.
         subId: lead.sub3 || '—',
         subId2: lead.sub4 || '—',
-        revenue: Number(lead.payout ?? 0),
+        revenue: lead.status?.trim().toLowerCase() === 'reversed' ? 0 : Number(lead.payout ?? 0),
         ip: lead.ipAddress || '—',
-        status: lead.status === 'Approved' || !lead.status ? 'Credited' : lead.status,
+        status: isCreditedConversionStatus(lead.status) ? 'Credited' : lead.status || 'Credited',
         date: (lead.occurredAt || lead.createdAt).toISOString(),
       })),
       totals: null,

@@ -54,7 +54,11 @@ export async function GET(request: Request) {
         }),
         prisma.conversionLead.groupBy({
           by: ['userId'],
-          where: { publisherInvoiceId: null, payout: { not: null } },
+          where: {
+            publisherInvoiceId: null,
+            payout: { not: null },
+            OR: [{ status: { not: 'Reversed' } }, { status: null }],
+          },
           _sum: { payout: true },
           _count: { _all: true },
         }),
@@ -132,7 +136,12 @@ export async function GET(request: Request) {
         select: { payoutMethod: true, payoutAccount: true },
       }),
       prisma.conversionLead.aggregate({
-        where: { userId: auth.user.id, publisherInvoiceId: null, payout: { not: null } },
+        where: {
+          userId: auth.user.id,
+          publisherInvoiceId: null,
+          payout: { not: null },
+          OR: [{ status: { not: 'Reversed' } }, { status: null }],
+        },
         _sum: { payout: true },
         _count: { _all: true },
       }),
@@ -266,7 +275,12 @@ export async function POST(request: Request) {
         }
 
         const conversions = await transaction.conversionLead.findMany({
-          where: { userId: publisherId, publisherInvoiceId: null, payout: { not: null } },
+          where: {
+            userId: publisherId,
+            publisherInvoiceId: null,
+            payout: { not: null },
+            OR: [{ status: { not: 'Reversed' } }, { status: null }],
+          },
           select: { id: true, payout: true },
         })
         const total = conversions.reduce((sum, conversion) => sum + Number(conversion.payout ?? 0), 0)
@@ -289,6 +303,7 @@ export async function POST(request: Request) {
           where: {
             id: { in: conversions.map((conversion) => conversion.id) },
             publisherInvoiceId: null,
+            OR: [{ status: { not: 'Reversed' } }, { status: null }],
           },
           data: { publisherInvoiceId: createdInvoice.id },
         })

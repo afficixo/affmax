@@ -1108,6 +1108,12 @@ export default function DashboardOverview() {
     chartConversions: number[]
     chartRevenue: number[]
   } | null>(null)
+  const [reversingConversionId, setReversingConversionId] = useState<string | null>(null)
+  const [conversionToReverse, setConversionToReverse] = useState<{ id: string; payout: number } | null>(null)
+  const [conversionActionNotice, setConversionActionNotice] = useState<{
+    tone: 'success' | 'error'
+    message: string
+  } | null>(null)
   const [pageNotice, setPageNotice] = useState('')
   const [accountDetails, setAccountDetails] = useState<AccountDetailsForm>(emptyAccountDetails)
   const [accountSaving, setAccountSaving] = useState(false)
@@ -1136,6 +1142,8 @@ export default function DashboardOverview() {
   const [applyTermsAccepted, setApplyTermsAccepted] = useState(false)
   const [applyTermsError, setApplyTermsError] = useState(false)
   const campaignDialogCloseRef = useRef<HTMLButtonElement>(null)
+  const conversionReversalDialogRef = useRef<HTMLElement>(null)
+  const conversionReversalCancelRef = useRef<HTMLButtonElement>(null)
   const [wizardStep, setWizardStep] = useState(0)
   const [wizardFields, setWizardFields] = useState<Record<string, string>>({})
   const [wizardToggles, setWizardToggles] = useState({ showLock: true, roundCurrency: true, hideCurrency: false })
@@ -1671,6 +1679,41 @@ export default function DashboardOverview() {
     campaignDialogCloseRef.current?.focus()
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [campaignPreviewOpen])
+
+  useEffect(() => {
+    if (!conversionToReverse) return
+
+    const previousOverflow = document.body.style.overflow
+    const previouslyFocusedElement = document.activeElement
+    const closeOnKeyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setConversionToReverse(null)
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const buttons = conversionReversalDialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      if (!buttons?.length) return
+      const firstButton = buttons[0]
+      const lastButton = buttons[buttons.length - 1]
+      if (event.shiftKey && (document.activeElement === firstButton || !conversionReversalDialogRef.current?.contains(document.activeElement))) {
+        event.preventDefault()
+        lastButton.focus()
+      } else if (!event.shiftKey && (document.activeElement === lastButton || !conversionReversalDialogRef.current?.contains(document.activeElement))) {
+        event.preventDefault()
+        firstButton.focus()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', closeOnKeyboard)
+    conversionReversalCancelRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', closeOnKeyboard)
+      if (previouslyFocusedElement instanceof HTMLElement) previouslyFocusedElement.focus()
+    }
+  }, [conversionToReverse])
 
   useEffect(() => {
     setWizardStep(0)
@@ -2926,6 +2969,52 @@ export default function DashboardOverview() {
     .map((value, index) => `${36 + index * 19.2},${scaleHourly(value)}`)
     .join(' ')
   const money = (value: number) => `$${value.toFixed(value >= 100 || Number.isInteger(value) ? 0 : 2)}`
+  const reverseConversion = async (conversionId: string, payout: number) => {
+    setReversingConversionId(conversionId)
+    setConversionActionNotice(null)
+    try {
+      const response = await fetch(`/api/conversions/${encodeURIComponent(conversionId)}/reverse`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const payload = await response.json().catch(() => null) as {
+        error?: string
+        payoutRemoved?: number
+        invoiceId?: string | null
+        invoiceRemoved?: boolean
+        invoiceTotal?: number | null
+      } | null
+      if (!response.ok || !payload) {
+        setConversionActionNotice({
+          tone: 'error',
+          message: payload?.error || 'Unable to reverse this conversion.',
+        })
+        return
+      }
+
+      setReportData((current) => current ? {
+        ...current,
+        rows: current.rows.map((row) => String(row.id || '') === conversionId
+          ? { ...row, status: 'Reversed', revenue: 0 }
+          : row),
+      } : current)
+      const amount = formatCrackBountyMoney(Number(payload.payoutRemoved ?? payout))
+      const message = payload.invoiceRemoved
+        ? `Conversion reversed. ${amount} removed; the empty pending invoice was removed.`
+        : payload.invoiceId
+          ? `Conversion reversed. ${amount} removed from the pending invoice.`
+          : `Conversion reversed. ${amount} removed from payable earnings.`
+      setConversionActionNotice({ tone: 'success', message })
+    } catch (error) {
+      console.error('Unable to reverse conversion:', error)
+      setConversionActionNotice({
+        tone: 'error',
+        message: 'Unable to reverse this conversion. Try again.',
+      })
+    } finally {
+      setReversingConversionId(null)
+    }
+  }
 
   const renderFeaturedSlide = (
     campaign: FeaturedCampaign,
@@ -3656,6 +3745,14 @@ export default function DashboardOverview() {
                 />
               </div>
             </div>
+            {pathname === '/reports/conversions' && userRole === 'MANAGER' && conversionActionNotice ? (
+              <p
+                className={`${styles.conversionActionNotice} ${conversionActionNotice.tone === 'success' ? styles.conversionActionNoticeSuccess : styles.conversionActionNoticeError}`}
+                role={conversionActionNotice.tone === 'error' ? 'alert' : 'status'}
+              >
+                {conversionActionNotice.message}
+              </p>
+            ) : null}
             <div className={styles.reportBody}>
             {pathname === '/reports/daily' ? (
               <div id="container" className={`${styles.reportChart} ${styles.bigchart}`} aria-label="Daily Reports chart">
@@ -3753,9 +3850,32 @@ export default function DashboardOverview() {
                             if (column === 'IP') return <td key={column}>{String(row.ip || '—')}</td>
                             if (column === 'Revenue') return <td key={column}>{formatCrackBountyMoney(Number(row.revenue || 0))}</td>
                             if (column === 'Status') {
+                              const status = String(row.status || 'Credited')
+                              const conversionId = String(row.id || '')
+                              const canReverse = userRole === 'MANAGER' && status === 'Credited' && Boolean(conversionId)
+                              if (canReverse) {
+                                return (
+                                  <td key={column}>
+                                    <button
+                                      type="button"
+                                      className={`${styles.reportStatusCredited} ${styles.reportStatusReverseButton}`}
+                                      disabled={reversingConversionId !== null}
+                                      title="Reverse this conversion and remove its payout from payable earnings"
+                                      onClick={() => setConversionToReverse({
+                                        id: conversionId,
+                                        payout: Number(row.revenue || 0),
+                                      })}
+                                    >
+                                      {reversingConversionId === conversionId ? 'Reversing…' : status}
+                                    </button>
+                                  </td>
+                                )
+                              }
                               return (
                                 <td key={column}>
-                                  <span className={styles.reportStatusCredited}>{String(row.status || 'Credited')}</span>
+                                  <span className={status === 'Reversed' ? styles.reportStatusReversed : styles.reportStatusCredited}>
+                                    {status}
+                                  </span>
                                 </td>
                               )
                             }
@@ -6557,6 +6677,49 @@ export default function DashboardOverview() {
           </div>
         )
       })()}
+      {conversionToReverse && (
+        <div
+          className={styles.conversionConfirmBackdrop}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setConversionToReverse(null)
+          }}
+        >
+          <section
+            ref={conversionReversalDialogRef}
+            className={styles.conversionConfirmDialog}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="conversion-reversal-title"
+            aria-describedby="conversion-reversal-description"
+          >
+            <h2 id="conversion-reversal-title">Reverse conversion?</h2>
+            <p id="conversion-reversal-description">
+              Remove <strong>{formatCrackBountyMoney(conversionToReverse.payout)}</strong> from payable earnings?
+              {' '}Paid invoices cannot be reversed.
+            </p>
+            <div className={styles.conversionConfirmActions}>
+              <button
+                ref={conversionReversalCancelRef}
+                type="button"
+                className={styles.pageSecondaryButton}
+                onClick={() => setConversionToReverse(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.conversionConfirmSubmit}
+                onClick={() => {
+                  void reverseConversion(conversionToReverse.id, conversionToReverse.payout)
+                  setConversionToReverse(null)
+                }}
+              >
+                Reverse
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
