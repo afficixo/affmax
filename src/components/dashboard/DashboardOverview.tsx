@@ -3814,6 +3814,7 @@ export default function DashboardOverview() {
             {affminePickerOpen && (
               <AffmineOfferPicker
                 existingOfferIds={[...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => offer.id)}
+                sidebarHidden={desktopSidebarHidden}
                 onClose={() => setAffminePickerOpen(false)}
                 onImport={importAffmineOffer}
               />

@@ -10,6 +10,7 @@ import dashboardStyles from './Dashboard.module.css'
 
 type Props = {
   existingOfferIds: string[]
+  sidebarHidden: boolean
   onClose: () => void
   onImport: (offer: AffmineOffer) => void
 }
@@ -50,7 +51,7 @@ function countryName(code: string): string {
   return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code
 }
 
-export default function AffmineOfferPicker({ existingOfferIds, onClose, onImport }: Props) {
+export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, onClose, onImport }: Props) {
   const [offers, setOffers] = useState<AffmineOffer[]>([])
   const [search, setSearch] = useState('')
   const [country, setCountry] = useState('All')
@@ -171,18 +172,13 @@ export default function AffmineOfferPicker({ existingOfferIds, onClose, onImport
 
   return (
     <div
-      className={styles.backdrop}
+      className={`${styles.backdrop} ${sidebarHidden ? styles.backdropExpanded : ''}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="affmine-picker-title">
+      <section className={styles.dialog} role="dialog" aria-modal="true" aria-label="Import offers from Affmine">
         <header className={styles.header}>
-          <div>
-            <p className={styles.eyebrow}>AFFMINE NETWORK</p>
-            <h2 id="affmine-picker-title">Import from Affmine</h2>
-            <p className={styles.subtitle}>Browse available offers and select one to fill in the campaign form.</p>
-          </div>
           <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close offer picker">
             <X size={18} />
           </button>
