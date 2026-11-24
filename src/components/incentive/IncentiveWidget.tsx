@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { Check, LockKeyhole } from 'lucide-react'
 import {
   type IncentiveToolRecord,
   type IncentiveWidgetOffer,
@@ -15,6 +16,7 @@ import {
   contentLockersStorageKey,
   offerwallsStorageKey,
 } from '@/lib/incentive-tools'
+import { offerMatchesVisitorCountry } from '@/lib/offer-geo'
 import { withoutLegacyCrackBountyDemoOffers } from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import styles from './IncentiveWidget.module.css'
@@ -47,8 +49,10 @@ function mergeOffers(seedOffers: SeedOffer[], preferRemoteOnly = false): Incenti
       name: offer.name,
       payout: Number(offer.payout) || 0,
       category: offer.category || 'App Install',
-      country: offer.country || 'US',
-      countries: offer.countries,
+      country: offer.country || '',
+      countries: offer.countries?.length
+        ? offer.countries
+        : (offer.country ? [offer.country] : undefined),
       offerTypes: offer.offerTypes?.length ? offer.offerTypes : ['CPI'],
       imageSource: toCampaignImageSource(offer.id, offer.imageSource || `/affmine/preview_i/${offer.id}.png`),
       description: offer.description,
@@ -71,13 +75,18 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
   const [launchNotice, setLaunchNotice] = useState('')
   const [ready, setReady] = useState(false)
   const [offerQuery, setOfferQuery] = useState('')
+  const [visitorCountryCode, setVisitorCountryCode] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const nextTool = loadTool(kind, toolId)
     setTool(nextTool)
 
-    const applyCatalog = (remoteOffers: SeedOffer[], preferRemoteOnly = false) => {
+    const applyCatalog = (
+      remoteOffers: SeedOffer[],
+      preferRemoteOnly = false,
+      detectedCountryCode: string | null = null,
+    ) => {
       const catalogAll = mergeOffers(
         withoutLegacyCrackBountyDemoOffers([...seedOffers, ...remoteOffers]),
         preferRemoteOnly,
@@ -87,10 +96,13 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
       const savedActive = activeIds.filter((id) => knownIds.has(id))
       // Public API already returns incentiveActive offers; fall back to all when local list is empty.
       const activeSet = new Set(savedActive.length ? savedActive : catalogAll.map((offer) => offer.id))
-      const catalog = catalogAll.filter((offer) => activeSet.has(offer.id))
-      const selected = nextTool?.selectedOfferIds?.length
-        ? catalog.filter((offer) => nextTool.selectedOfferIds.includes(offer.id))
-        : catalog
+      const selected = catalogAll
+        .filter((offer) => activeSet.has(offer.id))
+        .filter((offer) => kind !== 'locker'
+          || !detectedCountryCode
+          || offerMatchesVisitorCountry(offer, detectedCountryCode))
+        .filter((offer) => !nextTool?.selectedOfferIds?.length
+          || nextTool.selectedOfferIds.includes(offer.id))
       const minPayout = Number(nextTool?.fields.minimumPayout || 0)
       const filtered = minPayout > 0 ? selected.filter((offer) => offer.payout >= minPayout) : selected
 
@@ -104,6 +116,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
 
       if (!cancelled) {
         setOffers(capped)
+        setVisitorCountryCode(kind === 'locker' ? detectedCountryCode : null)
         setReady(true)
       }
     }
@@ -112,9 +125,16 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
       try {
         const response = await fetch('/api/campaigns/public?placement=INCENTIVE', { cache: 'no-store' })
         if (!response.ok) throw new Error('public_catalog_unavailable')
-        const payload = await response.json() as { offers?: SeedOffer[] }
+        const payload = await response.json() as {
+          offers?: SeedOffer[]
+          visitorCountryCode?: string | null
+        }
         // Prefer DB catalog only so browser-cached Crack Bounty demo offers cannot resurface.
-        applyCatalog(Array.isArray(payload.offers) ? payload.offers : [], true)
+        applyCatalog(
+          Array.isArray(payload.offers) ? payload.offers : [],
+          true,
+          payload.visitorCountryCode ?? null,
+        )
       } catch {
         applyCatalog([], true)
       }
@@ -128,6 +148,9 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
   const currencyName = tool?.fields.currencyName?.trim() || 'Points'
   const progress = Math.min(completedIds.length, required)
   const canUnlock = progress >= required
+  const visitorCountryName = visitorCountryCode
+    ? new Intl.DisplayNames(['en'], { type: 'region' }).of(visitorCountryCode) ?? visitorCountryCode
+    : null
   const visibleOffers = useMemo(() => {
     const query = offerQuery.trim().toLowerCase()
     if (!query) return offers
@@ -220,7 +243,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
         </div>
         {kind === 'locker' && tool.toggles.showLock ? (
           <div className={`${styles.lockBadge} ${unlocked ? styles.lockBadgeOpen : ''}`} aria-hidden="true">
-            {unlocked ? '✓' : '🔒'}
+            {unlocked ? <Check size={21} strokeWidth={2.5} /> : <LockKeyhole size={20} strokeWidth={2} />}
           </div>
         ) : null}
       </header>
@@ -261,7 +284,12 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
       ) : null}
 
       <div className={styles.offerToolbar}>
-        <h2 className={styles.offerHeading}>{kind === 'locker' ? 'Available offers' : 'Earn rewards'}</h2>
+        <div className={styles.offerHeadingGroup}>
+          <h2 className={styles.offerHeading}>{kind === 'locker' ? 'Available offers' : 'Earn rewards'}</h2>
+          {kind === 'locker' && visitorCountryName ? (
+            <span className={styles.geoLabel}>Offers for {visitorCountryName}</span>
+          ) : null}
+        </div>
         <input
           type="search"
           className={styles.offerSearch}
@@ -275,7 +303,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
       <section className={styles.offerList} aria-label="Incentive offers">
         {visibleOffers.length ? visibleOffers.map((offer) => {
           const done = completedIds.includes(offer.id)
-          const geos = offer.countries?.length ? offer.countries : [offer.country]
+          const geos = offer.countries?.length ? offer.countries : [offer.country].filter(Boolean)
           const reward = tool.toggles.roundCurrency
             ? Math.round(offer.payout * exchangeRate)
             : Number((offer.payout * exchangeRate).toFixed(2))
@@ -288,7 +316,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
                 <p>
                   {offer.category}
                   <span aria-hidden="true"> · </span>
-                  {geos.join(', ')}
+                  {geos.length ? geos.join(', ') : 'Global'}
                   <span aria-hidden="true"> · </span>
                   {offer.offerTypes[0] || 'CPI'}
                 </p>
@@ -305,7 +333,9 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
           <div className={styles.empty}>
             {offers.length
               ? `No offers match “${offerQuery.trim()}”.`
-              : `No offers are available right now. Please check back soon.`}
+              : visitorCountryName
+                ? `No offers are available for ${visitorCountryName} right now. Please check back soon.`
+                : 'No offers are available right now. Please check back soon.'}
           </div>
         )}
       </section>

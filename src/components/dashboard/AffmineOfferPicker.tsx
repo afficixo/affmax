@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import * as CountryFlags from 'country-flag-icons/react/1x1'
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
@@ -13,6 +13,7 @@ type Props = {
   sidebarHidden: boolean
   onClose: () => void
   onImport: (offer: AffmineOffer) => void
+  onImportMany: (offers: AffmineOffer[]) => Promise<number>
 }
 
 type SortKey = 'id' | 'name' | 'payout'
@@ -46,12 +47,27 @@ function offerTypes(offer: AffmineOffer): string[] {
   return types.length ? types : [offer.incentive ? 'CPI' : 'CPL']
 }
 
+function canImportOffer(offer: AffmineOffer, alreadyAdded: boolean): boolean {
+  return !alreadyAdded
+    && /^\d+$/.test(offer.id)
+    && offer.currency === 'USD'
+    && offer.payout !== null
+    && offer.payout > 0
+    && Boolean(offer.trackingUrl)
+}
+
 function countryName(code: string): string {
   if (code === 'GB') return 'United Kingdom'
   return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code
 }
 
-export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, onClose, onImport }: Props) {
+export default function AffmineOfferPicker({
+  existingOfferIds,
+  sidebarHidden,
+  onClose,
+  onImport,
+  onImportMany,
+}: Props) {
   const [offers, setOffers] = useState<AffmineOffer[]>([])
   const [search, setSearch] = useState('')
   const [country, setCountry] = useState('All')
@@ -65,6 +81,11 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [retryCount, setRetryCount] = useState(0)
+  const [selectedOfferIds, setSelectedOfferIds] = useState<string[]>([])
+  const [bulkImporting, setBulkImporting] = useState(false)
+  const [bulkError, setBulkError] = useState('')
+  const [bulkSuccess, setBulkSuccess] = useState('')
+  const selectAllRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -151,6 +172,22 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
   }), [filteredOffers, sortKey, sortDirection])
   const pageCount = Math.max(1, Math.ceil(sortedOffers.length / pageSize))
   const visibleOffers = sortedOffers.slice((page - 1) * pageSize, page * pageSize)
+  const selectableFilteredIds = sortedOffers
+    .filter((offer) => canImportOffer(offer, existingIds.has(offer.id)))
+    .map((offer) => offer.id)
+  const selectedOffers = selectedOfferIds
+    .map((id) => offers.find((offer) => offer.id === id))
+    .filter((offer): offer is AffmineOffer => Boolean(offer && canImportOffer(offer, existingIds.has(offer.id))))
+  const selectedAvailableIds = new Set(selectedOffers.map((offer) => offer.id))
+  const allFilteredSelected = selectableFilteredIds.length > 0
+    && selectableFilteredIds.every((id) => selectedAvailableIds.has(id))
+  const someFilteredSelected = selectableFilteredIds.some((id) => selectedAvailableIds.has(id))
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someFilteredSelected && !allFilteredSelected
+    }
+  }, [someFilteredSelected, allFilteredSelected])
 
   useEffect(() => {
     if (page > pageCount) setPage(pageCount)
@@ -169,6 +206,39 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
   const resetPage = () => setPage(1)
   const firstResult = sortedOffers.length ? (page - 1) * pageSize + 1 : 0
   const lastResult = Math.min(page * pageSize, sortedOffers.length)
+  const toggleOfferSelection = (offerId: string) => {
+    setBulkError('')
+    setBulkSuccess('')
+    setSelectedOfferIds((selected) => selected.includes(offerId)
+      ? selected.filter((id) => id !== offerId)
+      : [...selected, offerId])
+  }
+  const toggleFilteredSelection = () => {
+    setBulkError('')
+    setBulkSuccess('')
+    setSelectedOfferIds((selected) => {
+      if (allFilteredSelected) {
+        const filteredIds = new Set(selectableFilteredIds)
+        return selected.filter((id) => !filteredIds.has(id))
+      }
+      return [...new Set([...selected, ...selectableFilteredIds])]
+    })
+  }
+  const importSelectedOffers = async () => {
+    if (!selectedOffers.length || bulkImporting) return
+    setBulkImporting(true)
+    setBulkError('')
+    setBulkSuccess('')
+    try {
+      const importedCount = await onImportMany(selectedOffers)
+      setSelectedOfferIds([])
+      setBulkSuccess(`${importedCount} offer${importedCount === 1 ? '' : 's'} added to your catalog.`)
+    } catch (requestError) {
+      setBulkError(requestError instanceof Error ? requestError.message : 'Selected offers could not be added.')
+    } finally {
+      setBulkImporting(false)
+    }
+  }
 
   return (
     <div
@@ -243,10 +313,44 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
               <button type="button" onClick={() => setRetryCount((count) => count + 1)}>Try again</button>
             </div>
           ) : (
+            <>
+            <div className={styles.selectionBar}>
+              <label className={styles.selectAll}>
+                <input
+                  ref={selectAllRef}
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  aria-checked={someFilteredSelected && !allFilteredSelected ? 'mixed' : allFilteredSelected}
+                  aria-label="Select all available offers matching the current filters"
+                  disabled={!selectableFilteredIds.length || bulkImporting}
+                  onChange={toggleFilteredSelection}
+                />
+                <span>Select all available matching offers</span>
+              </label>
+              <span className={styles.selectionCount}>
+                {selectedOffers.length} selected
+                {sortedOffers.length !== selectableFilteredIds.length
+                  ? ` · ${selectableFilteredIds.length} available in these results`
+                  : ''}
+              </span>
+              <button
+                type="button"
+                className={styles.bulkImportButton}
+                disabled={!selectedOffers.length || bulkImporting}
+                onClick={() => void importSelectedOffers()}
+              >
+                {bulkImporting ? 'Adding offers…' : `Add selected${selectedOffers.length ? ` (${selectedOffers.length})` : ''}`}
+              </button>
+            </div>
+            {bulkError ? <p className={styles.bulkError} role="alert">{bulkError}</p> : null}
+            {bulkSuccess ? <p className={styles.bulkSuccess} role="status">{bulkSuccess}</p> : null}
             <div className={dashboardStyles.campaignTableWrap}>
               <table className={dashboardStyles.campaignTable}>
                 <thead>
                   <tr>
+                    <th>
+                      <span className={styles.visuallyHidden}>Select</span>
+                    </th>
                     <th aria-sort={sortKey === 'id' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}>
                       <button type="button" onClick={() => selectSort('id')}>ID</button>
                     </th>
@@ -266,13 +370,20 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
                 <tbody>
                   {visibleOffers.length ? visibleOffers.map((offer) => {
                     const alreadyAdded = existingIds.has(offer.id)
+                    const importable = canImportOffer(offer, alreadyAdded)
                     const hasUsdPayout = offer.currency === 'USD' && offer.payout !== null && offer.payout > 0
-                    const canImport = !alreadyAdded
-                      && /^\d+$/.test(offer.id)
-                      && hasUsdPayout
-                      && Boolean(offer.trackingUrl)
                     return (
                       <tr key={offer.id}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className={styles.offerCheckbox}
+                            checked={!alreadyAdded && selectedAvailableIds.has(offer.id)}
+                            disabled={!importable || bulkImporting}
+                            aria-label={`Select ${offer.name}`}
+                            onChange={() => toggleOfferSelection(offer.id)}
+                          />
+                        </td>
                         <td>{offer.id}</td>
                         <td>
                           {offer.previewUrl ? (
@@ -324,13 +435,13 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
                           <button
                             type="button"
                             className={`${dashboardStyles.offerAction} ${dashboardStyles.offerActionApply} ${styles.importButton}`}
-                            disabled={!canImport}
+                            disabled={!importable || bulkImporting}
                             title={!hasUsdPayout ? 'Only offers with a valid USD payout can be imported.' : !offer.trackingUrl ? 'Tracking link is missing.' : undefined}
                             onClick={() => onImport(offer)}
                           >
-                            {alreadyAdded ? 'Added' : canImport ? 'Import' : 'Unavailable'}
+                            {alreadyAdded ? 'Added' : importable ? 'Import' : 'Unavailable'}
                           </button>
-                          {!alreadyAdded && !canImport && (
+                          {!alreadyAdded && !importable && (
                             <span className={styles.unavailable}>
                               {!hasUsdPayout ? 'USD payout required' : !offer.trackingUrl ? 'Tracking link missing' : 'Numeric ID required'}
                             </span>
@@ -340,7 +451,7 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
                     )
                   }) : (
                     <tr>
-                      <td className={dashboardStyles.campaignNoResults} colSpan={8}>
+                      <td className={dashboardStyles.campaignNoResults} colSpan={9}>
                         {search || country !== 'All' || device !== 'All' || category !== 'All' || type !== 'All'
                           ? 'No offers match your filters.'
                           : 'No offers are available.'}
@@ -350,6 +461,7 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
 
@@ -358,7 +470,7 @@ export default function AffmineOfferPicker({ existingOfferIds, sidebarHidden, on
             {offers.length ? sortedOffers.length
               ? `Showing ${firstResult}–${lastResult} of ${sortedOffers.length} offers. `
               : 'No matching offers. ' : ''}
-            Offers are added to your catalog after you submit the campaign form.
+            Add selected offers to your catalog now, or import one offer to fill the campaign form.
           </span>
           <div className={styles.pagination}>
             <label>

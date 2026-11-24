@@ -143,25 +143,126 @@
 }
 
 .tableArea table {
-  min-width: 990px;
+  min-width: 1030px;
 }
 
-.tableArea th:nth-child(1),
-.tableArea td:nth-child(1) { width: 6%; }
 .tableArea th:nth-child(2),
-.tableArea td:nth-child(2) { width: 8%; }
+.tableArea td:nth-child(2) { width: 6%; }
 .tableArea th:nth-child(3),
-.tableArea td:nth-child(3) { width: 31%; }
+.tableArea td:nth-child(3) { width: 8%; }
 .tableArea th:nth-child(4),
-.tableArea td:nth-child(4) { width: 10%; }
+.tableArea td:nth-child(4) { width: 31%; }
 .tableArea th:nth-child(5),
-.tableArea td:nth-child(5) { width: 15%; }
+.tableArea td:nth-child(5) { width: 10%; }
 .tableArea th:nth-child(6),
-.tableArea td:nth-child(6) { width: 8%; }
+.tableArea td:nth-child(6) { width: 15%; }
 .tableArea th:nth-child(7),
-.tableArea td:nth-child(7) { width: 13%; }
+.tableArea td:nth-child(7) { width: 8%; }
 .tableArea th:nth-child(8),
-.tableArea td:nth-child(8) { width: 9%; }
+.tableArea td:nth-child(8) { width: 13%; }
+.tableArea th:nth-child(9),
+.tableArea td:nth-child(9) { width: 9%; }
+
+.tableArea th:first-child,
+.tableArea td:first-child {
+  width: 42px;
+  min-width: 42px;
+  text-align: center;
+}
+
+.selectionBar {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  min-width: 1030px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #e8edef;
+  background: #fff;
+}
+
+.selectAll {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  color: #46545b;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selectAll input,
+.offerCheckbox {
+  width: 15px;
+  height: 15px;
+  accent-color: #1687a1;
+  cursor: pointer;
+}
+
+.selectAll input:disabled,
+.offerCheckbox:disabled {
+  cursor: not-allowed;
+}
+
+.selectionCount {
+  color: #74818a;
+  font-size: 11px;
+}
+
+.bulkImportButton {
+  min-height: 32px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 0;
+  border-radius: 5px;
+  padding: 0 13px;
+  background: #1687a1;
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bulkImportButton:hover:not(:disabled) {
+  background: #116f84;
+}
+
+.bulkImportButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.bulkError,
+.bulkSuccess {
+  min-width: 1030px;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 11px;
+}
+
+.bulkError {
+  background: #fff5f5;
+  color: #a52b2b;
+}
+
+.bulkSuccess {
+  background: #f0faf3;
+  color: #287c46;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
 
 .imagePlaceholder {
   display: grid;

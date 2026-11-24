@@ -6,10 +6,16 @@ import {
   toCampaignOfferRecord,
 } from '@/lib/campaign-offers'
 import { prisma } from '@/lib/db/prisma'
+import { visitorCountryCodeFromHeaders } from '@/lib/offer-geo'
 
 /** Public catalog for Content Locker / OfferWall embeds (no auth). */
 export async function GET(request: Request) {
   const origin = request.headers.get('origin') || null
+  const headers = {
+    ...getCorsHeaders(origin),
+    'Cache-Control': 'private, no-store',
+  }
+  const visitorCountryCode = visitorCountryCodeFromHeaders(request.headers)
   const url = new URL(request.url)
   const placement = url.searchParams.get('placement')
   const placementFilter = placement === 'INCENTIVE' || placement === 'STANDARD' ? placement : 'INCENTIVE'
@@ -29,14 +35,14 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json(
-      { offers: offers.map(toCampaignOfferRecord) },
-      { headers: getCorsHeaders(origin) },
+      { offers: offers.map(toCampaignOfferRecord), visitorCountryCode },
+      { headers },
     )
   } catch (error) {
     console.error('Public campaign offers failed:', error)
     return NextResponse.json(
       { error: 'Unable to load offers' },
-      { status: 503, headers: getCorsHeaders(origin) },
+      { status: 503, headers },
     )
   }
 }

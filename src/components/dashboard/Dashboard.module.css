@@ -4104,22 +4104,43 @@ input.reportRangeInput {
 
 .wizardPreview {
   min-height: 430px;
-  background: #f7f8f9;
+  border-color: #e2e8ee;
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(67, 182, 214, 0.06), transparent 46%),
+    #f6f8fa;
+  box-shadow: 0 8px 24px rgba(30, 41, 49, 0.04);
 }
 
 .wizardPreviewHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   color: #58666e;
   font-size: 11px;
 }
 
+.wizardPreviewHeader strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #34424c;
+  font-size: 12px;
+}
+
+.previewLiveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38a66a;
+  box-shadow: 0 0 0 3px rgba(56, 166, 106, 0.12);
+}
+
 .wizardPreviewHeader select {
   height: 28px;
-  border: 1px solid #d5dadd;
-  border-radius: 3px;
+  border: 1px solid #d9e0e5;
+  border-radius: 6px;
   padding: 0 7px;
   background: #fff;
   color: #58666e;
@@ -4532,34 +4553,28 @@ input.reportRangeInput {
 .lockerPreview,
 .offerwallPreview {
   --locker-btn: #5cb85c;
+  --locker-main: #43b6d6;
   --locker-offers-bg: #f7f8f9;
   --locker-offers-text: #58666e;
   --wall-btn: #43b6d6;
   --wall-box: #f7f8f9;
   --wall-text: #58666e;
   max-width: 540px;
-  min-height: 350px;
+  min-height: 380px;
   margin: auto;
-  border: 1px solid #e5e8ea;
-  border-radius: 8px;
-  padding: 16px;
+  border: 1px solid #e1e7eb;
+  border-radius: 16px;
+  padding: 22px;
   background: #fff;
   color: #58666e;
   font-size: 12px;
-  box-shadow: 0 8px 24px rgba(30, 41, 49, 0.05);
+  box-shadow: 0 14px 34px rgba(30, 41, 49, 0.08);
 }
 
 .wizardPreviewMobile {
   max-width: 320px;
-}
-
-.lockerPreviewHead {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  margin-bottom: 8px;
-  color: #3d464d;
-  font-size: 14px;
+  min-height: 420px;
+  padding: 18px;
 }
 
 .lockerPreview > p,
@@ -4570,8 +4585,6 @@ input.reportRangeInput {
 
 .lockerPreviewProgress {
   margin-bottom: 10px;
-  color: #8a949b;
-  font-size: 11px;
 }
 
 .lockerPreviewOffer,
@@ -4657,6 +4670,183 @@ input.reportRangeInput {
   margin: 0 0 8px;
   color: #3d464d;
   font-size: 16px;
+}
+
+.lockerPreviewBrand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lockerPreviewIcon {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--locker-main) 20%, #fff);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--locker-main) 10%, #fff);
+  color: var(--locker-main);
+}
+
+.lockerPreviewHead {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.lockerPreviewEyebrow {
+  color: var(--locker-main);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.lockerPreviewHead strong {
+  color: #263746;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.lockerPreview > p {
+  margin: 0 0 16px;
+  color: #6e7c86;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.lockerPreviewProgress {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 14px;
+  border: 1px solid #e8edf0;
+  border-radius: 11px;
+  padding: 12px;
+  background: #fbfcfd;
+}
+
+.lockerPreviewProgressMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.lockerPreviewProgressMeta span {
+  color: #71808a;
+  font-size: 11px;
+}
+
+.lockerPreviewProgressMeta strong {
+  color: #34424c;
+  font-size: 11px;
+}
+
+.lockerPreviewProgressTrack {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e9eef1;
+}
+
+.lockerPreviewProgressTrack span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--locker-main);
+}
+
+.lockerPreviewProgress small {
+  color: #84919a;
+  font-size: 10px;
+}
+
+.lockerPreviewOffer {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(31, 41, 51, 0.03);
+}
+
+.lockerPreviewOfferUnavailable {
+  border-color: #e8dcc5;
+  background: #fcfaf6;
+}
+
+.lockerPreviewOfferStatus {
+  grid-column: 1 / -1;
+  justify-self: start;
+  border-radius: 99px;
+  padding: 2px 8px;
+  background: #f5ead7;
+  color: #80602d;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.lockerPreviewOffer img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.lockerPreviewOffer b {
+  color: #34424c;
+  font-size: 11px;
+}
+
+.lockerPreviewOffer small {
+  color: #7b8992;
+  font-size: 10px;
+}
+
+.lockerPreviewOffer button {
+  min-width: 60px;
+  min-height: 32px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.lockerPreviewOffer button:disabled {
+  background: #969fa5;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.lockerPreviewUnlock {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  opacity: 0.68;
+  cursor: default;
+}
+
+.lockerPreviewNote {
+  margin-top: 8px;
+  color: #84919a;
+  font-size: 10px;
+  text-align: center;
+}
+
+.lockerPreviewEmpty {
+  margin-top: 10px;
+  border: 1px dashed #d2dbe0;
+  border-radius: 10px;
+  padding: 18px 12px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #7b8992;
+  text-align: center;
 }
 
 .referralSummary {

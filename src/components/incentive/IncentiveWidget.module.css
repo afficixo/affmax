@@ -183,6 +183,18 @@
   font-weight: 700;
 }
 
+.offerHeadingGroup {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.geoLabel {
+  color: var(--iw-main);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .offerSearch {
   flex: 1 1 180px;
   max-width: 260px;
@@ -311,9 +323,108 @@
   font-size: 11px;
 }
 
+.lockerShell .header {
+  border-color: color-mix(in srgb, var(--iw-main) 24%, #e5e9ec);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 14px 34px rgba(30, 41, 49, 0.07);
+}
+
+.lockerShell .header h1 {
+  max-width: 34ch;
+  font-size: clamp(20px, 3vw, 25px);
+  line-height: 1.3;
+}
+
+.lockerShell .lockBadge {
+  border-radius: 14px;
+  color: var(--iw-main);
+}
+
+.lockerShell .lockBadge svg {
+  display: block;
+}
+
+.lockerShell .lockBadgeOpen {
+  color: #278144;
+}
+
+.lockerShell .progressCard {
+  gap: 14px;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 10px 26px rgba(30, 41, 49, 0.05);
+}
+
+.lockerShell .progressMeta {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.lockerShell .progressMeta strong {
+  font-size: 20px;
+}
+
+.lockerShell .progressTrack {
+  height: 10px;
+}
+
+.lockerShell .unlockButton {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 13px;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.lockerShell .unlockButton:not(:disabled):hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.lockerShell .unlockButton:disabled {
+  opacity: 0.62;
+}
+
+.lockerShell .offerCard {
+  gap: 14px;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.lockerShell .offerBody h2 {
+  color: #263746;
+  font-size: 14px;
+}
+
+.lockerShell .offerButton {
+  min-width: 104px;
+  min-height: 40px;
+  border-radius: 9px;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--iw-btn) 22%, transparent);
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.lockerShell .offerButton:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.lockerShell .offerButton:focus-visible,
+.lockerShell .unlockButton:focus-visible,
+.lockerShell .offerSearch:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--iw-main) 42%, transparent);
+  outline-offset: 2px;
+}
+
 @media (max-width: 640px) {
   .shell {
     padding: 12px 10px 18px;
+  }
+
+  .lockerShell .header {
+    padding: 18px;
   }
 
   .header h1 {

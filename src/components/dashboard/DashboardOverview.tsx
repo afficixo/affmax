@@ -623,6 +623,7 @@ const incentiveOfferTypeOptions = ['CPI', 'CPE', 'SOI', 'CPL']
 const standardOfferTypeOptions = ['CPL', 'CPE', 'CPI', 'SOI']
 
 const campaignCountryLabels: Record<string, string> = {
+  GLOBAL: 'Global',
   US: 'United States',
   GB: 'United Kingdom',
   CA: 'Canada',
@@ -673,10 +674,12 @@ const mergeCampaignOverride = (source: CampaignOffer, override?: CampaignOffer):
   return merged
 }
 
-const campaignFlagEmoji = (country: string) => country.toUpperCase()
-  .split('')
-  .map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)))
-  .join('')
+const campaignFlagEmoji = (country: string) => country.toUpperCase() === 'GLOBAL'
+  ? '🌐'
+  : country.toUpperCase()
+    .split('')
+    .map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)))
+    .join('')
 
 const featuredCampaignsFromOffers = (campaigns: CampaignOffer[]): FeaturedCampaign[] => {
   const toFeatured = (campaign: CampaignOffer): FeaturedCampaign => ({
@@ -2227,6 +2230,98 @@ export default function DashboardOverview() {
     setAffminePickerOpen(false)
   }
 
+  const importAffmineOffers = async (offers: AffmineOffer[]) => {
+    if (userRole !== 'MANAGER') {
+      throw new Error('Manager access is required to manage offers.')
+    }
+
+    const existingIds = new Set([...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => offer.id))
+    const uniqueOffers = offers.filter((offer, index) => (
+      !existingIds.has(offer.id)
+      && offers.findIndex((candidate) => candidate.id === offer.id) === index
+      && offer.payout !== null
+      && offer.payout > 0
+      && offer.currency === 'USD'
+      && Boolean(offer.trackingUrl)
+      && /^\d+$/.test(offer.id)
+    ))
+    if (!uniqueOffers.length) {
+      throw new Error('No new importable offers were selected.')
+    }
+
+    const imported = uniqueOffers.map((offer) => {
+      const isIncentive = offer.incentive
+      const sourceDetails = `${offer.name} ${offer.category}`.toUpperCase()
+      const types = (isIncentive ? incentiveOfferTypeOptions : standardOfferTypeOptions)
+        .filter((offerType) => sourceDetails.split(/[^A-Z0-9]+/).includes(offerType))
+      const category = offerCategories.find((option) => (
+        sourceDetails.toLowerCase().includes(option.toLowerCase())
+      )) ?? (isIncentive ? 'App Install' : 'E-mail Submit')
+      const countries = offer.countries.length ? [...offer.countries] : ['GLOBAL']
+
+      return {
+        id: offer.id,
+        name: offer.name,
+        payout: offer.payout,
+        country: countries[0],
+        countries,
+        imageSource: offer.previewUrl || (
+          isIncentive
+            ? `/affmine/preview_i/${encodeURIComponent(offer.id)}.png`
+            : `/affmine/campaigns/${encodeURIComponent(offer.id)}.png`
+        ),
+        offerTypes: types.length ? types : [isIncentive ? 'CPI' : 'CPL'],
+        requiresApproval: !isIncentive,
+        category,
+        device: isIncentive ? [...initialIncentiveOfferDraft.device] : [...allOfferDevices],
+        description: offer.description,
+        offerLink: offer.trackingUrl,
+        action: isIncentive ? 'View' : 'Apply',
+        isHot: false,
+        status: 'ACTIVE',
+        placement: isIncentive ? 'INCENTIVE' : 'STANDARD',
+        incentiveActive: isIncentive,
+      }
+    })
+
+    const response = await fetch('/api/campaigns', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offers: imported }),
+    })
+    const payload = await response.json().catch(() => null) as {
+      error?: string
+      offers?: CampaignOffer[]
+    } | null
+    if (!response.ok) {
+      throw new Error(payload?.error || 'Selected offers could not be saved.')
+    }
+    if (!Array.isArray(payload?.offers) || payload.offers.length !== imported.length) {
+      throw new Error('The server did not confirm that all selected offers were added.')
+    }
+
+    const savedOffers = payload.offers
+    setCustomCampaignOffers((current) => {
+      const savedIds = new Set(savedOffers.map((offer) => offer.id))
+      const next = [...current.filter((offer) => !savedIds.has(offer.id)), ...savedOffers]
+      window.localStorage.setItem(customOffersStorageKey, JSON.stringify(next))
+      return next
+    })
+    const savedIncentiveIds = savedOffers
+      .filter((offer) => offer.placement === 'INCENTIVE' && offer.incentiveActive !== false)
+      .map((offer) => offer.id)
+    if (savedIncentiveIds.length) {
+      setActiveIncentiveOfferIds((current) => {
+        const next = [...new Set([...current, ...savedIncentiveIds])]
+        window.localStorage.setItem(activeIncentiveOffersStorageKey, JSON.stringify(next))
+        return next
+      })
+    }
+
+    return savedOffers.length
+  }
+
   const getDraftGeos = (draft: OfferDraft = offerDraft) => {
     if (draft.countries?.length) return draft.countries
     if (draft.country) return [draft.country]
@@ -2569,10 +2664,20 @@ export default function DashboardOverview() {
       imageSource: campaign.imageSource || `/affmine/preview_i/${campaign.id}.png`,
     }))
 
-  const wizardPreviewOffers = (wizardSelectedOfferIds.length
+  const wizardMinimumPayout = Number(wizardFields.minimumPayout || 0)
+  const wizardSelectedOffers = (wizardSelectedOfferIds.length
     ? activeIncentiveCatalog.filter((offer) => wizardSelectedOfferIds.includes(offer.id))
     : activeIncentiveCatalog
-  ).slice(0, Number(wizardFields.desktopMaxOffers || 5) || 5)
+  )
+  const wizardPreviewOffers = wizardSelectedOffers
+    .filter((offer) => !(wizardMinimumPayout > 0) || offer.payout >= wizardMinimumPayout)
+    .slice(0, Number(wizardFields.desktopMaxOffers || 5) || 5)
+  const wizardBelowMinimumOffers = wizardPreviewOffers.length
+    ? []
+    : wizardSelectedOffers
+      .filter((offer) => wizardMinimumPayout > 0 && offer.payout < wizardMinimumPayout)
+      .slice(0, 1)
+  const wizardPreviewCandidates = wizardPreviewOffers.length ? wizardPreviewOffers : wizardBelowMinimumOffers
 
   const persistTools = (kind: 'locker' | 'offerwall', next: IncentiveToolRecord[]) => {
     if (kind === 'locker') {
@@ -3817,6 +3922,7 @@ export default function DashboardOverview() {
                 sidebarHidden={desktopSidebarHidden}
                 onClose={() => setAffminePickerOpen(false)}
                 onImport={importAffmineOffer}
+                onImportMany={importAffmineOffers}
               />
             )}
           </section>
@@ -5100,7 +5206,7 @@ export default function DashboardOverview() {
               </section>
               <aside className={styles.wizardPreview}>
                 <div className={styles.wizardPreviewHeader}>
-                  <strong>ⓘ&nbsp; Live preview</strong>
+                  <strong><span className={styles.previewLiveDot} aria-hidden="true" />Live preview</strong>
                   <select aria-label="Preview as" value={wizardFields.previewDevice ?? 'Desktop'} onChange={(event) => setWizardFields((fields) => ({ ...fields, previewDevice: event.target.value }))}>
                     <option>Desktop</option>
                     <option>Mobile</option>
@@ -5111,40 +5217,73 @@ export default function DashboardOverview() {
                     className={`${styles.lockerPreview} ${wizardFields.previewDevice === 'Mobile' ? styles.wizardPreviewMobile : ''}`}
                     style={{
                       background: wizardFields.lockerBackground || '#fff',
+                      ['--locker-main' as string]: wizardFields.lockerMainColor || '#43b6d6',
                       ['--locker-btn' as string]: wizardFields.offersButtonColor || '#5cb85c',
                       ['--locker-offers-bg' as string]: wizardFields.offersBackground || '#f7f8f9',
                       ['--locker-offers-text' as string]: wizardFields.offersTextColor || '#58666e',
                     }}
                   >
-                    <div className={styles.lockerPreviewHead}>
-                      {wizardToggles.showLock ? <span aria-hidden="true">🔒</span> : null}
-                      <strong>{wizardFields.lockerTitle || 'Complete an offer below to unlock your content.'}</strong>
+                    <div className={styles.lockerPreviewBrand}>
+                      {wizardToggles.showLock ? (
+                        <span className={styles.lockerPreviewIcon} aria-hidden="true"><Lock size={17} /></span>
+                      ) : null}
+                      <div className={styles.lockerPreviewHead}>
+                        <span className={styles.lockerPreviewEyebrow}>CONTENT LOCKED</span>
+                        <strong>{wizardFields.lockerTitle || 'Complete an offer below to unlock your content.'}</strong>
+                      </div>
                     </div>
                     <p>{wizardFields.lockerDescription || 'Unlocking will allow access to the premium content.'}</p>
                     <div className={styles.lockerPreviewProgress}>
-                      0 / {wizardFields.conversionsRequired || '1'} required · min ${wizardFields.minimumPayout || '0.25'}
-                    </div>
-                    {wizardPreviewOffers.length ? wizardPreviewOffers.map((offer) => (
-                      <div key={offer.id} className={styles.lockerPreviewOffer}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={offer.imageSource || `/affmine/preview_i/${offer.id}.png`} alt="" width={36} height={36} />
-                        <span>
-                          <b>{offer.name}</b>
-                          <small>${offer.payout.toFixed(2)} · {offer.country}</small>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => window.open(offer.offerLink, '_blank', 'noopener,noreferrer')}
-                        >
-                          FREE
-                        </button>
+                      <div className={styles.lockerPreviewProgressMeta}>
+                        <span>Unlock progress</span>
+                        <strong>0 / {wizardFields.conversionsRequired || '1'} offers</strong>
                       </div>
-                    )) : (
-                      <div className={styles.lockerPreviewEmpty}>Activate incentive offers to preview real conversions here.</div>
+                      <div className={styles.lockerPreviewProgressTrack} aria-hidden="true"><span /></div>
+                      <small>Minimum offer value ${wizardFields.minimumPayout || '0.25'}</small>
+                    </div>
+                    {wizardPreviewCandidates.length ? wizardPreviewCandidates.map((offer) => {
+                      const belowMinimum = wizardMinimumPayout > 0 && offer.payout < wizardMinimumPayout
+                      const offerGeos = offer.countries?.length ? offer.countries : [offer.country].filter(Boolean)
+                      return (
+                        <div
+                          key={offer.id}
+                          className={`${styles.lockerPreviewOffer} ${belowMinimum ? styles.lockerPreviewOfferUnavailable : ''}`}
+                        >
+                          {belowMinimum ? <span className={styles.lockerPreviewOfferStatus}>Below minimum</span> : null}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={offer.imageSource || `/affmine/preview_i/${offer.id}.png`} alt="" width={36} height={36} />
+                          <span>
+                            <b>{offer.name}</b>
+                            <small>
+                              ${offer.payout.toFixed(2)} · {offerGeos.join(', ') || 'Global'}
+                              {belowMinimum ? ` · Below $${wizardMinimumPayout.toFixed(2)} minimum` : ''}
+                            </small>
+                          </span>
+                          <button
+                            type="button"
+                            disabled={belowMinimum}
+                            onClick={() => window.open(offer.offerLink, '_blank', 'noopener,noreferrer')}
+                          >
+                            {belowMinimum ? 'Unavailable' : 'Start'}
+                          </button>
+                        </div>
+                      )
+                    }) : (
+                      <div className={styles.lockerPreviewEmpty}>
+                        {activeIncentiveCatalog.length
+                          ? 'No offers match the current selection and minimum payout. Adjust your filters or activate more offers.'
+                          : 'Activate incentive offers to preview available options here.'}
+                      </div>
                     )}
                     <button type="button" className={styles.lockerPreviewUnlock} disabled>
+                      <Lock size={14} aria-hidden="true" />
                       {wizardFields.lockerButtonText || 'Unlock content'}
                     </button>
+                    <div className={styles.lockerPreviewNote}>
+                      {wizardBelowMinimumOffers.length
+                        ? 'Lower the minimum payout to make this geo-targeted offer available.'
+                        : 'Complete the required offers to unlock access.'}
+                    </div>
                   </div>
                 ) : (
                   <div
