@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { parseAffmineOffers } from '../src/lib/affmine'
+import { getAffmineSourceOfferId, parseAffmineOffers } from '../src/lib/affmine'
+
+test('reads the original Affmine offer ID from its preserved tracking URL', () => {
+  assert.equal(
+    getAffmineSourceOfferId('https://trk2affm.com/c/?p=55632&o=4380'),
+    '4380',
+  )
+  assert.equal(getAffmineSourceOfferId('https://network.example/click?id=4380'), null)
+  assert.equal(getAffmineSourceOfferId('not-a-url'), null)
+})
 
 test('parses Affmine offers and normalizes country codes and URLs', () => {
   const offers = parseAffmineOffers(`

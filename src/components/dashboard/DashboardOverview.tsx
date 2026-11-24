@@ -79,12 +79,15 @@ import {
   buildPublicTrackingUrl,
   getTrackingDomainOrigin,
 } from '@/lib/tracking'
-import { withoutLegacyCrackBountyDemoOffers } from '@/lib/campaign-offers'
+import {
+  generateCampaignOfferIds,
+  withoutLegacyCrackBountyDemoOffers,
+} from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import {
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
-import type { AffmineOffer } from '@/lib/affmine'
+import { getAffmineSourceOfferId, type AffmineOffer } from '@/lib/affmine'
 import ReportDateRangePicker, { type ReportDatePreset } from './ReportDateRangePicker'
 import AffmineOfferPicker from './AffmineOfferPicker'
 import NewsUpdatesPopover from './NewsUpdatesPopover'
@@ -2208,11 +2211,20 @@ export default function DashboardOverview() {
         ? `/affmine/preview_i/${encodeURIComponent(offer.id)}.png`
         : `/affmine/campaigns/${encodeURIComponent(offer.id)}.png`
     )
+    const existingOffers = [...allSeedCampaignOffers, ...customCampaignOffers]
+    const id = generateCampaignOfferIds(
+      existingOffers.map((campaign) => campaign.id),
+      1,
+      [
+        offer.id,
+        ...existingOffers.map((campaign) => getAffmineSourceOfferId(campaign.offerLink ?? '') ?? ''),
+      ],
+    )[0]
 
     setOfferPlacement(isIncentive ? 'INCENTIVE' : 'STANDARD')
     setOfferDraft({
       ...(isIncentive ? initialIncentiveOfferDraft : initialOfferDraft),
-      id: offer.id,
+      id,
       name: offer.name,
       payout: String(offer.payout),
       imageSource,
@@ -2235,9 +2247,15 @@ export default function DashboardOverview() {
       throw new Error('Manager access is required to manage offers.')
     }
 
-    const existingIds = new Set([...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => offer.id))
+    const existingOffers = [...allSeedCampaignOffers, ...customCampaignOffers]
+    const existingIds = new Set(existingOffers.map((offer) => offer.id))
+    const existingAffmineIds = new Set(existingOffers.flatMap((offer) => [
+      offer.id,
+      getAffmineSourceOfferId(offer.offerLink ?? '') ?? '',
+    ]))
     const uniqueOffers = offers.filter((offer, index) => (
       !existingIds.has(offer.id)
+      && !existingAffmineIds.has(offer.id)
       && offers.findIndex((candidate) => candidate.id === offer.id) === index
       && offer.payout !== null
       && offer.payout > 0
@@ -2249,7 +2267,12 @@ export default function DashboardOverview() {
       throw new Error('No new importable offers were selected.')
     }
 
-    const imported = uniqueOffers.map((offer) => {
+    const internalOfferIds = generateCampaignOfferIds(
+      existingOffers.map((offer) => offer.id),
+      uniqueOffers.length,
+      [...existingAffmineIds, ...uniqueOffers.map((offer) => offer.id)],
+    )
+    const imported = uniqueOffers.map((offer, index) => {
       const isIncentive = offer.incentive
       const sourceDetails = `${offer.name} ${offer.category}`.toUpperCase()
       const types = (isIncentive ? incentiveOfferTypeOptions : standardOfferTypeOptions)
@@ -2260,7 +2283,7 @@ export default function DashboardOverview() {
       const countries = offer.countries.length ? [...offer.countries] : ['GLOBAL']
 
       return {
-        id: offer.id,
+        id: internalOfferIds[index],
         name: offer.name,
         payout: offer.payout,
         country: countries[0],
@@ -3466,10 +3489,10 @@ export default function DashboardOverview() {
                   <section className={styles.addOfferSection}>
                     <header className={styles.addOfferSectionHead}>
                       <h3><span className={styles.addOfferSectionIndex}>01</span> Campaign details</h3>
-                      <p>ID, name, payout, and conversion type for the catalog row.</p>
+                      <p>Your site ID, name, payout, and conversion type for the catalog row.</p>
                     </header>
                     <div className={styles.addOfferFields}>
-                      <label className={styles.addOfferField}>Offer ID
+                      <label className={styles.addOfferField}>Offer ID (your site)
                         <div className={styles.addOfferIdRow}>
                           <input name="offerId" type="text" inputMode="numeric" pattern="[0-9]+" value={offerDraft.id} onChange={(event) => updateOfferDraft('id', event.target.value)} readOnly={Boolean(editingOfferId)} required />
                           {!editingOfferId && (
@@ -3477,14 +3500,20 @@ export default function DashboardOverview() {
                               type="button"
                               className={styles.addOfferGhostButton}
                               onClick={() => {
-                                const maxId = Math.max(0, ...[...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => Number(offer.id) || 0))
-                                updateOfferDraft('id', String(maxId + 1))
+                                const nextId = generateCampaignOfferIds(
+                                  [...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => offer.id),
+                                  1,
+                                )[0]
+                                updateOfferDraft('id', nextId)
                               }}
                             >
                               Next ID
                             </button>
                           )}
                         </div>
+                        <p className={styles.addOfferFieldHint}>
+                          Internal ID for your catalog and tracking; Affmine&apos;s ID stays in the destination URL.
+                        </p>
                       </label>
                       <label className={styles.addOfferField}>Offer name
                         <input
@@ -3804,8 +3833,11 @@ export default function DashboardOverview() {
               ) : (
                 <>
                   <div className={styles.addOfferFields}>
-                    <label className={styles.addOfferField}>Offer ID
+                    <label className={styles.addOfferField}>Offer ID (your site)
                       <input name="offerId" type="text" inputMode="numeric" pattern="[0-9]+" value={offerDraft.id} onChange={(event) => updateOfferDraft('id', event.target.value)} readOnly={Boolean(editingOfferId)} required />
+                      <p className={styles.addOfferFieldHint}>
+                        Internal ID for your catalog and tracking; Affmine&apos;s ID stays in the destination URL.
+                      </p>
                     </label>
                     <label className={styles.addOfferField}>Offer name
                       <input name="offerName" type="text" placeholder="Offer name" value={offerDraft.name} onChange={(event) => updateOfferDraft('name', event.target.value)} required />
@@ -3918,7 +3950,10 @@ export default function DashboardOverview() {
             </form>
             {affminePickerOpen && (
               <AffmineOfferPicker
-                existingOfferIds={[...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => offer.id)}
+                existingOfferIds={[...allSeedCampaignOffers, ...customCampaignOffers].flatMap((offer) => [
+                  offer.id,
+                  getAffmineSourceOfferId(offer.offerLink ?? '') ?? '',
+                ]).filter(Boolean)}
                 sidebarHidden={desktopSidebarHidden}
                 onClose={() => setAffminePickerOpen(false)}
                 onImport={importAffmineOffer}

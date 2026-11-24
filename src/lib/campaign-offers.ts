@@ -67,6 +67,36 @@ const ACTIONS = new Set(['Apply', 'Pending', 'View'])
 const STATUSES = new Set(['ACTIVE', 'PAUSED'])
 const PLACEMENTS = new Set(['STANDARD', 'INCENTIVE'])
 
+export function generateCampaignOfferIds(
+  existingIds: Iterable<string>,
+  count: number,
+  reservedIds: Iterable<string> = [],
+): string[] {
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new RangeError('Offer ID count must be a non-negative integer.')
+  }
+
+  const ids = [...existingIds]
+  let highestId = BigInt(0)
+  for (const id of ids) {
+    if (/^\d+$/.test(id)) {
+      const numericId = BigInt(id)
+      if (numericId > highestId) highestId = numericId
+    }
+  }
+
+  const reserved = new Set([...ids, ...reservedIds])
+  const generated: string[] = []
+  while (generated.length < count) {
+    highestId += BigInt(1)
+    const id = highestId.toString()
+    if (reserved.has(id)) continue
+    generated.push(id)
+    reserved.add(id)
+  }
+  return generated
+}
+
 /** Crack Bounty demo catalog IDs formerly hardcoded in the app — never rehydrate these. */
 export const LEGACY_CRACK_BOUNTY_DEMO_OFFER_IDS = [
   '4392', '4394', '4415', '4424', '32703', '33614', '33615', '33616', '33617',

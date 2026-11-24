@@ -13,6 +13,15 @@ export type AffmineOffer = {
   incentive: boolean
 }
 
+export function getAffmineSourceOfferId(trackingUrl: string): string | null {
+  try {
+    const sourceId = new URL(trackingUrl).searchParams.get('o')?.trim()
+    return sourceId && /^\d+$/.test(sourceId) ? sourceId : null
+  } catch {
+    return null
+  }
+}
+
 const parser = new XMLParser({
   ignoreAttributes: true,
   parseTagValue: false,
