@@ -120,7 +120,7 @@ export type MainOfferParts = {
 
 /**
  * Hidden network link used for postbacks:
- * {main}/?s1=P{publisher_hex}&s2=O{offer_hex}&s3={sub1}&s4={sub2}
+ * {main}?{existing_network_params}&s1=P{publisher_hex}&s2=O{offer_hex}&s3={sub1}&s4={sub2}
  */
 export function buildMainOfferUrl(parts: MainOfferParts): string {
   const base = (parts.mainOfferBase || DEFAULT_MAIN_OFFER_BASE).trim() || DEFAULT_MAIN_OFFER_BASE
@@ -131,8 +131,7 @@ export function buildMainOfferUrl(parts: MainOfferParts): string {
     url = new URL(DEFAULT_MAIN_OFFER_BASE)
   }
 
-  // Keep path/host from the offer's main link; replace query with postback map.
-  url.search = ''
+  // Preserve network parameters (such as Affmine's p/o) while adding our tracking map.
   url.searchParams.set('s1', encodeTrackingId(parts.publisherId, 'P'))
   url.searchParams.set('s2', encodeTrackingId(parts.offerId, 'O'))
   const sub1 = parts.subId1?.trim()

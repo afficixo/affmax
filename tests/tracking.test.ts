@@ -48,6 +48,24 @@ test('uses prefixed hexadecimal IDs in main-offer postback Sub IDs', () => {
   assert.equal(url.searchParams.get('s4'), 'slot-2')
 })
 
+test('preserves existing network query parameters when adding tracking Sub IDs', () => {
+  const url = new URL(buildMainOfferUrl({
+    mainOfferBase: 'https://trk2affm.com/c/?p=55632&o=4380&source=network',
+    publisherId: 60001,
+    offerId: '35677',
+    subId1: 'source',
+    subId2: 'slot-2',
+  }))
+
+  assert.equal(url.searchParams.get('p'), '55632')
+  assert.equal(url.searchParams.get('o'), '4380')
+  assert.equal(url.searchParams.get('source'), 'network')
+  assert.equal(url.searchParams.get('s1'), 'PEA61')
+  assert.equal(url.searchParams.get('s2'), 'O8B5D')
+  assert.equal(url.searchParams.get('s3'), 'source')
+  assert.equal(url.searchParams.get('s4'), 'slot-2')
+})
+
 test('keeps legacy decimal tracking IDs unchanged', () => {
   assert.equal(decodeTrackingId('60001', 'P'), '60001')
   assert.equal(decodeTrackingId('35677', 'O'), '35677')
