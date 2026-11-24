@@ -1033,6 +1033,15 @@ export default function DashboardOverview() {
   const [customCampaignOffers, setCustomCampaignOffers] = useState<CampaignOffer[]>([])
   const [managedCampaignOverrides, setManagedCampaignOverrides] = useState<CampaignOffer[]>([])
   const [deletedCampaignIds, setDeletedCampaignIds] = useState<string[]>([])
+  const [selectedCampaignOfferIds, setSelectedCampaignOfferIds] = useState<string[]>([])
+  const [deletingCampaignOffers, setDeletingCampaignOffers] = useState(false)
+  const [showCampaignDeleteConfirm, setShowCampaignDeleteConfirm] = useState(false)
+  const [campaignDeleteError, setCampaignDeleteError] = useState('')
+  const deletingCampaignOffersRef = useRef(false)
+  const campaignDeleteConfirmDialogRef = useRef<HTMLElement>(null)
+  const campaignDeleteConfirmCancelRef = useRef<HTMLButtonElement>(null)
+  const campaignDeleteConfirmTriggerRef = useRef<HTMLButtonElement>(null)
+  const selectAllCampaignsRef = useRef<HTMLInputElement>(null)
   const [activeIncentiveOfferIds, setActiveIncentiveOfferIds] = useState<string[]>([])
   const [openOfferActionsId, setOpenOfferActionsId] = useState<string | null>(null)
   const [offerActionMenuPosition, setOfferActionMenuPosition] = useState<{ top: number; left: number } | null>(null)
@@ -1723,6 +1732,49 @@ export default function DashboardOverview() {
       if (previouslyFocusedElement instanceof HTMLElement) previouslyFocusedElement.focus()
     }
   }, [conversionToReverse])
+
+  useEffect(() => {
+    if (!showCampaignDeleteConfirm) return
+
+    const previousOverflow = document.body.style.overflow
+    const previouslyFocusedElement = document.activeElement
+    const deleteTriggerElement = campaignDeleteConfirmTriggerRef.current
+    const selectAllElement = selectAllCampaignsRef.current
+    const handleKeyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (!deletingCampaignOffersRef.current) setShowCampaignDeleteConfirm(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const buttons = campaignDeleteConfirmDialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      if (!buttons?.length) return
+      const firstButton = buttons[0]
+      const lastButton = buttons[buttons.length - 1]
+      if (event.shiftKey && (document.activeElement === firstButton || !campaignDeleteConfirmDialogRef.current?.contains(document.activeElement))) {
+        event.preventDefault()
+        lastButton.focus()
+      } else if (!event.shiftKey && (document.activeElement === lastButton || !campaignDeleteConfirmDialogRef.current?.contains(document.activeElement))) {
+        event.preventDefault()
+        firstButton.focus()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyboard)
+    campaignDeleteConfirmCancelRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyboard)
+      if (previouslyFocusedElement instanceof HTMLElement && document.contains(previouslyFocusedElement)) {
+        previouslyFocusedElement.focus()
+      } else if (deleteTriggerElement && document.contains(deleteTriggerElement)) {
+        deleteTriggerElement.focus()
+      } else {
+        if (selectAllElement && document.contains(selectAllElement)) selectAllElement.focus()
+      }
+    }
+  }, [showCampaignDeleteConfirm])
 
   useEffect(() => {
     setWizardStep(0)
@@ -3068,6 +3120,86 @@ export default function DashboardOverview() {
   const campaignPageSize = pathname === '/campaigns/new' ? 100 : 50
   const campaignPageCount = Math.max(1, Math.ceil(filteredCampaigns.length / campaignPageSize))
   const visibleCampaigns = filteredCampaigns.slice((campaignPage - 1) * campaignPageSize, campaignPage * campaignPageSize)
+  const selectedCampaignOfferIdSet = new Set(selectedCampaignOfferIds)
+  const selectedVisibleCampaignCount = visibleCampaigns.filter((campaign) => selectedCampaignOfferIdSet.has(campaign.id)).length
+  const allVisibleCampaignsSelected = visibleCampaigns.length > 0
+    && selectedVisibleCampaignCount === visibleCampaigns.length
+  const someVisibleCampaignsSelected = selectedVisibleCampaignCount > 0
+
+  useEffect(() => {
+    setSelectedCampaignOfferIds([])
+    setShowCampaignDeleteConfirm(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (selectAllCampaignsRef.current) {
+      selectAllCampaignsRef.current.indeterminate = someVisibleCampaignsSelected && !allVisibleCampaignsSelected
+    }
+  }, [allVisibleCampaignsSelected, someVisibleCampaignsSelected])
+
+  const toggleCampaignOfferSelection = (id: string) => {
+    setSelectedCampaignOfferIds((current) => (
+      current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id]
+    ))
+  }
+
+  const toggleVisibleCampaignOfferSelection = () => {
+    const visibleIds = new Set(visibleCampaigns.map((campaign) => campaign.id))
+    setSelectedCampaignOfferIds((current) => {
+      if (allVisibleCampaignsSelected) {
+        return current.filter((id) => !visibleIds.has(id))
+      }
+      return [...new Set([...current, ...visibleIds])]
+    })
+  }
+
+  const deleteSelectedCampaignOffers = async () => {
+    if (userRole !== 'MANAGER' || deletingCampaignOffersRef.current || !selectedCampaignOfferIds.length) return
+
+    const selectedIds = [...selectedCampaignOfferIds]
+    const selectedIdSet = new Set(selectedIds)
+    setCampaignDeleteError('')
+    deletingCampaignOffersRef.current = true
+    setDeletingCampaignOffers(true)
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds }),
+      })
+      const payload = await response.json().catch(() => null) as { error?: string; deletedCount?: number } | null
+      if (!response.ok || typeof payload?.deletedCount !== 'number') {
+        throw new Error(payload?.error || 'Selected offers could not be deleted.')
+      }
+
+      const updatedOffers = customCampaignOffers.filter((offer) => !selectedIdSet.has(offer.id))
+      setCustomCampaignOffers(updatedOffers)
+      writeJson(customOffersStorageKey, updatedOffers)
+      setManagedCampaignOverrides((current) => {
+        const next = current.filter((offer) => !selectedIdSet.has(offer.id))
+        writeJson(campaignOverridesStorageKey, next)
+        return next
+      })
+      setActiveIncentiveOfferIds((current) => {
+        const next = current.filter((id) => !selectedIdSet.has(id))
+        writeJson(activeIncentiveOffersStorageKey, next)
+        return next
+      })
+      setSelectedCampaignOfferIds([])
+      setCampaignPage(1)
+      setShowCampaignDeleteConfirm(false)
+      setPageNotice(payload.deletedCount === selectedIds.length
+        ? `${payload.deletedCount} offer${payload.deletedCount === 1 ? '' : 's'} deleted.`
+        : `${payload.deletedCount} of ${selectedIds.length} selected offers deleted.`)
+    } catch (deleteError) {
+      setCampaignDeleteError(deleteError instanceof Error ? deleteError.message : 'Selected offers could not be deleted.')
+    } finally {
+      deletingCampaignOffersRef.current = false
+      setDeletingCampaignOffers(false)
+    }
+  }
+
   const deleteCampaignOffer = async (campaign: CampaignOffer) => {
     if (userRole !== 'MANAGER' || !window.confirm(`Delete offer #${campaign.id} - ${campaign.name}?`)) return
 
@@ -3083,6 +3215,7 @@ export default function DashboardOverview() {
       const updatedOffers = customCampaignOffers.filter((offer) => offer.id !== campaign.id)
       window.localStorage.setItem(customOffersStorageKey, JSON.stringify(updatedOffers))
       setCustomCampaignOffers(updatedOffers)
+      setSelectedCampaignOfferIds((current) => current.filter((id) => id !== campaign.id))
       setActiveIncentiveOfferIds((current) => {
         const next = current.filter((id) => id !== campaign.id)
         try {
@@ -4549,6 +4682,32 @@ export default function DashboardOverview() {
                   </button>
                 </div>
               )}
+              {canManageOffers && selectedCampaignOfferIds.length > 0 && (
+                <div className={styles.campaignBulkActions} role="group" aria-label="Selected campaign actions">
+                  <span>{selectedCampaignOfferIds.length} offer{selectedCampaignOfferIds.length === 1 ? '' : 's'} selected</span>
+                  <button
+                    type="button"
+                    className={styles.campaignBulkClear}
+                    disabled={deletingCampaignOffers}
+                    onClick={() => setSelectedCampaignOfferIds([])}
+                  >
+                    Clear selection
+                  </button>
+                  <button
+                    ref={campaignDeleteConfirmTriggerRef}
+                    type="button"
+                    className={styles.campaignBulkDelete}
+                    disabled={deletingCampaignOffers}
+                    onClick={() => {
+                      setCampaignDeleteError('')
+                      setShowCampaignDeleteConfirm(true)
+                    }}
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                    Delete selected
+                  </button>
+                </div>
+              )}
               <div className={styles.campaignTableWrap}>
                 <table className={`${styles.campaignTable} ${isIncentiveOffers ? styles.campaignTableIncentive : ''} ${canManageOffers ? styles.campaignTableManager : ''} ${isIncentiveOffers && canManageOffers ? styles.campaignTableManagerIncentive : ''}`}>
                   <thead>
@@ -4559,6 +4718,20 @@ export default function DashboardOverview() {
                       <th aria-sort={campaignSort.key === 'name' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('name')}>Name</button></th>
                       <th aria-sort={campaignSort.key === 'payout' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('payout')}>Payout</button></th>
                       <th>Category</th><th>Geo</th><th>Device</th><th>Action</th>
+                      {canManageOffers && (
+                        <th className={styles.campaignSelectHeader}>
+                          <input
+                            ref={selectAllCampaignsRef}
+                            type="checkbox"
+                            checked={allVisibleCampaignsSelected}
+                            aria-checked={someVisibleCampaignsSelected && !allVisibleCampaignsSelected ? 'mixed' : allVisibleCampaignsSelected}
+                            aria-label="Select all offers on this page"
+                            title="Select all offers on this page"
+                            disabled={!visibleCampaigns.length || deletingCampaignOffers}
+                            onChange={toggleVisibleCampaignOfferSelection}
+                          />
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -4690,8 +4863,19 @@ export default function DashboardOverview() {
                             )}
                           </div>
                         </td>
+                        {canManageOffers && (
+                          <td className={styles.campaignSelectCell}>
+                            <input
+                              type="checkbox"
+                              checked={selectedCampaignOfferIdSet.has(campaign.id)}
+                              disabled={deletingCampaignOffers}
+                              aria-label={`Select offer ${campaign.id} - ${campaign.name}`}
+                              onChange={() => toggleCampaignOfferSelection(campaign.id)}
+                            />
+                          </td>
+                        )}
                       </tr>
-                    }) : <tr><td className={styles.campaignNoResults} colSpan={isIncentiveOffers ? 9 : 8}>{isIncentiveOffers ? 'No incentive offers found' : 'No matching campaigns found'}</td></tr>}
+                    }) : <tr><td className={styles.campaignNoResults} colSpan={isIncentiveOffers ? (canManageOffers ? 10 : 9) : (canManageOffers ? 9 : 8)}>{isIncentiveOffers ? 'No incentive offers found' : 'No matching campaigns found'}</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -6965,6 +7149,60 @@ export default function DashboardOverview() {
                 }}
               >
                 Reverse
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {showCampaignDeleteConfirm && (
+        <div
+          className={styles.campaignDeleteConfirmBackdrop}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingCampaignOffersRef.current) {
+              setShowCampaignDeleteConfirm(false)
+            }
+          }}
+        >
+          <section
+            ref={campaignDeleteConfirmDialogRef}
+            className={styles.campaignDeleteConfirmDialog}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="campaign-delete-confirm-title"
+            aria-describedby="campaign-delete-confirm-description"
+          >
+            <div className={styles.campaignDeleteConfirmIcon} aria-hidden="true">
+              <Trash2 size={20} />
+            </div>
+            <h2 id="campaign-delete-confirm-title">
+              Delete {selectedCampaignOfferIds.length} selected offer{selectedCampaignOfferIds.length === 1 ? '' : 's'}?
+            </h2>
+            <p id="campaign-delete-confirm-description">
+              This will permanently remove the selected offers from your catalog. This action cannot be undone.
+            </p>
+            {campaignDeleteError && (
+              <p className={styles.campaignDeleteConfirmError} role="alert">{campaignDeleteError}</p>
+            )}
+            <div className={styles.campaignDeleteConfirmActions}>
+              <button
+                ref={campaignDeleteConfirmCancelRef}
+                type="button"
+                className={styles.pageSecondaryButton}
+                disabled={deletingCampaignOffers}
+                onClick={() => setShowCampaignDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.campaignDeleteConfirmSubmit}
+                aria-disabled={deletingCampaignOffers}
+                aria-busy={deletingCampaignOffers}
+                onClick={() => { void deleteSelectedCampaignOffers() }}
+              >
+                {deletingCampaignOffers
+                  ? 'Deleting offers…'
+                  : `Delete ${selectedCampaignOfferIds.length} offer${selectedCampaignOfferIds.length === 1 ? '' : 's'}`}
               </button>
             </div>
           </section>

@@ -5,6 +5,7 @@ import {
   type CampaignOfferInput,
   LEGACY_CRACK_BOUNTY_DEMO_OFFER_IDS,
   isLegacyCrackBountyDemoOfferId,
+  normalizeCampaignOfferIds,
   normalizeCampaignOfferInput,
   purgeLegacyCrackBountyDemoOffers,
   toCampaignOfferRecord,
@@ -126,6 +127,53 @@ export async function POST(request: Request) {
     console.error('Create campaign offers failed:', error)
     return NextResponse.json(
       { error: 'Unable to save campaign offers' },
+      { status: 503, headers: getCorsHeaders(origin) },
+    )
+  }
+}
+
+export async function DELETE(request: Request) {
+  const auth = await requireUser(request)
+  if ('error' in auth) return auth.error
+
+  const { user, origin } = auth
+  if (user.role !== 'MANAGER') {
+    return NextResponse.json(
+      { error: 'Only managers can delete offers' },
+      { status: 403, headers: getCorsHeaders(origin) },
+    )
+  }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: 'A valid list of offer IDs is required' },
+      { status: 400, headers: getCorsHeaders(origin) },
+    )
+  }
+
+  const ids = normalizeCampaignOfferIds(body && typeof body === 'object' && 'ids' in body
+    ? body.ids
+    : null)
+  if (!ids?.length) {
+    return NextResponse.json(
+      { error: 'A valid list of offer IDs is required' },
+      { status: 400, headers: getCorsHeaders(origin) },
+    )
+  }
+
+  try {
+    const result = await prisma.campaignOffer.deleteMany({ where: { id: { in: ids } } })
+    return NextResponse.json(
+      { deletedCount: result.count },
+      { headers: getCorsHeaders(origin) },
+    )
+  } catch (error) {
+    console.error('Delete campaign offers failed:', error)
+    return NextResponse.json(
+      { error: 'Unable to delete selected offers' },
       { status: 503, headers: getCorsHeaders(origin) },
     )
   }

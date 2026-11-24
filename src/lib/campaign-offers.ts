@@ -67,6 +67,19 @@ const ACTIONS = new Set(['Apply', 'Pending', 'View'])
 const STATUSES = new Set(['ACTIVE', 'PAUSED'])
 const PLACEMENTS = new Set(['STANDARD', 'INCENTIVE'])
 
+export function normalizeCampaignOfferIds(value: unknown): string[] | null {
+  if (
+    !Array.isArray(value)
+    || value.length === 0
+    || value.length > 1000
+    || !value.every((id): id is string => typeof id === 'string' && id.trim().length > 0 && id.trim().length <= 128)
+  ) {
+    return null
+  }
+
+  return [...new Set(value.map((id) => id.trim()))]
+}
+
 export function generateCampaignOfferIds(
   existingIds: Iterable<string>,
   count: number,

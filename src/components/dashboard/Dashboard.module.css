@@ -5753,6 +5753,123 @@ input.reportRangeInput {
   font-weight: 600;
 }
 
+.campaignDeleteConfirmBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483003;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 22, 27, 0.58);
+  backdrop-filter: blur(2px);
+}
+
+.campaignDeleteConfirmDialog {
+  width: min(440px, 100%);
+  border: 1px solid #e2d4d3;
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+  color: #52616a;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+}
+
+.campaignDeleteConfirmIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.campaignDeleteConfirmDialog h2 {
+  margin: 16px 0 7px;
+  color: #263238;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.campaignDeleteConfirmDialog p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.campaignDeleteConfirmDialog .campaignDeleteConfirmError {
+  margin-top: 12px;
+  border: 1px solid #f0c4c1;
+  border-radius: 6px;
+  padding: 9px 11px;
+  background: #fff5f4;
+  color: #9f2720;
+  font-size: 12px;
+}
+
+.campaignDeleteConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.campaignDeleteConfirmActions button {
+  min-height: 36px;
+}
+
+.campaignDeleteConfirmSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #b42318;
+  border-radius: 5px;
+  padding: 0 14px;
+  background: #b42318;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.campaignDeleteConfirmSubmit:hover:not([aria-disabled="true"]) {
+  border-color: #8f1c14;
+  background: #8f1c14;
+}
+
+.campaignDeleteConfirmSubmit[aria-disabled="true"] {
+  opacity: 0.68;
+  cursor: wait;
+}
+
+.campaignDeleteConfirmActions button:focus-visible {
+  outline: 2px solid #438fc3;
+  outline-offset: 2px;
+}
+
+:global(html.dark) .campaignDeleteConfirmDialog {
+  border-color: #49393a;
+  background: #1d2932;
+  color: #d7e0e5;
+}
+
+:global(html.dark) .campaignDeleteConfirmDialog h2 {
+  color: #f0f4f6;
+}
+
+:global(html.dark) .campaignDeleteConfirmIcon {
+  background: #412726;
+  color: #ff928b;
+}
+
+:global(html.dark) .campaignDeleteConfirmDialog .campaignDeleteConfirmError {
+  border-color: #69413e;
+  background: #332322;
+  color: #ffaaa4;
+}
+
 .conversionConfirmBackdrop {
   position: fixed;
   inset: 0;
@@ -6210,6 +6327,59 @@ input.reportRangeInput {
   font-size: 12px;
 }
 
+.campaignBulkActions {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #e8e8e8;
+  padding: 6px 12px;
+  background: #f7fafb;
+  color: #58666e;
+  font-size: 12px;
+}
+
+.campaignBulkActions span {
+  margin-right: auto;
+  font-weight: 600;
+}
+
+.campaignBulkActions button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #d5dadd;
+  border-radius: 3px;
+  padding: 0 9px;
+  background: #fff;
+  color: #58666e;
+  font: inherit;
+  cursor: pointer;
+}
+
+.campaignBulkActions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.campaignBulkActions .campaignBulkDelete {
+  border-color: #b94a48;
+  background: #b94a48;
+  color: #fff;
+}
+
+.campaignBulkActions .campaignBulkDelete:hover:not(:disabled) {
+  border-color: #9f3f3d;
+  background: #9f3f3d;
+}
+
+.campaignBulkActions .campaignBulkClear:hover:not(:disabled) {
+  background: #f0f3f4;
+}
+
 .campaignTableWrap {
   width: 100%;
   overflow-x: auto;
@@ -6233,6 +6403,29 @@ input.reportRangeInput {
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.campaignTable .campaignSelectHeader,
+.campaignTable .campaignSelectCell {
+  width: 44px;
+  padding-right: 10px;
+  padding-left: 10px;
+  text-align: center;
+}
+
+.campaignTable .campaignSelectHeader input,
+.campaignTable .campaignSelectCell input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #438fc3;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.campaignTable .campaignSelectHeader input:disabled,
+.campaignTable .campaignSelectCell input:disabled {
+  cursor: default;
 }
 
 .campaignTable th:first-child,
