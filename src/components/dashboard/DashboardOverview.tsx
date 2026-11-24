@@ -4713,11 +4713,6 @@ export default function DashboardOverview() {
                   <thead>
                     <tr>
                       {isIncentiveOffers && <th>Active</th>}
-                      <th aria-sort={campaignSort.key === 'id' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('id')}>ID</button></th>
-                      <th>View</th>
-                      <th aria-sort={campaignSort.key === 'name' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('name')}>Name</button></th>
-                      <th aria-sort={campaignSort.key === 'payout' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('payout')}>Payout</button></th>
-                      <th>Category</th><th>Geo</th><th>Device</th><th>Action</th>
                       {canManageOffers && (
                         <th className={styles.campaignSelectHeader}>
                           <input
@@ -4732,6 +4727,11 @@ export default function DashboardOverview() {
                           />
                         </th>
                       )}
+                      <th aria-sort={campaignSort.key === 'id' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('id')}>ID</button></th>
+                      <th>View</th>
+                      <th aria-sort={campaignSort.key === 'name' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('name')}>Name</button></th>
+                      <th aria-sort={campaignSort.key === 'payout' ? (campaignSort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => sortCampaignsBy('payout')}>Payout</button></th>
+                      <th>Category</th><th>Geo</th><th>Device</th><th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4768,6 +4768,17 @@ export default function DashboardOverview() {
                                 <label htmlFor={`active-${campaign.id}`} className={styles.incentiveCheckboxLabel} />
                               </div>
                             )}
+                          </td>
+                        )}
+                        {canManageOffers && (
+                          <td className={styles.campaignSelectCell}>
+                            <input
+                              type="checkbox"
+                              checked={selectedCampaignOfferIdSet.has(campaign.id)}
+                              disabled={deletingCampaignOffers}
+                              aria-label={`Select offer ${campaign.id} - ${campaign.name}`}
+                              onChange={() => toggleCampaignOfferSelection(campaign.id)}
+                            />
                           </td>
                         )}
                         <td>{campaign.id}</td>
@@ -4863,17 +4874,6 @@ export default function DashboardOverview() {
                             )}
                           </div>
                         </td>
-                        {canManageOffers && (
-                          <td className={styles.campaignSelectCell}>
-                            <input
-                              type="checkbox"
-                              checked={selectedCampaignOfferIdSet.has(campaign.id)}
-                              disabled={deletingCampaignOffers}
-                              aria-label={`Select offer ${campaign.id} - ${campaign.name}`}
-                              onChange={() => toggleCampaignOfferSelection(campaign.id)}
-                            />
-                          </td>
-                        )}
                       </tr>
                     }) : <tr><td className={styles.campaignNoResults} colSpan={isIncentiveOffers ? (canManageOffers ? 10 : 9) : (canManageOffers ? 9 : 8)}>{isIncentiveOffers ? 'No incentive offers found' : 'No matching campaigns found'}</td></tr>}
                   </tbody>
