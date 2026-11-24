@@ -76,6 +76,7 @@ model User {
   publisherSupportConversations SupportConversation[]     @relation("SupportConversationPublisher")
   sentSupportMessages           SupportMessage[]          @relation("SupportMessageSender")
   authoredNewsPosts             DashboardNewsPost[]        @relation("DashboardNewsAuthor")
+  ownedIncentiveTools           IncentiveTool[]           @relation("IncentiveToolOwner")
 
   @@map("users")
 }
@@ -91,6 +92,24 @@ model DashboardNewsPost {
 
   @@index([createdAt])
   @@map("dashboard_news_posts")
+}
+
+model IncentiveTool {
+  id               String   @id
+  kind             String
+  name             String
+  fields           Json
+  toggles          Json
+  selectedOfferIds String[] @default([])
+  isPublished      Boolean  @default(true)
+  ownerId          String
+  owner            User     @relation("IncentiveToolOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([ownerId, kind])
+  @@index([kind, isPublished])
+  @@map("incentive_tools")
 }
 
 model OfferApplication {

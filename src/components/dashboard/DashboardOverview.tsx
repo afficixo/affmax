@@ -1360,6 +1360,48 @@ export default function DashboardOverview() {
       setOfferwalls([])
     }
 
+    void (async () => {
+      try {
+        const response = await fetch('/api/incentive-tools', { credentials: 'include', cache: 'no-store' })
+        if (!response.ok) return
+        const payload = await response.json() as { tools?: IncentiveToolRecord[] }
+        const tools = Array.isArray(payload.tools) ? payload.tools : []
+        const localLockers = parseToolList(
+          window.localStorage.getItem(contentLockersStorageKey) ? JSON.parse(window.localStorage.getItem(contentLockersStorageKey) as string) as unknown : [],
+          'locker',
+        )
+        const localWalls = parseToolList(
+          window.localStorage.getItem(offerwallsStorageKey) ? JSON.parse(window.localStorage.getItem(offerwallsStorageKey) as string) as unknown : [],
+          'offerwall',
+        )
+        const localTools = [...localLockers, ...localWalls]
+        for (const tool of localTools) {
+          if (!tools.some((savedTool) => savedTool.id === tool.id)) {
+            await fetch('/api/incentive-tools', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tool }),
+            })
+          }
+        }
+        const mergedTools = [
+          ...tools,
+          ...localTools.filter((tool) => !tools.some((savedTool) => savedTool.id === tool.id)),
+        ]
+        const lockers = mergedTools.filter((tool) => tool.kind === 'locker')
+        const walls = mergedTools.filter((tool) => tool.kind === 'offerwall')
+        if (!cancelled) {
+          setContentLockers(lockers)
+          setOfferwalls(walls)
+          writeJson(contentLockersStorageKey, lockers)
+          writeJson(offerwallsStorageKey, walls)
+        }
+      } catch {
+        // Browser storage remains the fallback for existing sessions.
+      }
+    })()
+
     void loadCatalog()
     return () => { cancelled = true }
   }, [])
@@ -2800,12 +2842,30 @@ export default function DashboardOverview() {
     setEditingToolId(nextTool.id)
     setPageNotice(`${kind === 'locker' ? 'Content locker' : 'OfferWall'} “${name}” is live and connected to incentive offers.`)
     setWizardStep(2)
+    void fetch('/api/incentive-tools', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: nextTool }),
+    }).then((response) => {
+      if (!response.ok) throw new Error('tool_save_failed')
+      return response.json()
+    }).catch((error) => {
+      console.error('Unable to publish incentive tool:', error)
+      setPageNotice('Tool saved locally, but publishing failed. Please try saving again.')
+    })
     router.replace(kind === 'locker' ? `/contentlocker/edit/${nextTool.id}` : `/offerwall/edit/${nextTool.id}`)
   }
 
   const deleteIncentiveTool = (kind: 'locker' | 'offerwall', toolId: string) => {
     const current = kind === 'locker' ? contentLockers : offerwalls
     persistTools(kind, current.filter((item) => item.id !== toolId))
+    void fetch('/api/incentive-tools', {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: toolId }),
+    }).catch((error) => console.error('Unable to delete published incentive tool:', error))
     setPageNotice(`${kind === 'locker' ? 'Content locker' : 'OfferWall'} deleted.`)
   }
 

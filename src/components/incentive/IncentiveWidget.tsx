@@ -79,7 +79,7 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
 
   useEffect(() => {
     let cancelled = false
-    const nextTool = loadTool(kind, toolId)
+    let nextTool = loadTool(kind, toolId)
     setTool(nextTool)
 
     const applyCatalog = (
@@ -137,6 +137,37 @@ export default function IncentiveWidget({ kind, toolId, seedOffers }: IncentiveW
         )
       } catch {
         applyCatalog([], true)
+      }
+    })()
+
+    void (async () => {
+      try {
+        const response = await fetch(`/api/incentive-tools/public?id=${encodeURIComponent(toolId)}&kind=${kind}`, { cache: 'no-store' })
+        if (!response.ok) throw new Error('tool_unavailable')
+        const payload = await response.json() as { tool?: IncentiveToolRecord }
+        if (!cancelled && payload.tool) {
+          nextTool = {
+            ...payload.tool,
+            fields: payload.tool.fields && typeof payload.tool.fields === 'object' ? payload.tool.fields : {},
+            toggles: payload.tool.toggles ?? { showLock: true, roundCurrency: true, hideCurrency: false },
+            selectedOfferIds: Array.isArray(payload.tool.selectedOfferIds) ? payload.tool.selectedOfferIds : [],
+          }
+          setTool(nextTool)
+          void fetch('/api/campaigns/public?placement=INCENTIVE', { cache: 'no-store' })
+            .then((catalogResponse) => catalogResponse.ok ? catalogResponse.json() : Promise.reject(new Error('public_catalog_unavailable')))
+            .then((catalogPayload: { offers?: SeedOffer[]; visitorCountryCode?: string | null }) => {
+              if (!cancelled) applyCatalog(
+                Array.isArray(catalogPayload.offers) ? catalogPayload.offers : [],
+                true,
+                catalogPayload.visitorCountryCode ?? null,
+              )
+            })
+            .catch(() => {
+              if (!cancelled) applyCatalog([], true)
+            })
+        }
+      } catch {
+        if (!cancelled && !nextTool) setReady(true)
       }
     })()
 

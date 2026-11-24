@@ -35,7 +35,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const isPublicPage = path === '/' || path === '/login' || path === '/signup'
+  const isPublicPage = path === '/'
+    || path === '/login'
+    || path === '/signup'
+    || path.startsWith('/locker/')
+    || path.startsWith('/wall/')
   const isApiRoute = path.startsWith('/api/')
   if (!isPublicPage && !isApiRoute && !getCookieValue(request.headers.get('cookie') || '', 'auth-token')) {
     return NextResponse.redirect(new URL('/login', request.url))
