@@ -908,13 +908,13 @@ function ReportCampaignFlag({ country, size = 25 }: { country: string; size?: nu
     )
   }
   return (
-    <img
-      className={size <= 18 ? styles.feedFlagImg : styles.reportFlagImg}
-      src={`/affmine/flags/${code.toLowerCase()}.png`}
-      alt={label}
+    <span
+      className={size <= 18 ? styles.feedFlagFallback : styles.reportFlagFallback}
       title={label}
-      height={size}
-    />
+      aria-label={label}
+    >
+      {code}
+    </span>
   )
 }
 
@@ -4486,20 +4486,8 @@ export default function DashboardOverview() {
                           <span className={styles.campaignGeoFlags}>
                             {campaignGeos.map((geo) => {
                               const Flag = CountryFlags[geo.toUpperCase() as keyof typeof CountryFlags]
-                              if (isIncentive) {
-                                return (
-                                  <img
-                                    key={geo}
-                                    className={styles.campaignFlagImg}
-                                    src={`/affmine/flags/${geo.toLowerCase()}.png`}
-                                    alt={campaignCountryLabels[geo] ?? geo}
-                                    title={campaignCountryLabels[geo] ?? geo}
-                                    height={18}
-                                  />
-                                )
-                              }
                               return Flag
-                                ? <Flag key={geo} className={styles.campaignFlag} aria-label={geo} title={campaignCountryLabels[geo] ?? geo} />
+                                ? <Flag key={geo} className={styles.campaignFlag} aria-label={campaignCountryLabels[geo] ?? geo} title={campaignCountryLabels[geo] ?? geo} />
                                 : <span key={geo}>{geo}</span>
                             })}
                           </span>
@@ -4633,11 +4621,7 @@ export default function DashboardOverview() {
                             <tr>
                               <td>
                                 <span className={styles.geoFlag}>
-                                  <img
-                                    src={`/affmine/flags/${detailedCampaign.country.toLowerCase()}.png`}
-                                    alt={detailedCampaign.country}
-                                    onError={(event) => { event.currentTarget.style.display = 'none' }}
-                                  />
+                                  <ReportCampaignFlag country={detailedCampaign.country} size={18} />
                                 </span>
                                 {' '}
                                 {campaignCountryLabels[detailedCampaign.country] ?? detailedCampaign.country}

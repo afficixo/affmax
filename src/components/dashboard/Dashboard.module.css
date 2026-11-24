@@ -5043,14 +5043,6 @@ input.reportRangeInput {
   margin-right: 8px;
 }
 
-.geoFlag img {
-  width: 18px;
-  height: 12px;
-  border: 1px solid #d5dadd;
-  object-fit: cover;
-  vertical-align: middle;
-}
-
 .trackingStatus {
   margin: 0;
   color: #438fc3;
@@ -5521,11 +5513,12 @@ input.reportRangeInput {
   vertical-align: middle;
 }
 
-.reportFlagImg {
+.reportFlagFallback {
   display: inline;
-  width: 25px;
-  height: 25px;
   margin: 0;
+  color: #58666e;
+  font-size: 10px;
+  font-weight: 700;
   vertical-align: middle;
 }
 
@@ -6308,13 +6301,6 @@ input.reportRangeInput {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-}
-
-.campaignFlagImg {
-  display: block;
-  height: 18px;
-  width: auto;
-  border: 0;
 }
 
 .campaignName {
@@ -7698,11 +7684,12 @@ a.offerAction {
   vertical-align: middle;
 }
 
-.feedFlagImg {
+.feedFlagFallback {
   display: inline;
-  width: 18px;
-  height: 18px;
   margin: 0;
+  color: #58666e;
+  font-size: 9px;
+  font-weight: 700;
   vertical-align: middle;
 }
 
