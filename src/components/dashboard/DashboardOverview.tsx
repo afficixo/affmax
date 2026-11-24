@@ -84,7 +84,9 @@ import { toCampaignImageSource } from '@/lib/campaign-images'
 import {
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
+import type { AffmineOffer } from '@/lib/affmine'
 import ReportDateRangePicker, { type ReportDatePreset } from './ReportDateRangePicker'
+import AffmineOfferPicker from './AffmineOfferPicker'
 import NewsUpdatesPopover from './NewsUpdatesPopover'
 import PaymentDashboard from './PaymentDashboard'
 import styles from './Dashboard.module.css'
@@ -1032,6 +1034,7 @@ export default function DashboardOverview() {
   const [editingOfferId, setEditingOfferId] = useState<string | null>(null)
   const [offerPlacement, setOfferPlacement] = useState<'STANDARD' | 'INCENTIVE'>('STANDARD')
   const [offerFormError, setOfferFormError] = useState('')
+  const [affminePickerOpen, setAffminePickerOpen] = useState(false)
   const [geoSearch, setGeoSearch] = useState('')
   const [imagePreviewState, setImagePreviewState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [showCampaignFilters, setShowCampaignFilters] = useState(false)
@@ -2178,8 +2181,50 @@ export default function DashboardOverview() {
   }
 
   const updateOfferDraft = (field: keyof OfferDraft, value: string) => {
-    setOfferDraft((draft) => ({ ...draft, [field]: value }))
+    setOfferDraft((draft) => field === 'country'
+      ? { ...draft, country: value, countries: value ? [value] : [] }
+      : { ...draft, [field]: value })
     if (field === 'imageSource') setImagePreviewState(value.trim() ? 'loading' : 'idle')
+  }
+
+  const importAffmineOffer = (offer: AffmineOffer) => {
+    if (offer.payout === null || offer.payout <= 0 || offer.currency !== 'USD' || !offer.trackingUrl) {
+      setOfferFormError('This Affmine offer needs a valid USD payout and tracking link.')
+      return
+    }
+
+    const isIncentive = offer.incentive
+    const sourceDetails = `${offer.name} ${offer.category}`.toUpperCase()
+    const typeOptions = isIncentive ? incentiveOfferTypeOptions : standardOfferTypeOptions
+    const selectedTypes = typeOptions.filter((type) => sourceDetails.split(/[^A-Z0-9]+/).includes(type))
+    const category = offerCategories.find((option) => (
+      sourceDetails.toLowerCase().includes(option.toLowerCase())
+    )) ?? (isIncentive ? 'App Install' : 'E-mail Submit')
+    const imageSource = offer.previewUrl || (
+      isIncentive
+        ? `/affmine/preview_i/${encodeURIComponent(offer.id)}.png`
+        : `/affmine/campaigns/${encodeURIComponent(offer.id)}.png`
+    )
+
+    setOfferPlacement(isIncentive ? 'INCENTIVE' : 'STANDARD')
+    setOfferDraft({
+      ...(isIncentive ? initialIncentiveOfferDraft : initialOfferDraft),
+      id: offer.id,
+      name: offer.name,
+      payout: String(offer.payout),
+      imageSource,
+      offerTypes: selectedTypes.length ? selectedTypes : [isIncentive ? 'CPI' : 'CPL'],
+      requiresApproval: !isIncentive,
+      category,
+      country: offer.countries[0] ?? '',
+      countries: [...offer.countries],
+      device: [...(isIncentive ? initialIncentiveOfferDraft.device : allOfferDevices)],
+      description: offer.description,
+      offerLink: offer.trackingUrl,
+    })
+    setOfferFormError('')
+    setImagePreviewState('loading')
+    setAffminePickerOpen(false)
   }
 
   const getDraftGeos = (draft: OfferDraft = offerDraft) => {
@@ -3375,8 +3420,14 @@ export default function DashboardOverview() {
                       <fieldset className={`${styles.addOfferField} ${styles.addOfferTypeField} ${styles.addOfferWideField} ${styles.addOfferGeoField}`}>
                         <legend>Geo</legend>
                         {(() => {
-                          const geoOptions = campaignFilterOptions.country.filter((option) => option.value !== 'All')
                           const selectedGeos = getDraftGeos()
+                          const knownGeos = campaignFilterOptions.country.filter((option) => option.value !== 'All')
+                          const geoOptions: CampaignFilterOption[] = [
+                            ...knownGeos,
+                            ...selectedGeos
+                              .filter((geo) => !knownGeos.some((option) => option.value === geo))
+                              .map((geo) => ({ value: geo, label: geo })),
+                          ]
                           const query = geoSearch.trim().toLowerCase()
                           const filteredGeos = query
                             ? geoOptions.filter((option) => (
@@ -3633,6 +3684,11 @@ export default function DashboardOverview() {
                   </section>
 
                   <div className={styles.addOfferActions}>
+                    {!editingOfferId && (
+                      <button type="button" className={styles.pageSecondaryButton} onClick={() => setAffminePickerOpen(true)}>
+                        <Search size={14} />Import from Affmine
+                      </button>
+                    )}
                     <button type="submit" className={styles.pagePrimaryButton}>
                       {editingOfferId ? <Check size={14} /> : <Plus size={14} />}
                       {editingOfferId ? 'Save changes' : 'Add incentive offer'}
@@ -3679,9 +3735,32 @@ export default function DashboardOverview() {
                       </select>
                     </label>
                     <label className={styles.addOfferField}>Geo
-                      <select value={offerDraft.country} onChange={(event) => updateOfferDraft('country', event.target.value)}>
-                        {campaignFilterOptions.country.filter((option) => option.value !== 'All').map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                      </select>
+                      {offerDraft.countries && offerDraft.countries.length > 1 ? (
+                        <>
+                          <div className={styles.addOfferTypeOptions} role="group" aria-label="Offer geos">
+                            {offerDraft.countries.map((geo) => {
+                              const selected = getDraftGeos().includes(geo)
+                              return (
+                                <button
+                                  key={geo}
+                                  type="button"
+                                  aria-pressed={selected}
+                                  className={`${styles.addOfferTypeButton} ${selected ? styles.addOfferTypeSelected : ''}`}
+                                  onClick={() => toggleDraftGeo(geo)}
+                                >
+                                  {geo}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <span className={styles.addOfferFieldHint}>Select the countries where this offer is available.</span>
+                        </>
+                      ) : (
+                        <select value={offerDraft.country ?? ''} onChange={(event) => updateOfferDraft('country', event.target.value)}>
+                          <option value="" disabled>Select a country</option>
+                          {campaignFilterOptions.country.filter((option) => option.value !== 'All').map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                        </select>
+                      )}
                     </label>
                     <fieldset className={`${styles.addOfferField} ${styles.addOfferTypeField} ${styles.addOfferWideField}`}>
                       <legend>Device</legend>
@@ -3718,6 +3797,11 @@ export default function DashboardOverview() {
                     </label>
                   </div>
                   <div className={styles.addOfferActions}>
+                    {!editingOfferId && (
+                      <button type="button" className={styles.pageSecondaryButton} onClick={() => setAffminePickerOpen(true)}>
+                        <Search size={14} />Import from Affmine
+                      </button>
+                    )}
                     <button type="submit" className={styles.pagePrimaryButton}>
                       {editingOfferId ? <Check size={14} /> : <Plus size={14} />}
                       {editingOfferId ? 'Save changes' : 'Add offer'}
@@ -3727,6 +3811,13 @@ export default function DashboardOverview() {
                 </>
               )}
             </form>
+            {affminePickerOpen && (
+              <AffmineOfferPicker
+                existingOfferIds={[...allSeedCampaignOffers, ...customCampaignOffers].map((offer) => offer.id)}
+                onClose={() => setAffminePickerOpen(false)}
+                onImport={importAffmineOffer}
+              />
+            )}
           </section>
         ) : reportPage ? (
           <>
