@@ -66,6 +66,7 @@ type DbCampaignOffer = {
 const ACTIONS = new Set(['Apply', 'Pending', 'View'])
 const STATUSES = new Set(['ACTIVE', 'PAUSED'])
 const PLACEMENTS = new Set(['STANDARD', 'INCENTIVE'])
+const FIRST_CAMPAIGN_OFFER_ID = BigInt(26401)
 
 export function normalizeCampaignOfferIds(value: unknown): string[] | null {
   if (
@@ -90,7 +91,7 @@ export function generateCampaignOfferIds(
   }
 
   const ids = [...existingIds]
-  let highestId = BigInt(0)
+  let highestId = FIRST_CAMPAIGN_OFFER_ID - BigInt(1)
   for (const id of ids) {
     if (/^\d+$/.test(id)) {
       const numericId = BigInt(id)

@@ -12,7 +12,11 @@ test('normalizes a non-empty bulk offer ID list and removes duplicates', () => {
 test('generates the next unique internal offer IDs and skips reserved network IDs', () => {
   assert.deepEqual(
     generateCampaignOfferIds(['1', '7', 'GLOBAL'], 3, ['8', '10']),
-    ['9', '11', '12'],
+    ['26401', '26402', '26403'],
+  )
+  assert.deepEqual(
+    generateCampaignOfferIds(['26401'], 3, ['26402']),
+    ['26403', '26404', '26405'],
   )
 })
 
