@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion, type Variants } from "framer-motion";
 import Image from "next/image";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const navLinks = [
   { href: "/#home", label: "Home" },
@@ -15,14 +15,52 @@ const navLinks = [
   { href: "/#contact", label: "Contact" },
 ];
 
+const mobileMenuVariants: Variants = {
+  hidden: { opacity: 0, y: -8, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.22,
+      ease: [0.22, 1, 0.36, 1],
+      delayChildren: 0.025,
+      staggerChildren: 0.025,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -4,
+    scale: 0.99,
+    transition: {
+      duration: 0.14,
+      ease: [0.4, 0, 1, 1],
+      staggerChildren: 0.012,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const mobileMenuItemVariants: Variants = {
+  hidden: { opacity: 0, y: -4 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.16, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: { opacity: 0, y: -2, transition: { duration: 0.08 } },
+};
+
 export default function PublicLayout({
   children,
   className = "",
   footerVariant = "default",
+  headerVariant = "default",
 }: {
   children: React.ReactNode;
   className?: string;
-  footerVariant?: "default" | "auth";
+  footerVariant?: "default" | "auth" | "none";
+  headerVariant?: "default" | "none";
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -91,8 +129,6 @@ export default function PublicLayout({
     setOpen(false);
   };
 
-  const headerSolid = open || !isHomePage || isScrolled;
-
   return (
     <div
       data-mobile-menu-open={open ? "true" : undefined}
@@ -100,13 +136,30 @@ export default function PublicLayout({
     >
       <div className="relative z-10 flex min-h-screen flex-col">
         <header
-          className={`fixed inset-x-0 top-0 z-40 border-b ${open ? "" : "transition-[background-color,border-color,box-shadow] duration-200"} ${
-            headerSolid
-              ? "border-transparent bg-[rgba(33,37,41,0.97)] shadow-none"
-              : "border-transparent bg-transparent shadow-none"
+          className={`${headerVariant === "none" ? "hidden " : ""}fixed inset-x-0 top-0 z-40 border-b border-[#ffffff1f] bg-[#10243b] ${
+            isHomePage
+              ? `transition-shadow duration-300 ${
+                  isScrolled
+                    ? "shadow-[0_6px_18px_rgba(0,0,0,0.2)]"
+                    : "shadow-[0_2px_12px_rgba(0,0,0,0.12)]"
+                }`
+              : "shadow-[0_6px_18px_rgba(0,0,0,0.2)]"
+          } ${
+            isHomePage
+              ? "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b]"
+              : ""
           }`}
         >
-          <nav className="relative z-10 mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-[70px] lg:px-8">
+          <nav
+            aria-label="Main navigation"
+            className={`relative z-10 mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-3 px-4 sm:px-6 ${
+              isHomePage
+                ? `text-white transition-[height] duration-300 ease-out lg:px-8 ${
+                      isScrolled ? "lg:h-[68px]" : "lg:h-[78px]"
+                  }`
+                  : "text-white lg:h-[70px] lg:px-8"
+            }`}
+          >
             <a
               href={isHomePage ? "#home" : "/#home"}
               onClick={isHomePage ? (e) => go(e, "#home") : undefined}
@@ -118,120 +171,165 @@ export default function PublicLayout({
                 width={2172}
                 height={724}
                 sizes="(min-width: 640px) 186px, 160px"
-                className="h-12 w-[160px] object-contain sm:h-14 sm:w-[186px]"
+                className={`object-contain transition-[width,height] duration-300 ${
+                  isHomePage && isScrolled
+                    ? "h-12 w-[150px] sm:w-[170px]"
+                    : "h-12 w-[160px] sm:h-14 sm:w-[186px]"
+                }`}
                 preload
               />
             </a>
 
-            <div className="hidden items-center gap-1 xl:gap-2 lg:flex">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={isHomePage ? (e) => go(e, link.href) : undefined}
-                  aria-current={active === link.href ? "location" : undefined}
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    isHomePage && active === link.href
-                      ? "text-[#5ff442]"
-                      : "text-white/75 hover:text-white"
-                  }`}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-
-            <div className="relative flex items-center gap-2">
-              <Link
-                href="/signup"
-                prefetch={false}
-                className="hidden lg:inline-flex items-center rounded-lg bg-[#17a2b8] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#138496]"
-              >
-                Sign up
-              </Link>
-              <Link
-                href="/login"
-                prefetch={false}
-                aria-current={pathname === "/login" ? "page" : undefined}
-                className="hidden lg:inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[#263238] transition-colors hover:bg-[#f0f4f7]"
-              >
-                Login
-              </Link>
-              <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                className={`grid h-10 w-14 place-items-center rounded border bg-transparent text-white/50 transition-colors lg:hidden ${
-                  open
-                    ? "border-[#17a2b8]"
-                    : "border-white/10 hover:border-white/25 hover:text-white/80"
-                } focus:border-[#17a2b8] focus:outline-none focus-visible:border-[#17a2b8]`}
-                aria-label="Toggle navigation"
-                aria-expanded={open}
-                aria-controls="public-mobile-menu"
-              >
-                <Menu className="h-[22px] w-[22px] text-white" strokeWidth={2.25} />
-              </button>
-
-              <AnimatePresence>
-                {open && (
-                  <motion.div
-                    id="public-mobile-menu"
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.16, ease: "easeOut" }}
-                    className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(16rem,calc(100vw-2rem))] lg:hidden"
+            <div className={`relative flex items-center gap-3 ${isHomePage ? "ml-auto lg:gap-6" : "ml-auto"}`}>
+              <div className="hidden items-center gap-1 lg:flex xl:gap-2">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={isHomePage ? (e) => go(e, link.href) : undefined}
+                    aria-current={active === link.href ? "location" : undefined}
+                    className={`${
+                      isHomePage
+                        ? "group relative rounded-md px-3 py-2.5 text-[13px] font-medium tracking-[0.01em] text-white/75 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b]"
+                        : "group relative rounded-md px-3 py-2.5 text-[13px] font-medium tracking-[0.01em] text-white/75 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b]"
+                    }`}
                   >
-                    <nav
-                      aria-label="Mobile navigation"
-                      className="rounded-sm bg-[rgba(33,37,41,0.97)] px-2.5 pb-2.5 pt-3.5 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
-                    >
-                      <ul className="m-0 list-none p-0">
-                        {navLinks.map((link) => (
-                          <li key={link.href}>
-                            <a
-                              href={link.href}
-                              onClick={(event) => {
-                                if (isHomePage) go(event, link.href);
-                                else setOpen(false);
-                              }}
-                              aria-current={isHomePage && active === link.href ? "location" : undefined}
-                              className={`block py-[5px] pb-2 text-[20px] font-normal leading-tight transition-colors ${
-                                isHomePage && active === link.href
-                                  ? "text-white"
-                                  : "text-white/50 hover:text-white/80"
-                              }`}
+                    {link.label}
+                    {isHomePage && (
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute inset-x-3 bottom-1 h-0.5 rounded-full transition-opacity ${
+                          active === link.href
+                            ? "bg-[#ef4444] opacity-100"
+                            : "bg-[#ffffff] opacity-0 group-hover:opacity-60"
+                        }`}
+                      />
+                    )}
+                  </a>
+                ))}
+              </div>
+
+              <div
+                className={`relative flex items-center gap-2 ${
+                  isHomePage ? "lg:ml-1 lg:border-l lg:border-[#ffffff33] lg:pl-4" : ""
+                }`}
+              >
+                <Link
+                  href="/signup"
+                  prefetch={false}
+                  className="hidden items-center rounded-md bg-[#e23b3f] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(226,59,63,0.2)] transition-colors hover:bg-[#c92f34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b] lg:inline-flex"
+                >
+                  Sign up
+                </Link>
+                <Link
+                  href="/login"
+                  prefetch={false}
+                  aria-current={pathname === "/login" ? "page" : undefined}
+                  className="hidden items-center rounded-md px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b] lg:inline-flex"
+                >
+                  Login
+                </Link>
+                <MotionConfig reducedMotion="user">
+                  <button
+                    type="button"
+                    onClick={() => setOpen((v) => !v)}
+                    className={`group grid h-10 w-10 place-items-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-95 lg:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b] ${
+                      open
+                        ? "bg-[rgba(95,244,66,0.12)] text-[#8aff70]"
+                        : "bg-transparent text-[#d3dce6] hover:bg-[rgba(95,244,66,0.1)]"
+                    }`}
+                    aria-label="Toggle navigation"
+                    aria-expanded={open}
+                    aria-controls="public-mobile-menu"
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={open ? "close" : "menu"}
+                        initial={{ opacity: 0, scale: 0.75, rotate: -45 }}
+                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                        exit={{ opacity: 0, scale: 0.75, rotate: 45 }}
+                        transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                        className="grid place-items-center"
+                      >
+                        {open ? (
+                          <X
+                            className="h-[22px] w-[22px] text-[#8aff70]"
+                            strokeWidth={2.25}
+                          />
+                        ) : (
+                          <Menu
+                            className="h-[22px] w-[22px] text-[#d3dce6] group-hover:text-[#8aff70]"
+                            strokeWidth={2.25}
+                          />
+                        )}
+                      </motion.span>
+                    </AnimatePresence>
+                  </button>
+
+                  <AnimatePresence>
+                    {headerVariant !== "none" && open && (
+                      <motion.div
+                        id="public-mobile-menu"
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={mobileMenuVariants}
+                        className="absolute right-0 top-[calc(100%+10px)] z-50 w-[min(18rem,calc(100vw-2rem))] origin-top-right lg:hidden"
+                      >
+                      <nav
+                        aria-label="Mobile navigation"
+                        className="rounded-xl border border-[#5ff44233] bg-[rgba(16,36,59,0.97)] p-2.5 text-[#d3dce6] shadow-[0_22px_55px_rgba(0,0,0,0.48)] backdrop-blur-xl"
+                      >
+                        <ul className="m-0 list-none space-y-0.5 p-0">
+                          {navLinks.map((link) => (
+                            <motion.li key={link.href} variants={mobileMenuItemVariants}>
+                              <a
+                                href={link.href}
+                                onClick={(event) => {
+                                  if (isHomePage) go(event, link.href);
+                                  else setOpen(false);
+                                }}
+                                aria-current={isHomePage && active === link.href ? "location" : undefined}
+                                className={`transition-colors ${
+                                  isHomePage && active === link.href
+                                    ? "block rounded-lg bg-[rgba(95,244,66,0.12)] px-3 py-2.5 text-sm font-semibold text-[#8aff70]"
+                                    : "block rounded-lg px-3 py-2.5 text-sm font-medium text-[#d3dce6] hover:bg-[rgba(95,244,66,0.07)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+                                }`}
+                              >
+                                {link.label}
+                              </a>
+                            </motion.li>
+                          ))}
+                          {!isHomePage && (
+                            <motion.li className="pt-1" variants={mobileMenuItemVariants}>
+                              <Link
+                                href="/signup"
+                                prefetch={false}
+                                onClick={() => setOpen(false)}
+                                className="block rounded-md bg-[#e23b3f] px-3 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#c92f34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+                              >
+                                Sign up
+                              </Link>
+                            </motion.li>
+                          )}
+                          <motion.li className="pt-1" variants={mobileMenuItemVariants}>
+                            <Link
+                              href="/login"
+                              prefetch={false}
+                              onClick={() => setOpen(false)}
+                              aria-current={pathname === "/login" ? "page" : undefined}
+                              className="block rounded-lg border border-[#5ff4424d] px-3 py-2.5 text-center text-sm font-semibold text-[#d3dce6] transition-colors hover:border-[#5ff442] hover:bg-[rgba(95,244,66,0.08)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
                             >
-                              {link.label}
-                            </a>
-                          </li>
-                        ))}
-                        <li className="pt-1">
-                          <Link
-                            href="/signup"
-                            prefetch={false}
-                            onClick={() => setOpen(false)}
-                            className="block rounded-[3px] bg-[#17a2b8] px-2 py-[5px] pb-1 text-center text-[20px] font-normal leading-tight text-white transition-colors hover:bg-[#138496]"
-                          >
-                            Sign up
-                          </Link>
-                        </li>
-                        <li className="pt-2">
-                          <Link
-                            href="/login"
-                            prefetch={false}
-                            onClick={() => setOpen(false)}
-                            aria-current={pathname === "/login" ? "page" : undefined}
-                            className="block rounded-[3px] bg-[#f3f5f7] px-2 py-[5px] pb-1 text-center text-[20px] font-normal leading-tight text-[#212529] transition-colors hover:bg-white"
-                          >
-                            Login
-                          </Link>
-                        </li>
-                      </ul>
-                    </nav>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                              Login
+                            </Link>
+                          </motion.li>
+                        </ul>
+                      </nav>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </MotionConfig>
+              </div>
             </div>
           </nav>
         </header>
@@ -247,7 +345,7 @@ export default function PublicLayout({
 
         {children}
 
-        {footerVariant === "auth" ? (
+        {footerVariant === "none" ? null : footerVariant === "auth" ? (
           <footer className="mt-auto bg-[#e9ecef]">
             <div className="mx-auto max-w-7xl px-4 py-5 text-center sm:px-6 lg:px-8">
               <p className="text-[13px] leading-relaxed text-[#6c757d]">
@@ -267,12 +365,23 @@ export default function PublicLayout({
             </div>
           </footer>
         ) : (
-          <footer className="mt-auto border-t border-white/10 bg-[#1a2429]">
-            <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 sm:px-6 md:flex-row lg:px-8">
-              <p className="text-center text-xs leading-relaxed text-white/55 md:text-left">
-                <span className="font-semibold text-white/85">Crack Bounty</span>
-                <span className="mx-2 text-[#5ff442]/70" aria-hidden="true">•</span>
-                © 2019–2026. All rights reserved.
+          <footer className="mt-auto border-t border-[#ffffff1a] bg-[#0b1524] text-[#c2ccda]">
+            <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-4 sm:flex-row sm:px-6 lg:px-8">
+              <Link
+                href="/#home"
+                className="inline-flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+              >
+                <Image
+                  src="/logo.png"
+                  alt="Crack Bounty"
+                  width={2172}
+                  height={724}
+                  sizes="120px"
+                  className="h-8 w-[120px] object-contain object-left"
+                />
+              </Link>
+              <p className="text-center text-xs text-[#8390a3] sm:text-right">
+                © 2019–2026 Crack Bounty. All rights reserved.
               </p>
             </div>
           </footer>

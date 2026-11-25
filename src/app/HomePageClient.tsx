@@ -68,61 +68,109 @@ export default function HomePage() {
     <PublicLayout>
       <main>
         {/* HERO */}
-        <section id="home" aria-labelledby="home-heading" className="relative overflow-hidden bg-[#0f172a] pt-24 pb-20 sm:pt-32 sm:pb-24 md:pt-44 md:pb-36">
+        <section id="home" aria-labelledby="home-heading" className="relative isolate overflow-hidden bg-[#07152e] pt-28 pb-14 sm:pt-32 sm:pb-16 md:min-h-[690px] md:pt-36">
           <Image
-            src="/header_image.webp"
+            src="/hero-network-bg.svg?v=particle-reference-20261126"
             alt=""
             fill
             fetchPriority="high"
             sizes="100vw"
-            className="home-hero-background pointer-events-none object-cover"
-            style={{ objectPosition: "72% 44%" }}
+            unoptimized
+            className="home-hero-background pointer-events-none object-cover object-[72%_44%]"
           />
           <div className="home-hero-overlay pointer-events-none absolute inset-0" aria-hidden="true" />
 
-          <div className="home-hero-content relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-left">
-            <motion.h1
-              id="home-heading"
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="font-[Montserrat] mb-6 max-w-[12ch] text-3xl font-black leading-[1.1] tracking-tight text-white sm:mb-7 sm:max-w-none sm:text-5xl md:text-6xl lg:text-7xl"
-            >
-              Join a <span className="text-[#5ff442]">private</span>
-              <br className="hidden sm:block" />
-              affiliate network
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.12 }}
-              className="mb-8 max-w-2xl text-sm leading-relaxed text-white/80 sm:mb-10 sm:text-base md:text-lg lg:text-lg"
-            >
-              Crack Bounty connects publishers and advertisers with quality campaigns,
-              clear performance insights, and responsive support.
-            </motion.p>
-
-            <div className="home-hero-actions-shell">
+          <div className="home-hero-content relative mx-auto flex min-h-[500px] w-full max-w-7xl items-center px-4 py-6 text-left sm:min-h-[540px] sm:px-6 sm:py-8 lg:min-h-[560px] lg:px-8">
+            <div className="max-w-[680px]">
               <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
+                className="home-hero-reveal relative mb-7 inline-flex items-center bg-[#df383e] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_8px_24px_rgba(0,0,0,0.2)] after:absolute after:left-5 after:top-full after:border-x-[9px] after:border-x-transparent after:border-t-[9px] after:border-t-[#df383e]"
+              >
+                Crack Bounty · Affiliate network
+              </motion.div>
+
+              <motion.h1
+                id="home-heading"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.24 }}
-                className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+                transition={{ duration: 0.68, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="home-hero-reveal font-[Montserrat] mb-5 text-[2.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:mb-6 sm:text-5xl md:text-[3.6rem] lg:text-[4.15rem]"
+              >
+                Affiliate growth,
+                <br />
+                built for <span className="text-[#ff6268]">your goals.</span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="home-hero-reveal mb-7 max-w-xl text-[15px] leading-7 text-[#e1e8f2] sm:mb-8 sm:text-base md:text-[17px]"
+              >
+                Crack Bounty connects publishers and advertisers with quality campaigns,
+                clear performance insights, and responsive support.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="home-hero-reveal mb-8 flex w-full flex-col items-stretch gap-3 sm:mb-9 sm:flex-row sm:items-center"
               >
                 <Link
                   href="/signup"
                   prefetch={false}
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#5ff442] px-6 py-3 text-sm font-bold text-[#263238] shadow-lg shadow-[#5ff442]/30 transition-all hover:-translate-y-1 hover:bg-[#4dd935] active:translate-y-0 sm:w-auto"
+                  className="group inline-flex min-h-12 w-full -skew-x-6 items-center justify-center rounded-none bg-[#5ff442] px-6 py-3 text-sm font-semibold text-[#10243b] shadow-[0_5px_14px_rgba(95,244,66,0.18)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#4dd935] hover:shadow-[0_8px_18px_rgba(95,244,66,0.26)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#07152e] active:translate-y-0 sm:w-auto sm:min-w-[224px]"
                 >
-                  Sign up
-                  <ArrowRight className="h-4 w-4" />
+                  <span className="inline-flex skew-x-6 items-center gap-2.5">
+                    Join the network
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
                 </Link>
                 <a
                   href="#contact"
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-white/30 bg-white/[0.05] px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/15 active:bg-white/20 sm:w-auto"
+                  className="group inline-flex min-h-12 w-full -skew-x-6 items-center justify-center rounded-none border border-[#5ff44266] bg-[rgba(16,36,59,0.68)] px-6 py-[11px] text-sm font-semibold text-white transition-[background-color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#5ff442] hover:bg-[rgba(95,244,66,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#07152e] active:translate-y-0 sm:w-auto sm:min-w-[224px]"
                 >
-                  Contact us
+                  <span className="inline-flex skew-x-6 items-center gap-2.5">
+                    Talk to our team
+                    <ArrowRight
+                      className="h-4 w-4 text-[#8aff70] transition-transform duration-200 group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </a>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                className="home-hero-reveal grid max-w-[570px] grid-cols-1 gap-3 sm:grid-cols-2"
+              >
+                <a
+                  href="#publishers"
+                  className="group flex min-h-[76px] items-center justify-between gap-4 rounded-lg border border-[#ffffff29] bg-[#ffffff0d] px-4 py-3.5 text-left backdrop-blur-md transition-colors hover:border-[#ffffff66] hover:bg-[#ffffff17] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <span>
+                    <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#c2ccda]">For publishers</span>
+                    <span className="mt-1 block text-sm font-semibold text-white">Find your next campaign</span>
+                  </span>
+                  <TrendingUp className="h-5 w-5 shrink-0 text-[#ff6268] transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </a>
+                <a
+                  href="#advertisers"
+                  className="group flex min-h-[76px] items-center justify-between gap-4 rounded-lg border border-[#ffffff29] bg-[#ffffff0d] px-4 py-3.5 text-left backdrop-blur-md transition-colors hover:border-[#ffffff66] hover:bg-[#ffffff17] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <span>
+                    <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#c2ccda]">For advertisers</span>
+                    <span className="mt-1 block text-sm font-semibold text-white">Grow with the right partners</span>
+                  </span>
+                  <Target className="h-5 w-5 shrink-0 text-[#ff6268] transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </a>
               </motion.div>
             </div>
@@ -506,13 +554,13 @@ function PublisherIllustration() {
 
 function AdvertiserIllustration() {
   return (
-    <div className="relative mx-auto aspect-[16/10] w-full max-w-[520px] overflow-hidden rounded-xl border border-[#e6ebed] bg-[#263238]">
+    <div className="group relative mx-auto aspect-[16/10] w-full max-w-[520px] overflow-hidden rounded-xl border border-[#dce4e8] bg-[#10243b] shadow-[0_18px_42px_rgba(16,36,59,0.16)]">
       <Image
         src="/advertisers-image.jpg"
-        alt="Advertiser reviewing a campaign on a laptop"
+        alt="Advertiser reviewing campaign analytics on a laptop"
         fill
         sizes="(min-width: 1024px) 50vw, 100vw"
-        className="object-cover"
+        className="object-cover object-[56%_center] transition-transform duration-500 motion-safe:group-hover:scale-[1.025]"
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getDashboardPath } from "@/lib/auth/dashboard-path";
 import PublicLayout from "@/components/layout/PublicLayout";
 import { AlertCircle } from "lucide-react";
@@ -99,17 +100,50 @@ export default function LoginClient() {
   };
 
   return (
-    <PublicLayout className="public-site-light" footerVariant="auth">
-      <main className="flex flex-1 flex-col bg-white px-4 pb-16 pt-28 sm:px-6 md:pt-32">
-        <div className="mx-auto w-full max-w-[520px]">
-          <h1 className="mb-8 text-center font-[Montserrat] text-[28px] font-normal leading-tight text-[#58666e] sm:mb-10 sm:text-[32px]">
+    <PublicLayout className="public-site-light" headerVariant="none" footerVariant="none">
+      <main className="relative flex min-h-screen flex-1 items-center justify-center overflow-hidden bg-[#070c15] px-4 py-10 sm:px-6">
+        <div aria-hidden="true" className="absolute inset-0">
+          <Image
+            src="/publishers-image.jpg"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover grayscale opacity-45"
+            preload
+          />
+        </div>
+        <div aria-hidden="true" className="absolute inset-0 bg-[#070c15]/75" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.42) 0.6px, transparent 0.7px)",
+            backgroundSize: "4px 4px",
+          }}
+        />
+        <div className="relative z-10 w-full max-w-[360px]">
+          <Link
+            href="/#home"
+            className="mb-6 inline-flex w-full justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+          >
+            <Image
+              src="/logo.png"
+              alt="Crack Bounty"
+              width={2172}
+              height={724}
+              sizes="180px"
+              className="h-12 w-[180px] object-contain"
+              preload
+            />
+          </Link>
+          <h1 className="mb-6 text-center text-lg font-semibold tracking-wide text-white">
             Publisher Login
           </h1>
 
           {error && (
             <div
               role="alert"
-              className="mb-4 overflow-hidden rounded border border-red-200 bg-red-50 text-red-800"
+              className="mb-4 overflow-hidden rounded-sm border border-red-300/40 bg-red-950/70 text-red-100"
             >
               <div className="flex items-start gap-3 p-3">
                 <div className="mt-0.5">
@@ -123,7 +157,8 @@ export default function LoginClient() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
+            <div className="overflow-hidden rounded-sm border border-[#dbe2e8] bg-white">
+              <div>
               <label htmlFor="login-username" className="sr-only">
                 E-mail
               </label>
@@ -133,15 +168,14 @@ export default function LoginClient() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full rounded-[3px] border border-[#c7cbcd] bg-[#f1f3f5] px-3 py-2.5 text-[17px] text-[#455964] placeholder-[#74818a] outline-none transition focus:border-[#17a2b8] focus:ring-2 focus:ring-[#17a2b8]/20"
+                className="h-12 w-full border-0 border-b border-[#dbe2e8] bg-white px-3 text-sm text-[#263238] placeholder:text-[#74818a] outline-none transition focus:ring-2 focus:ring-inset focus:ring-[#5ff442]/40"
                 placeholder="E-mail"
                 autoComplete="username"
                 required
                 disabled={loading}
               />
-            </div>
-
-            <div>
+              </div>
+              <div>
               <label htmlFor="login-password" className="sr-only">
                 Password
               </label>
@@ -151,27 +185,34 @@ export default function LoginClient() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-[3px] border border-[#c7cbcd] bg-[#f1f3f5] px-3 py-2.5 text-[17px] text-[#455964] placeholder-[#74818a] outline-none transition focus:border-[#17a2b8] focus:ring-2 focus:ring-[#17a2b8]/20"
+                className="h-12 w-full border-0 bg-white px-3 text-sm text-[#263238] placeholder:text-[#74818a] outline-none transition focus:ring-2 focus:ring-inset focus:ring-[#5ff442]/40"
                 placeholder="Password"
                 autoComplete="current-password"
                 required
                 disabled={loading}
               />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="flex min-h-[46px] w-full items-center justify-center rounded-[3px] bg-[#17a2b8] px-5 py-2.5 text-[17px] font-normal text-white transition-colors hover:bg-[#138496] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#17a2b8]/30 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex min-h-12 w-full items-center justify-center rounded-sm bg-[#5ff442] px-5 py-2.5 text-sm font-semibold text-[#10243b] transition-colors hover:bg-[#4dd935] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070c15] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Signing in..." : "Login"}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            <div className="flex items-center justify-between gap-3 pt-1 text-[17px]">
-              <Link href="/signup" className="text-[#007bff] hover:underline">
-                Don&apos;t have an account?
+            <div className="flex flex-col items-center gap-2 pt-1 text-sm">
+              <Link
+                href="/signup"
+                className="text-white/75 transition-colors hover:text-[#8aff70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+              >
+                Don&apos;t have an account? <span className="font-semibold text-white">Sign up</span>
               </Link>
-              <a href="#forgot-password" className="text-[#007bff] hover:underline">
+              <a
+                href="#forgot-password"
+                className="text-white/75 transition-colors hover:text-[#8aff70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+              >
                 Forgot Password?
               </a>
             </div>

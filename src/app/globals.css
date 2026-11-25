@@ -190,8 +190,31 @@ body {
 
 .home-hero-overlay {
   background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.55) 0%, rgba(15, 23, 42, 0.42) 42%, rgba(15, 23, 42, 0.72) 100%),
-    rgba(15, 23, 42, 0.2);
+    linear-gradient(90deg, rgba(5, 16, 39, 0.96) 0%, rgba(5, 16, 39, 0.88) 38%, rgba(5, 16, 39, 0.34) 76%, rgba(5, 16, 39, 0.3) 100%),
+    linear-gradient(180deg, rgba(5, 16, 39, 0.12) 0%, rgba(5, 16, 39, 0.08) 58%, rgba(5, 16, 39, 0.42) 100%);
+}
+
+.home-hero-background {
+  animation: home-hero-drift 28s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes home-hero-drift {
+  from {
+    transform: scale(1.025);
+  }
+  to {
+    transform: scale(1.055) translate3d(-0.3%, 0.2%, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .home-hero-overlay {
+    background:
+      linear-gradient(90deg, rgba(5, 16, 39, 0.96) 0%, rgba(5, 16, 39, 0.9) 72%, rgba(5, 16, 39, 0.78) 100%),
+      linear-gradient(180deg, rgba(5, 16, 39, 0.08) 0%, rgba(5, 16, 39, 0.32) 100%);
+  }
 }
 
 .home-hero-content {
@@ -201,11 +224,6 @@ body {
 .public-site[data-mobile-menu-open="true"] .home-hero-content {
   /* Keep hero visible under Crack Bounty-style right dropdown */
   pointer-events: none;
-}
-
-.home-hero-actions-shell {
-  width: 100%;
-  max-width: 28rem;
 }
 
 .page-load-overlay {
@@ -287,6 +305,17 @@ body {
   .home-hero-content,
   .public-site[data-mobile-menu-open="true"] .home-hero-content {
     transition-duration: 0ms;
+  }
+
+  .home-hero-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition-duration: 0ms !important;
+  }
+
+  .home-hero-background {
+    animation: none;
+    will-change: auto;
   }
 
   .page-load-spinner span::before {
