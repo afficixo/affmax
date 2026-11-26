@@ -247,13 +247,13 @@ export default function NewsUpdatesPopover({
                   <button
                     type="button"
                     className={styles.newsDeleteButton}
-                    aria-label={`Delete update: ${post.title}`}
-                    title="Delete update"
+                    aria-label={`${deletingPostId === post.id ? 'Deleting' : 'Delete'} update: ${post.title}`}
+                    title={deletingPostId === post.id ? 'Deleting update…' : 'Delete update'}
                     disabled={deletingPostId !== null}
+                    aria-busy={deletingPostId === post.id}
                     onClick={() => void deletePost(post)}
                   >
-                    <Trash2 size={15} />
-                    <span>{deletingPostId === post.id ? 'Deleting…' : 'Delete'}</span>
+                    <Trash2 size={16} aria-hidden="true" />
                   </button>
                 </div>
                 <p className={styles.newsPostBody}>{post.body}</p>

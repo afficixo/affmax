@@ -848,7 +848,7 @@ function getInitialReportDateRange() {
   const end = new Date()
   end.setUTCHours(12, 0, 0, 0)
   const start = new Date(end)
-  start.setUTCDate(start.getUTCDate() - 29)
+  start.setUTCDate(start.getUTCDate() - 6)
   return {
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
@@ -1075,7 +1075,7 @@ export default function DashboardOverview() {
   const [reportDateMode, setReportDateMode] = useState<'default' | 'range' | 'all-time'>('default')
   const [showReportDates, setShowReportDates] = useState(false)
   const [reportPresetLabel, setReportPresetLabel] = useState(
-    pathname === '/reports/daily' ? 'Last 30 Days' : 'Today',
+    pathname === '/reports/daily' ? 'Last 7 Days' : 'Today',
   )
   const reportRangeAnchorRef = useRef<HTMLInputElement>(null)
   const [pageSearch, setPageSearch] = useState('')
@@ -2075,7 +2075,7 @@ export default function DashboardOverview() {
     const defaultDates = pathname === '/reports/daily' ? initialReportDates : todayReportDates
     setReportStartDate(defaultDates.start)
     setReportEndDate(defaultDates.end)
-    setReportPresetLabel(pathname === '/reports/daily' ? 'Last 30 Days' : 'Today')
+    setReportPresetLabel(pathname === '/reports/daily' ? 'Last 7 Days' : 'Today')
     setReportDateMode('default')
     setShowReportDates(false)
   }, [pathname, initialReportDates, todayReportDates])
@@ -2687,7 +2687,7 @@ export default function DashboardOverview() {
   const reportPreset = reportDateMode === 'all-time'
     ? 'All Time'
     : reportDateMode === 'default'
-      ? pathname === '/reports/daily' ? 'Last 30 Days' : 'Today'
+      ? pathname === '/reports/daily' ? 'Last 7 Days' : 'Today'
       : reportPresetLabel
   const reportRangeValue = reportPreset === 'All Time'
     ? 'All Time'
