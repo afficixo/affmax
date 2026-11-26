@@ -25,45 +25,46 @@ test('builds hexadecimal tracking URLs while preserving Sub IDs', () => {
     offerId: '35677',
     subId1: 'source',
     subId2: 'slot-2',
+    subId3: 'slot-3',
   }, 'https://tracking.example')
 
   assert.equal(
     url,
-    'https://tracking.example/PEA61/O8B5D?s1=source&s2=slot-2',
+    'https://tracking.example/PEA61/O8B5D?s1=source&s2=slot-2&s3=slot-3',
   )
 })
 
-test('uses prefixed hexadecimal IDs in main-offer postback Sub IDs', () => {
+test('maps publisher IDs and all three publisher sub IDs to marketplace parameters', () => {
   const url = new URL(buildMainOfferUrl({
     mainOfferBase: 'https://network.example/campaign',
     publisherId: 60001,
-    offerId: '35677',
     subId1: 'source',
     subId2: 'slot-2',
+    subId3: 'slot-3',
   }))
 
-  assert.equal(url.searchParams.get('s1'), 'PEA61')
-  assert.equal(url.searchParams.get('s2'), 'O8B5D')
-  assert.equal(url.searchParams.get('s3'), 'source')
-  assert.equal(url.searchParams.get('s4'), 'slot-2')
+  assert.equal(url.searchParams.get('s1'), '60001')
+  assert.equal(url.searchParams.get('s2'), 'source')
+  assert.equal(url.searchParams.get('s3'), 'slot-2')
+  assert.equal(url.searchParams.get('s4'), 'slot-3')
 })
 
 test('preserves existing network query parameters when adding tracking Sub IDs', () => {
   const url = new URL(buildMainOfferUrl({
     mainOfferBase: 'https://trk2affm.com/c/?p=55632&o=4380&source=network',
     publisherId: 60001,
-    offerId: '35677',
     subId1: 'source',
     subId2: 'slot-2',
+    subId3: 'slot-3',
   }))
 
   assert.equal(url.searchParams.get('p'), '55632')
   assert.equal(url.searchParams.get('o'), '4380')
   assert.equal(url.searchParams.get('source'), 'network')
-  assert.equal(url.searchParams.get('s1'), 'PEA61')
-  assert.equal(url.searchParams.get('s2'), 'O8B5D')
-  assert.equal(url.searchParams.get('s3'), 'source')
-  assert.equal(url.searchParams.get('s4'), 'slot-2')
+  assert.equal(url.searchParams.get('s1'), '60001')
+  assert.equal(url.searchParams.get('s2'), 'source')
+  assert.equal(url.searchParams.get('s3'), 'slot-2')
+  assert.equal(url.searchParams.get('s4'), 'slot-3')
 })
 
 test('keeps legacy decimal tracking IDs unchanged', () => {

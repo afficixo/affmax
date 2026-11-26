@@ -14,6 +14,7 @@ export type CampaignOfferRecord = {
   device?: string[]
   description?: string
   offerLink?: string
+  marketplaceOfferId?: string
   isHot?: boolean
   status?: 'ACTIVE' | 'PAUSED'
   placement?: 'STANDARD' | 'INCENTIVE'
@@ -35,6 +36,7 @@ export type CampaignOfferInput = {
   device?: string[]
   description?: string | null
   offerLink?: string | null
+  marketplaceOfferId?: string | null
   isHot?: boolean
   status?: 'ACTIVE' | 'PAUSED'
   placement?: 'STANDARD' | 'INCENTIVE'
@@ -56,6 +58,7 @@ type DbCampaignOffer = {
   device: string[]
   description: string | null
   offerLink: string | null
+  marketplaceOfferId: string | null
   isHot: boolean
   status: string
   placement: string
@@ -177,6 +180,9 @@ export function normalizeCampaignOfferInput(body: unknown): CampaignOfferInput |
     device,
     description: typeof raw.description === 'string' ? raw.description.trim() : raw.description === null ? null : undefined,
     offerLink: typeof raw.offerLink === 'string' ? raw.offerLink.trim() : raw.offerLink === null ? null : undefined,
+    marketplaceOfferId: typeof raw.marketplaceOfferId === 'string'
+      ? raw.marketplaceOfferId.trim()
+      : raw.marketplaceOfferId === null ? null : undefined,
     isHot: typeof raw.isHot === 'boolean' ? raw.isHot : undefined,
     status,
     placement,
@@ -203,6 +209,7 @@ export function toCampaignOfferRecord(row: DbCampaignOffer): CampaignOfferRecord
     device: row.device.length ? row.device : undefined,
     description: row.description || undefined,
     offerLink: row.offerLink || undefined,
+    marketplaceOfferId: row.marketplaceOfferId || undefined,
     isHot: row.isHot,
     status,
     placement,
@@ -230,6 +237,7 @@ export function toPrismaCreateData(input: CampaignOfferInput, createdById?: stri
     device: input.device ?? [],
     description: input.description || null,
     offerLink: input.offerLink || null,
+    marketplaceOfferId: input.marketplaceOfferId?.trim() || null,
     isHot: input.isHot ?? false,
     status: input.status ?? 'ACTIVE',
     placement,

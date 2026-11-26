@@ -24,6 +24,7 @@ export async function GET(request: Request, context: RouteContext) {
   const requestUrl = new URL(request.url)
   const subId1 = requestUrl.searchParams.get('s1') || ''
   const subId2 = requestUrl.searchParams.get('s2') || ''
+  const subId3 = requestUrl.searchParams.get('s3') || ''
   const publisherNumber = Number(publisherId)
 
   let mainOfferBase = DEFAULT_MAIN_OFFER_BASE
@@ -66,9 +67,9 @@ export async function GET(request: Request, context: RouteContext) {
   const destination = buildMainOfferUrl({
     mainOfferBase,
     publisherId,
-    offerId,
     subId1,
     subId2,
+    subId3,
   })
 
   const response = NextResponse.redirect(destination, 302)

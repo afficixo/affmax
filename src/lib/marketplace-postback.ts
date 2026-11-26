@@ -12,6 +12,7 @@ type StoredMarketplacePostbackTokens = {
   s2Token: string
   s3Token: string
   s4Token: string
+  cmpidToken: string
   ipToken: string
 }
 
@@ -21,11 +22,9 @@ export function createPostbackToken(): string {
 
 /**
  * Shared manager inbound URL fields for every configured marketplace:
- * #s1# #s2# #s3# #s4# #ip#
+ * #s1# #s2# #s3# #s4# #ip# #cmpid#
  *
- * Our tracking map on offer links:
- *   s1 = prefixed publisher ID, s2 = prefixed offer ID
- *   s3 = publisher sub1, s4 = publisher sub2
+ * Offer-link values are publisher ID in s1 and publisher sub IDs 1-3 in s2-s4.
  */
 export function getMarketplacePostbackTokens(
   config: StoredMarketplacePostbackTokens,
@@ -35,6 +34,7 @@ export function getMarketplacePostbackTokens(
     s2: config.s2Token,
     s3: config.s3Token,
     s4: config.s4Token,
+    cmpid: config.cmpidToken,
     ip: config.ipToken,
   }
 }
@@ -47,7 +47,8 @@ export function buildMarketplacePostbackUrl(
   const base = origin.replace(/\/$/, '')
   // Keep the marketplace macro syntax intact so its system can substitute values.
   return `${base}/api/postback/in/${encodeURIComponent(token)}`
-    + `?s1=${tokens.s1}&s2=${tokens.s2}&s3=${tokens.s3}&s4=${tokens.s4}&ip=${tokens.ip}`
+    + `?s1=${tokens.s1}&s2=${tokens.s2}&s3=${tokens.s3}&s4=${tokens.s4}`
+    + `&ip=${tokens.ip}&cmpid=${tokens.cmpid}`
 }
 
 export async function ensureMarketplacePostbackConfig(managerId: string) {
@@ -138,6 +139,7 @@ function buildExternalKey(parts: {
   offerKey: string
   datetime: string
   ip: string
+  s2: string
   s3: string
   s4: string
 }) {
@@ -148,6 +150,7 @@ function buildExternalKey(parts: {
       parts.offerKey,
       parts.datetime,
       parts.ip,
+      parts.s2,
       parts.s3,
       parts.s4,
     ].join('|'))
@@ -173,10 +176,8 @@ export type IngestPostbackResult =
 
 /**
  * Marketplace → our app.
- * Mapping (already used on tracking links):
- *   s1 = prefixed publisher ID, s2 = prefixed offer ID
- *   s3 = publisher sub id 1
- *   s4 = publisher sub id 2
+ * Mapping: s1 = publisher ID, s2-s4 = publisher sub IDs 1-3, cmpid = marketplace offer ID.
+ * Legacy callbacks without cmpid may still use the old internal offer ID in s2.
  */
 export async function ingestMarketplacePostback(
   token: string,
@@ -190,16 +191,17 @@ export async function ingestMarketplacePostback(
   }
 
   const s1 = decodeTrackingId(firstParam(params, ['s1', 'sub1', 'sub_id_1']), 'P')
-  const s2 = decodeTrackingId(firstParam(params, ['s2', 'sub2', 'sub_id_2', 'offer_id', 'offerid']), 'O')
+  const s2 = firstParam(params, ['s2', 'sub2', 'sub_id_2'])
   const s3 = firstParam(params, ['s3', 'sub3', 'sub_id_3'])
   const s4 = firstParam(params, ['s4', 'sub4', 'sub_id_4'])
+  const cmpid = firstParam(params, ['cmpid', 'campaign_id', 'campaignid'])
   const datetime = firstParam(params, ['datetime', 'time', 'timestamp'])
   const ip = firstParam(params, ['ip', 'ip_address', 'ipaddress'])
   const suppliedCountry = firstParam(params, ['country', 'county', 'geo']).toUpperCase()
   const country = /^[A-Z]{2}$/.test(suppliedCountry) ? suppliedCountry : ''
 
-  if (!s1 || !s2) {
-    return { ok: false, status: 400, error: 'Missing required s1 (publisher id) or s2 (offer id)' }
+  if (!s1) {
+    return { ok: false, status: 400, error: 'Missing required s1 (publisher id)' }
   }
 
   const publisherNumber = Number(s1)
@@ -218,14 +220,36 @@ export async function ingestMarketplacePostback(
     return { ok: false, status: 404, error: `Publisher #${publisherNumber} not found` }
   }
 
-  const offer = await prisma.campaignOffer.findUnique({
-    where: { id: s2 },
-    select: { id: true, name: true, payout: true, status: true },
-  })
+  const explicitOfferId = firstParam(params, ['offer_id', 'offerid'])
+  const legacyOfferValue = explicitOfferId || s2
+  const hasLegacyOfferId = Boolean(explicitOfferId) || /^(?:O[0-9a-f]+|0x[0-9a-f]+)$/i.test(s2)
+  const legacyOfferId = hasLegacyOfferId
+    ? decodeTrackingId(legacyOfferValue, 'O')
+    : ''
+  const offer = cmpid
+    ? await prisma.campaignOffer.findUnique({
+        where: { marketplaceOfferId: cmpid },
+        select: { id: true, name: true, payout: true, status: true },
+      })
+    : legacyOfferId
+      ? await prisma.campaignOffer.findUnique({
+          where: { id: legacyOfferId },
+          select: { id: true, name: true, payout: true, status: true },
+        })
+      : null
   if (!offer) {
-    return { ok: false, status: 404, error: `Offer #${s2} not found` }
+    return {
+      ok: false,
+      status: 404,
+      error: cmpid
+        ? `Marketplace offer #${cmpid} not found`
+        : `Offer #${legacyOfferId || '(missing)'} not found`,
+    }
   }
 
+  const publisherSub1 = cmpid ? s2 : s3
+  const publisherSub2 = cmpid ? s3 : s4
+  const publisherSub3 = cmpid ? s4 : ''
   const payout = offer.payout
   if (!Number.isFinite(payout) || payout < 0) {
     return { ok: false, status: 400, error: 'Invalid payout' }
@@ -240,9 +264,10 @@ export async function ingestMarketplacePostback(
   const externalKey = buildExternalKey({
     token,
     publisherKey: s1,
-    offerKey: s2,
+    offerKey: cmpid || legacyOfferId,
     datetime: datetime || occurredAt.toISOString(),
     ip,
+    s2,
     s3,
     s4,
   })
@@ -272,12 +297,13 @@ export async function ingestMarketplacePostback(
         campaignName: offer.name,
         payout,
         country: countryCode || null,
-        ipAddress: ip || null,
+        ipAddress: null,
         status: 'Approved',
         sub1: s1,
-        sub2: s2,
-        sub3: s3 || null,
-        sub4: s4 || null,
+        sub2: offer.id,
+        sub3: publisherSub1 || null,
+        sub4: publisherSub2 || null,
+        publisherSub3: publisherSub3 || null,
         occurredAt,
         externalKey,
       },
@@ -292,6 +318,7 @@ export async function ingestMarketplacePostback(
         status: true,
         sub3: true,
         sub4: true,
+        publisherSub3: true,
         occurredAt: true,
         createdAt: true,
       },
@@ -303,6 +330,7 @@ export async function ingestMarketplacePostback(
       const { firePublisherGlobalPostback } = await import('@/lib/publisher-postback')
       publisherPostback = await firePublisherGlobalPostback(publisher.id, {
         ...lead,
+        ipAddress: ip || null,
       })
     } catch (error) {
       console.error('Publisher postback dispatch failed:', error)

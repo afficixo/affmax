@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { generateCampaignOfferIds, normalizeCampaignOfferIds } from '../src/lib/campaign-offers'
+import {
+  generateCampaignOfferIds,
+  normalizeCampaignOfferIds,
+  normalizeCampaignOfferInput,
+  toPrismaCreateData,
+} from '../src/lib/campaign-offers'
 
 test('normalizes a non-empty bulk offer ID list and removes duplicates', () => {
   assert.deepEqual(normalizeCampaignOfferIds([' 12 ', '12', '13']), ['12', '13'])
@@ -25,4 +30,17 @@ test('generates offer IDs without losing precision for large catalog IDs', () =>
     generateCampaignOfferIds(['9007199254740991'], 2),
     ['9007199254740992', '9007199254740993'],
   )
+})
+
+test('normalizes and saves the separate marketplace offer ID', () => {
+  const input = normalizeCampaignOfferInput({
+    id: '26401',
+    name: 'Marketplace offer',
+    payout: 2,
+    country: 'us',
+    marketplaceOfferId: '  main-482  ',
+  })
+
+  assert.equal(input?.marketplaceOfferId, 'main-482')
+  assert.equal(input && toPrismaCreateData(input).marketplaceOfferId, 'main-482')
 })

@@ -93,9 +93,10 @@ export type PublicTrackingParts = {
   offerId: string | number
   subId1?: string
   subId2?: string
+  subId3?: string
 }
 
-/** Publisher-facing link: https://tracking-domain/{publisher}/{offer}/?s1=&s2= */
+/** Publisher-facing link: https://tracking-domain/{publisher}/{offer}/?s1=&s2=&s3= */
 export function buildPublicTrackingUrl(parts: PublicTrackingParts, origin = getTrackingDomainOrigin()): string {
   const publisherId = encodeTrackingId(parts.publisherId, 'P')
   const offerId = encodeTrackingId(parts.offerId, 'O')
@@ -105,22 +106,24 @@ export function buildPublicTrackingUrl(parts: PublicTrackingParts, origin = getT
   const url = new URL(`${origin.replace(/\/$/, '')}/${publisherId}/${offerId}`)
   const sub1 = parts.subId1?.trim()
   const sub2 = parts.subId2?.trim()
+  const sub3 = parts.subId3?.trim()
   if (sub1) url.searchParams.set('s1', sub1)
   if (sub2) url.searchParams.set('s2', sub2)
+  if (sub3) url.searchParams.set('s3', sub3)
   return url.toString()
 }
 
 export type MainOfferParts = {
   mainOfferBase: string
   publisherId: string | number
-  offerId: string | number
   subId1?: string
   subId2?: string
+  subId3?: string
 }
 
 /**
  * Hidden network link used for postbacks:
- * {main}?{existing_network_params}&s1=P{publisher_hex}&s2=O{offer_hex}&s3={sub1}&s4={sub2}
+ * {main}?{existing_network_params}&s1={publisher_id}&s2={sub1}&s3={sub2}&s4={sub3}
  */
 export function buildMainOfferUrl(parts: MainOfferParts): string {
   const base = (parts.mainOfferBase || DEFAULT_MAIN_OFFER_BASE).trim() || DEFAULT_MAIN_OFFER_BASE
@@ -132,12 +135,13 @@ export function buildMainOfferUrl(parts: MainOfferParts): string {
   }
 
   // Preserve network parameters (such as Affmine's p/o) while adding our tracking map.
-  url.searchParams.set('s1', encodeTrackingId(parts.publisherId, 'P'))
-  url.searchParams.set('s2', encodeTrackingId(parts.offerId, 'O'))
+  url.searchParams.set('s1', sanitizeTrackingToken(parts.publisherId))
   const sub1 = parts.subId1?.trim()
   const sub2 = parts.subId2?.trim()
-  if (sub1) url.searchParams.set('s3', sub1)
-  if (sub2) url.searchParams.set('s4', sub2)
+  const sub3 = parts.subId3?.trim()
+  url.searchParams.set('s2', sub1 || '')
+  url.searchParams.set('s3', sub2 || '')
+  url.searchParams.set('s4', sub3 || '')
   return url.toString()
 }
 

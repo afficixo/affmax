@@ -85,6 +85,7 @@ import {
 } from '@/lib/campaign-offers'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import {
+  hasRequiredMarketplacePostbackTokens,
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
 import { getAffmineSourceOfferId, type AffmineOffer } from '@/lib/affmine'
@@ -104,24 +105,27 @@ type MarketplacePostbackRecord = {
   inboundUrl: string
 }
 
-const EMPTY_MARKETPLACE_POSTBACK_TOKENS: MarketplacePostbackTokens = {
+const INITIAL_MARKETPLACE_POSTBACK_TOKENS: MarketplacePostbackTokens = {
   s1: '',
   s2: '',
   s3: '',
   s4: '',
+  cmpid: '',
   ip: '',
 }
 
 const MARKETPLACE_POSTBACK_TOKEN_FIELDS: Array<{
   key: keyof MarketplacePostbackTokens
   label: string
-  example: string
+  example?: string
   required?: boolean
+  showRequiredAsterisk?: boolean
 }> = [
-  { key: 's1', label: 'Publisher ID (s1)', example: '#S1#', required: true },
-  { key: 's2', label: 'Offer ID (s2)', example: '#S2#', required: true },
-  { key: 's3', label: 'Sub ID 1 (s3)', example: '#S3#' },
-  { key: 's4', label: 'Sub ID 2 (s4)', example: '#S4#' },
+  { key: 's1', label: 'SUB ID (s1)', example: '#S1#', required: true },
+  { key: 's2', label: 'Sub ID 1 (s2)', example: '#S2#' },
+  { key: 's3', label: 'Sub ID 2 (s3)', example: '#S3#' },
+  { key: 's4', label: 'Sub ID 3 (s4)', example: '#S4#' },
+  { key: 'cmpid', label: 'Marketplace Offer ID', required: true, showRequiredAsterisk: false },
   { key: 'ip', label: 'Conversion IP', example: '#IP#' },
 ]
 
@@ -494,6 +498,7 @@ type CampaignOffer = {
   device?: string[]
   description?: string
   offerLink?: string
+  marketplaceOfferId?: string
   isHot?: boolean
   status?: 'ACTIVE' | 'PAUSED'
   placement?: 'STANDARD' | 'INCENTIVE'
@@ -529,6 +534,7 @@ type OfferDraft = {
   device: string[]
   description?: string
   offerLink?: string
+  marketplaceOfferId?: string
 }
 
 const allOfferDevices = ['Windows', 'Mac', 'Android', 'iPhone', 'iPad', 'Mobile (Other)'] as const
@@ -545,6 +551,7 @@ const buildPublisherTrackingUrl = (input: {
   offerId?: string | null
   subId1?: string
   subId2?: string
+  subId3?: string
 }) => {
   if (input.publisherId == null || !input.offerId) return ''
   return buildPublicTrackingUrl({
@@ -552,6 +559,7 @@ const buildPublisherTrackingUrl = (input: {
     offerId: input.offerId,
     subId1: input.subId1,
     subId2: input.subId2,
+    subId3: input.subId3,
   }, resolvePublicTrackingOrigin())
 }
 
@@ -568,6 +576,7 @@ const initialOfferDraft: OfferDraft = {
   device: [...allOfferDevices],
   description: '',
   offerLink: '',
+  marketplaceOfferId: '',
 }
 
 const initialIncentiveOfferDraft: OfferDraft = {
@@ -583,6 +592,7 @@ const initialIncentiveOfferDraft: OfferDraft = {
   device: ['iPhone', 'iPad', 'Mobile (Other)'],
   description: '',
   offerLink: '',
+  marketplaceOfferId: '',
 }
 
 const offerRequiresApproval = (offer: Pick<CampaignOffer, 'action' | 'requiresApproval'>) => (
@@ -1082,7 +1092,7 @@ export default function DashboardOverview() {
   const [marketplacePostbacks, setMarketplacePostbacks] = useState<MarketplacePostbackRecord[]>([])
   const [newMarketplaceName, setNewMarketplaceName] = useState('')
   const [newMarketplaceTokens, setNewMarketplaceTokens] = useState<MarketplacePostbackTokens>(
-    EMPTY_MARKETPLACE_POSTBACK_TOKENS,
+    INITIAL_MARKETPLACE_POSTBACK_TOKENS,
   )
   const [marketplacePostbackCreating, setMarketplacePostbackCreating] = useState(false)
   const [marketplacePostbackUpdatingId, setMarketplacePostbackUpdatingId] = useState<string | null>(null)
@@ -1090,7 +1100,7 @@ export default function DashboardOverview() {
   const [editingMarketplacePostbackId, setEditingMarketplacePostbackId] = useState<string | null>(null)
   const [editingMarketplaceName, setEditingMarketplaceName] = useState('')
   const [editingMarketplaceTokens, setEditingMarketplaceTokens] = useState<MarketplacePostbackTokens>(
-    EMPTY_MARKETPLACE_POSTBACK_TOKENS,
+    INITIAL_MARKETPLACE_POSTBACK_TOKENS,
   )
   const [marketplacePostbackLoading, setMarketplacePostbackLoading] = useState(false)
   const [marketplacePostbackLoadError, setMarketplacePostbackLoadError] = useState('')
@@ -1152,7 +1162,7 @@ export default function DashboardOverview() {
   const supportThreadRef = useRef<HTMLDivElement>(null)
   const supportPopupThreadRef = useRef<HTMLDivElement>(null)
   const supportComposerRef = useRef<HTMLTextAreaElement>(null)
-  const [trackingSubIds, setTrackingSubIds] = useState(['', ''])
+  const [trackingSubIds, setTrackingSubIds] = useState(['', '', ''])
   const [generatedTrackingUrl, setGeneratedTrackingUrl] = useState('')
   const [trackingMessage, setTrackingMessage] = useState('')
   const [campaignPreviewOpen, setCampaignPreviewOpen] = useState(false)
@@ -1676,7 +1686,7 @@ export default function DashboardOverview() {
     } catch {
       setPageNotice('')
     }
-    setTrackingSubIds(['', ''])
+    setTrackingSubIds(['', '', ''])
     setGeneratedTrackingUrl('')
     setTrackingMessage('')
     setCampaignPreviewOpen(false)
@@ -1985,6 +1995,7 @@ export default function DashboardOverview() {
       offerId,
       subId1: trackingSubIds[0],
       subId2: trackingSubIds[1],
+      subId3: trackingSubIds[2],
     }))
   }, [pathname, accountProfile.publisherNumber, trackingSubIds])
 
@@ -2330,6 +2341,7 @@ export default function DashboardOverview() {
       device: [...(isIncentive ? initialIncentiveOfferDraft.device : allOfferDevices)],
       description: offer.description,
       offerLink: offer.trackingUrl,
+      marketplaceOfferId: offer.id,
     })
     setOfferFormError('')
     setImagePreviewState('loading')
@@ -2393,6 +2405,7 @@ export default function DashboardOverview() {
         device: isIncentive ? [...initialIncentiveOfferDraft.device] : [...allOfferDevices],
         description: offer.description,
         offerLink: offer.trackingUrl,
+        marketplaceOfferId: offer.id,
         action: isIncentive ? 'View' : 'Apply',
         isHot: false,
         status: 'ACTIVE',
@@ -2505,6 +2518,7 @@ export default function DashboardOverview() {
     const payout = Number(offerDraft.payout)
     const imageSource = (offerDraft.imageSource ?? '').trim()
     const offerLink = (offerDraft.offerLink ?? '').trim()
+    const marketplaceOfferId = (offerDraft.marketplaceOfferId ?? '').trim()
     const description = (offerDraft.description ?? '').trim()
 
     if (!/^\d+$/.test(id) || Number(id) <= 0) {
@@ -2558,6 +2572,7 @@ export default function DashboardOverview() {
       payout,
       imageSource,
       offerLink,
+      marketplaceOfferId,
       country: primaryCountry,
       countries: selectedGeos.length > 1 ? selectedGeos : undefined,
       category: offerDraft.category ?? (isIncentive ? 'App Install' : 'E-mail Submit'),
@@ -2678,7 +2693,7 @@ export default function DashboardOverview() {
       if (byDate !== 0) return byDate
       return Number(second.id) - Number(first.id)
     })
-    .slice(0, 25)
+    .slice(0, 10)
   const detailedCampaign = campaignDetail ? allCampaignOffers.find((campaign) => campaign.id === campaignDetail[1]) : undefined
   const publisherTrackingId = accountProfile.publisherNumber
   const copyCampaignTrackingLink = async () => {
@@ -2691,6 +2706,7 @@ export default function DashboardOverview() {
       offerId: detailedCampaign.id,
       subId1: trackingSubIds[0],
       subId2: trackingSubIds[1],
+      subId3: trackingSubIds[2],
     })
     if (!nextUrl) {
       setTrackingMessage('Set TRACKING_DOMAIN (or open the app on a public origin) to generate links.')
@@ -2705,7 +2721,7 @@ export default function DashboardOverview() {
     }
   }
   const resetCampaignTrackingLink = () => {
-    setTrackingSubIds(['', ''])
+    setTrackingSubIds(['', '', ''])
     const nextUrl = buildPublisherTrackingUrl({
       publisherId: publisherTrackingId,
       offerId: detailedCampaign?.id,
@@ -3708,6 +3724,17 @@ export default function DashboardOverview() {
                           Internal ID for your catalog and tracking; Affmine&apos;s ID stays in the destination URL.
                         </p>
                       </label>
+                      <label className={styles.addOfferField}>Marketplace Offer ID (cmpid)
+                        <input
+                          name="marketplaceOfferId"
+                          type="text"
+                          value={offerDraft.marketplaceOfferId ?? ''}
+                          onChange={(event) => updateOfferDraft('marketplaceOfferId', event.target.value)}
+                        />
+                        <p className={styles.addOfferFieldHint}>
+                          Match the marketplace&apos;s #cmpid# value for conversion attribution.
+                        </p>
+                      </label>
                       <label className={styles.addOfferField}>Offer name
                         <input
                           name="offerName"
@@ -4030,6 +4057,17 @@ export default function DashboardOverview() {
                       <input name="offerId" type="text" inputMode="numeric" pattern="[0-9]+" value={offerDraft.id} onChange={(event) => updateOfferDraft('id', event.target.value)} readOnly={Boolean(editingOfferId)} required />
                       <p className={styles.addOfferFieldHint}>
                         Internal ID for your catalog and tracking; Affmine&apos;s ID stays in the destination URL.
+                      </p>
+                    </label>
+                    <label className={styles.addOfferField}>Marketplace Offer ID (cmpid)
+                      <input
+                        name="marketplaceOfferId"
+                        type="text"
+                        value={offerDraft.marketplaceOfferId ?? ''}
+                        onChange={(event) => updateOfferDraft('marketplaceOfferId', event.target.value)}
+                      />
+                      <p className={styles.addOfferFieldHint}>
+                        Match the marketplace&apos;s #cmpid# value for conversion attribution.
                       </p>
                     </label>
                     <label className={styles.addOfferField}>Offer name
@@ -5066,7 +5104,7 @@ export default function DashboardOverview() {
                         />
                       </div>
                       <div className={styles.trackingRight}>
-                        {['Sub ID 1', 'Sub ID 2'].map((label, index) => (
+                        {['Sub ID 1', 'Sub ID 2', 'Sub ID 3'].map((label, index) => (
                           <label className={styles.subIdField} key={label}>
                             <span>{label}</span>
                             <input type="text" value={trackingSubIds[index]} maxLength={100} onChange={(event) => setTrackingSubIds((current) => current.map((value, currentIndex) => currentIndex === index ? event.target.value : value))} />
@@ -5666,7 +5704,7 @@ export default function DashboardOverview() {
                         const inputId = `marketplace-postback-token-${field.key}`
                         return (
                           <label className={styles.marketplaceTokenField} htmlFor={inputId} key={field.key}>
-                            <span>{field.label}{field.required ? ' *' : ''}</span>
+                            <span>{field.label}{field.required && field.showRequiredAsterisk !== false ? ' *' : ''}</span>
                             <input
                               id={inputId}
                               type="text"
@@ -5773,15 +5811,13 @@ export default function DashboardOverview() {
                     disabled={
                       marketplacePostbackCreating
                       || !newMarketplaceName.trim()
-                      || !newMarketplaceTokens.s1.trim()
-                      || !newMarketplaceTokens.s2.trim()
+                      || !hasRequiredMarketplacePostbackTokens(newMarketplaceTokens)
                     }
                     onClick={async () => {
                       const label = newMarketplaceName.trim()
                       if (
                         !label
-                        || !newMarketplaceTokens.s1.trim()
-                        || !newMarketplaceTokens.s2.trim()
+                        || !hasRequiredMarketplacePostbackTokens(newMarketplaceTokens)
                         || marketplacePostbackCreating
                       ) return
                       setMarketplacePostbackCreating(true)
@@ -5803,7 +5839,7 @@ export default function DashboardOverview() {
                         const createdMarketplace = payload.marketplace
                         setMarketplacePostbacks((current) => [...current, createdMarketplace])
                         setNewMarketplaceName('')
-                        setNewMarketplaceTokens(EMPTY_MARKETPLACE_POSTBACK_TOKENS)
+                        setNewMarketplaceTokens(INITIAL_MARKETPLACE_POSTBACK_TOKENS)
                         setMarketplacePostbackLoadError('')
                         setPageNotice(`${createdMarketplace.label} postback URL created.`)
                       } catch (error) {
@@ -6081,7 +6117,7 @@ export default function DashboardOverview() {
                                 htmlFor={`edit-${marketplace.id}-${field.key}`}
                                 key={field.key}
                               >
-                                <span>{field.label}{field.required ? ' *' : ''}</span>
+                                <span>{field.label}{field.required && field.showRequiredAsterisk !== false ? ' *' : ''}</span>
                                 <input
                                   id={`edit-${marketplace.id}-${field.key}`}
                                   type="text"
@@ -6104,8 +6140,7 @@ export default function DashboardOverview() {
                               disabled={
                                 marketplacePostbackUpdatingId !== null
                                 || !editingMarketplaceName.trim()
-                                || !editingMarketplaceTokens.s1.trim()
-                                || !editingMarketplaceTokens.s2.trim()
+                                || !hasRequiredMarketplacePostbackTokens(editingMarketplaceTokens)
                               }
                               onClick={async () => {
                                 setMarketplacePostbackUpdatingId(marketplace.id)
@@ -6194,10 +6229,11 @@ export default function DashboardOverview() {
                     </thead>
                     <tbody>
                       {(userRole === 'MANAGER' ? [
-                        ['#s1#', 'SubID 1 (our publisher ID)'],
-                        ['#s2#', 'SubID 2 (our offer ID)'],
-                        ['#s3#', 'SubID 3 (publisher sub 1)'],
-                        ['#s4#', 'SubID 4 (publisher sub 2)'],
+                        ['#s1#', 'Publisher ID'],
+                        ['#s2#', 'Publisher sub ID 1'],
+                        ['#s3#', 'Publisher sub ID 2'],
+                        ['#s4#', 'Publisher sub ID 3'],
+                        ['#cmpid#', 'Marketplace offer ID (used to identify the offer)'],
                         ['#ip#', 'Conversion IP'],
                       ] : [
                         ['#datetime#', 'Conversion date and time (Unix timestamp)'],

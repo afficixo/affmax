@@ -141,26 +141,27 @@ model OfferApplication {
 
 /// Shared campaign catalog (browse + incentive). Visible to all authenticated roles.
 model CampaignOffer {
-  id               String   @id
-  name             String
-  payout           Float
-  country          String
-  countries        String[] @default([])
-  action           String   @default("Apply")
-  requiresApproval Boolean  @default(true)
-  imageSource      String?
-  offerTypes       String[] @default([])
-  category         String?
-  device           String[] @default([])
-  description      String?
-  offerLink        String?
-  isHot            Boolean  @default(false)
-  status           String   @default("ACTIVE")
-  placement        String   @default("STANDARD")
-  incentiveActive  Boolean  @default(true)
-  createdById      String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                 String   @id
+  name               String
+  payout             Float
+  country            String
+  countries          String[] @default([])
+  action             String   @default("Apply")
+  requiresApproval   Boolean  @default(true)
+  imageSource        String?
+  offerTypes         String[] @default([])
+  category           String?
+  device             String[] @default([])
+  description        String?
+  offerLink          String?
+  marketplaceOfferId String?  @unique
+  isHot              Boolean  @default(false)
+  status             String   @default("ACTIVE")
+  placement          String   @default("STANDARD")
+  incentiveActive    Boolean  @default(true)
+  createdById        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([placement, status])
   @@index([status, createdAt])
@@ -607,21 +608,22 @@ enum PostbackProvider {
 }
 
 model PostbackConfig {
-  id            String           @id @default(cuid())
-  userId        String
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider      PostbackProvider
-  label         String
-  token         String           @unique
-  s1Token       String           @default("#s1#")
-  s2Token       String           @default("#s2#")
-  s3Token       String           @default("#s3#")
-  s4Token       String           @default("#s4#")
-  ipToken       String           @default("#ip#")
-  isActive      Boolean          @default(true)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  leads         ConversionLead[]
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   PostbackProvider
+  label      String
+  token      String           @unique
+  s1Token    String           @default("#s1#")
+  s2Token    String           @default("#s2#")
+  s3Token    String           @default("#s3#")
+  s4Token    String           @default("#s4#")
+  cmpidToken String           @default("#cmpid#")
+  ipToken    String           @default("#ip#")
+  isActive   Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  leads      ConversionLead[]
 
   @@index([token, isActive])
   @@map("postback_configs")
@@ -650,6 +652,7 @@ model ConversionLead {
   sub2               String?
   sub3               String?
   sub4               String?
+  publisherSub3      String?
   occurredAt         DateTime?
   externalKey        String?                  @unique
   publisherInvoiceId String?

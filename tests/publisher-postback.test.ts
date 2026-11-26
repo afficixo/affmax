@@ -18,7 +18,7 @@ test('keeps a configured publisher postback active unless explicitly disabled', 
 test('builds a publisher postback with conversion fields and an explicit test marker', () => {
   const url = buildPublisherPostbackUrl(
     'https://publisher.example/postback?campaign=#cmpname#&id=#cmpid#&revenue=#payout#'
-      + '&s1=#s1#&s2=#s2#&status=#status#&test=#test#',
+      + '&s1=#s1#&s2=#s2#&s3=#s3#&ip=#ip#&status=#status#&test=#test#',
     {
       offerId: 'offer-42',
       campaignName: 'Summer Offer',
@@ -28,6 +28,7 @@ test('builds a publisher postback with conversion fields and an explicit test ma
       status: 'pending',
       sub3: 'test-sub-1',
       sub4: 'test-sub-2',
+      publisherSub3: 'test-sub-3',
       isTest: true,
       createdAt: new Date('2026-11-24T00:00:00.000Z'),
     },
@@ -36,7 +37,7 @@ test('builds a publisher postback with conversion fields and an explicit test ma
   assert.equal(
     url,
     'https://publisher.example/postback?campaign=Summer%20Offer&id=offer-42&revenue=2'
-    + '&s1=test-sub-1&s2=test-sub-2&status=created&test=1',
+    + '&s1=test-sub-1&s2=test-sub-2&s3=test-sub-3&ip=192.0.2.1&status=created&test=1',
   )
 })
 

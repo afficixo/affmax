@@ -113,6 +113,9 @@ export async function POST(request: Request) {
           device: data.device,
           description: data.description,
           offerLink: data.offerLink,
+          marketplaceOfferId: input.marketplaceOfferId === undefined
+            ? undefined
+            : data.marketplaceOfferId,
           isHot: data.isHot,
           status: data.status,
           placement: data.placement,

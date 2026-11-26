@@ -8,7 +8,11 @@ import {
   getMarketplacePostbackTokens,
   sumPublisherEarnings,
 } from '@/lib/marketplace-postback'
-import { isPublisherGlobalPostbackActive, type MarketplacePostbackTokens } from '@/lib/postback-tokens'
+import {
+  hasRequiredMarketplacePostbackTokens,
+  isPublisherGlobalPostbackActive,
+  type MarketplacePostbackTokens,
+} from '@/lib/postback-tokens'
 import { getTrackingDomainOrigin } from '@/lib/tracking'
 
 const marketplaceTokenKeys: Array<keyof MarketplacePostbackTokens> = [
@@ -16,6 +20,7 @@ const marketplaceTokenKeys: Array<keyof MarketplacePostbackTokens> = [
   's2',
   's3',
   's4',
+  'cmpid',
   'ip',
 ]
 
@@ -82,6 +87,7 @@ export async function GET(request: Request) {
           s2Token: true,
           s3Token: true,
           s4Token: true,
+          cmpidToken: true,
           ipToken: true,
         },
       })
@@ -93,10 +99,11 @@ export async function GET(request: Request) {
         inboundUrl: buildMarketplacePostbackUrl(appOrigin, config.token, getMarketplacePostbackTokens(config)),
         mapping: {
           s1: 'publisher_id',
-          s2: 'offer_id',
-          s3: 'publisher_sub_id_1',
-          s4: 'publisher_sub_id_2',
+          s2: 'publisher_sub_id_1',
+          s3: 'publisher_sub_id_2',
+          s4: 'publisher_sub_id_3',
           ip: 'conversion_ip',
+          cmpid: 'marketplace_offer_id',
         },
         marketplaces: configs.map((marketplace) => ({
           id: marketplace.id,
@@ -190,10 +197,13 @@ export async function POST(request: Request) {
       s2: rawTokens.s2.trim(),
       s3: rawTokens.s3.trim(),
       s4: rawTokens.s4.trim(),
+      cmpid: rawTokens.cmpid.trim(),
       ip: rawTokens.ip.trim(),
     }
-    if (!tokens.s1 || !tokens.s2) {
-      return NextResponse.json({ error: 'Publisher ID (s1) and offer ID (s2) tokens are required.' }, {
+    if (!hasRequiredMarketplacePostbackTokens(tokens)) {
+      return NextResponse.json({
+        error: 'Publisher ID (s1) and marketplace offer ID (cmpid) tokens are required.',
+      }, {
         status: 400,
         headers: getCorsHeaders(origin),
       })
@@ -221,6 +231,7 @@ export async function POST(request: Request) {
         s2Token: tokens.s2,
         s3Token: tokens.s3,
         s4Token: tokens.s4,
+        cmpidToken: tokens.cmpid,
         ipToken: tokens.ip,
         isActive: true,
       },
@@ -233,6 +244,7 @@ export async function POST(request: Request) {
         s2Token: true,
         s3Token: true,
         s4Token: true,
+        cmpidToken: true,
         ipToken: true,
       },
     })
@@ -345,10 +357,13 @@ export async function PATCH(request: Request) {
             s2: body.tokens.s2.trim(),
             s3: body.tokens.s3.trim(),
             s4: body.tokens.s4.trim(),
+            cmpid: body.tokens.cmpid.trim(),
             ip: body.tokens.ip.trim(),
           }
-          if (!tokens.s1 || !tokens.s2) {
-            return NextResponse.json({ error: 'Publisher ID (s1) and offer ID (s2) tokens are required.' }, {
+          if (!hasRequiredMarketplacePostbackTokens(tokens)) {
+            return NextResponse.json({
+              error: 'Publisher ID (s1) and marketplace offer ID (cmpid) tokens are required.',
+            }, {
               status: 400,
               headers: getCorsHeaders(origin),
             })
@@ -372,6 +387,7 @@ export async function PATCH(request: Request) {
               s2Token: tokens.s2,
               s3Token: tokens.s3,
               s4Token: tokens.s4,
+              cmpidToken: tokens.cmpid,
               ipToken: tokens.ip,
             },
           })

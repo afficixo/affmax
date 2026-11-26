@@ -16,7 +16,12 @@ export type MarketplacePostbackTokens = {
   s2: string
   s3: string
   s4: string
+  cmpid: string
   ip: string
+}
+
+export function hasRequiredMarketplacePostbackTokens(tokens: MarketplacePostbackTokens): boolean {
+  return Boolean(tokens.s1.trim() && tokens.cmpid.trim())
 }
 
 export const DEFAULT_MARKETPLACE_POSTBACK_TOKENS: MarketplacePostbackTokens = {
@@ -24,5 +29,6 @@ export const DEFAULT_MARKETPLACE_POSTBACK_TOKENS: MarketplacePostbackTokens = {
   s2: '#s2#',
   s3: '#s3#',
   s4: '#s4#',
+  cmpid: '#cmpid#',
   ip: '#ip#',
 }

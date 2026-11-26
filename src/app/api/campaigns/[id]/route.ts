@@ -61,6 +61,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       device: partial.device ?? existing.device,
       description: partial.description === undefined ? existing.description : partial.description,
       offerLink: partial.offerLink === undefined ? existing.offerLink : partial.offerLink,
+      marketplaceOfferId: partial.marketplaceOfferId === undefined
+        ? existing.marketplaceOfferId
+        : partial.marketplaceOfferId,
       isHot: partial.isHot ?? existing.isHot,
       status: partial.status ?? (existing.status as 'ACTIVE' | 'PAUSED'),
       placement: partial.placement ?? (existing.placement as 'STANDARD' | 'INCENTIVE'),
@@ -83,6 +86,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         device: data.device,
         description: data.description,
         offerLink: data.offerLink,
+        marketplaceOfferId: data.marketplaceOfferId,
         isHot: data.isHot,
         status: data.status,
         placement: data.placement,
