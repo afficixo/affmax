@@ -559,11 +559,11 @@ export default function HomePage() {
 
                 <form onSubmit={handleSubmit} noValidate>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
-                    <FormField label="First Name" id="firstName" value={form.firstName} onChange={update("firstName")} error={errors.firstName} placeholder="Jane" autoComplete="given-name" />
-                    <FormField label="Last Name" id="lastName" value={form.lastName} onChange={update("lastName")} error={errors.lastName} placeholder="Doe" autoComplete="family-name" />
+                    <FormField label="First Name" id="firstName" value={form.firstName} onChange={update("firstName")} error={errors.firstName} autoComplete="given-name" />
+                    <FormField label="Last Name" id="lastName" value={form.lastName} onChange={update("lastName")} error={errors.lastName} autoComplete="family-name" />
                   </div>
 
-                  <FormField label="E-mail" id="email" type="email" value={form.email} onChange={update("email")} error={errors.email} placeholder="jane@company.com" autoComplete="email" />
+                  <FormField label="E-mail" id="email" type="email" value={form.email} onChange={update("email")} error={errors.email} autoComplete="email" />
 
                   <div className="mb-6">
                     <label htmlFor="message" className="mb-2 block text-sm font-semibold text-[#263238]">
@@ -579,7 +579,7 @@ export default function HomePage() {
                       className={`w-full resize-none rounded-lg border bg-white px-4 py-3 text-sm text-[#263238] placeholder:text-[#9aa7b1] transition-all focus:outline-none focus:ring-2 ${
                         errors.message
                           ? "border-red-400 focus:ring-red-200"
-                          : "border-[#d8e1e6] focus:border-[#5ff442] focus:ring-[#5ff442]/20"
+                          : "border-[#d8e1e6] focus:border-[#cbd5e1] focus:ring-[#94a3b8]/15"
                       }`}
                     />
                     {errors.message && <p className="mt-1.5 text-xs text-red-500">{errors.message}</p>}
@@ -603,7 +603,7 @@ export default function HomePage() {
 }
 
 function FormField({
-  label, id, type = "text", value, onChange, error, placeholder, autoComplete,
+  label, id, type = "text", value, onChange, error, autoComplete,
 }: {
   label: string;
   id: string;
@@ -611,7 +611,6 @@ function FormField({
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
-  placeholder?: string;
   autoComplete?: string;
 }) {
   return (
@@ -625,12 +624,11 @@ function FormField({
         type={type}
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
         autoComplete={autoComplete}
-        className={`min-h-11 w-full rounded-lg border bg-white px-4 py-3 text-sm text-[#263238] placeholder:text-[#9aa7b1] transition-colors focus:outline-none focus:ring-2 ${
+        className={`min-h-11 w-full rounded-lg border bg-white px-4 py-3 text-sm text-[#263238] transition-colors focus:outline-none focus:ring-2 ${
           error
             ? "border-red-400 focus:ring-red-200"
-            : "border-[#d8e1e6] focus:border-[#5ff442] focus:ring-[#5ff442]/20"
+            : "border-[#d8e1e6] focus:border-[#cbd5e1] focus:ring-[#94a3b8]/15"
         }`}
       />
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}

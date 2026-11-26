@@ -217,7 +217,7 @@ export default function PublicLayout({
                 <Link
                   href="/signup"
                   prefetch={false}
-                  className="hidden items-center rounded-md border border-[rgba(95,244,66,0.65)] bg-[linear-gradient(135deg,#70ff55_0%,#52e83a_100%)] px-4 py-2.5 text-[13px] font-semibold text-[#10243b] shadow-[0_8px_22px_rgba(95,244,66,0.22)] transition-[background,box-shadow,transform,color,border-color] duration-150 ease-in-out hover:-translate-y-px hover:border-[#70ff55] hover:bg-[linear-gradient(135deg,#10243b_0%,#183450_100%)] hover:text-[#70ff55] hover:shadow-[0_10px_26px_rgba(16,36,59,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b] lg:inline-flex"
+                  className="hidden items-center rounded-md border border-[rgba(226,59,63,0.7)] bg-[linear-gradient(135deg,#ef4548_0%,#bd252c_100%)] px-4 py-2.5 text-[13px] font-semibold text-[#ffffff] shadow-[0_8px_22px_rgba(226,59,63,0.24)] transition-[background,box-shadow,transform,color,border-color] duration-150 ease-in-out hover:-translate-y-px hover:border-[#ef4548] hover:bg-[linear-gradient(135deg,#10243b_0%,#183450_100%)] hover:text-[#ef4548] hover:shadow-[0_10px_26px_rgba(16,36,59,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10243b] lg:inline-flex"
                 >
                   Sign up
                 </Link>
@@ -306,7 +306,7 @@ export default function PublicLayout({
                                 href="/signup"
                                 prefetch={false}
                                 onClick={() => setOpen(false)}
-                                className="block rounded-md bg-[#5ff442] px-3 py-2.5 text-center text-sm font-semibold text-[#10243b] transition-colors hover:bg-[#4fcf38] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+                                className="block rounded-md bg-[#e23b3f] px-3 py-2.5 text-center text-sm font-semibold text-[#ffffff] transition-colors hover:bg-[#bd252c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef4548]"
                               >
                                 Sign up
                               </Link>
