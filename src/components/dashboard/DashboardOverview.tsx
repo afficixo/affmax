@@ -1162,6 +1162,7 @@ export default function DashboardOverview() {
   const supportThreadRef = useRef<HTMLDivElement>(null)
   const supportPopupThreadRef = useRef<HTMLDivElement>(null)
   const supportComposerRef = useRef<HTMLTextAreaElement>(null)
+  const trackingUrlTextareaRef = useRef<HTMLTextAreaElement>(null)
   const [trackingSubIds, setTrackingSubIds] = useState(['', '', ''])
   const [generatedTrackingUrl, setGeneratedTrackingUrl] = useState('')
   const [trackingMessage, setTrackingMessage] = useState('')
@@ -1998,6 +1999,30 @@ export default function DashboardOverview() {
       subId3: trackingSubIds[2],
     }))
   }, [pathname, accountProfile.publisherNumber, trackingSubIds])
+
+  useEffect(() => {
+    const textarea = trackingUrlTextareaRef.current
+    const container = textarea?.parentElement
+    if (!textarea || !container) return
+
+    const resizeToContent = () => {
+      textarea.style.height = 'auto'
+      const borderHeight = textarea.offsetHeight - textarea.clientHeight
+      textarea.style.height = `${textarea.scrollHeight + borderHeight}px`
+    }
+
+    resizeToContent()
+
+    let containerWidth = container.getBoundingClientRect().width
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width === containerWidth) return
+      containerWidth = entry.contentRect.width
+      resizeToContent()
+    })
+    observer.observe(container)
+
+    return () => observer.disconnect()
+  }, [generatedTrackingUrl])
 
   useEffect(() => {
     if (pathname !== '/dashboard') return
@@ -5095,12 +5120,11 @@ export default function DashboardOverview() {
                       <div className={styles.trackingLeft}>
                         <div className={styles.fieldLabel}>Tracking URL</div>
                         <textarea
+                          ref={trackingUrlTextareaRef}
                           aria-label="Publisher tracking URL"
+                          rows={1}
                           readOnly
                           value={generatedTrackingUrl || (publisherTrackingId == null ? 'Publisher ID required…' : 'Generating tracking URL…')}
-                          onClick={(event) => {
-                            if (generatedTrackingUrl) event.currentTarget.select()
-                          }}
                         />
                       </div>
                       <div className={styles.trackingRight}>

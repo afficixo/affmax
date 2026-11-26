@@ -5368,10 +5368,25 @@ input.reportRangeInput {
 }
 
 .trackingLeft textarea {
-  min-height: 34px;
+  min-height: 40px;
+  height: auto;
   margin-bottom: 0;
   padding: 8px;
   line-height: 1.4;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.trackingLeft textarea:focus-visible {
+  border-color: #9ca3af;
+  outline: 1px solid #cbd5e1;
+  outline-offset: 1px;
+}
+
+.trackingLeft textarea::selection {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .trackingRight {
