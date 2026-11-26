@@ -100,7 +100,7 @@ export default function LoginClient() {
   };
 
   return (
-    <PublicLayout className="public-site-light" footerVariant="none">
+    <PublicLayout className="public-site-light" headerVariant="none" footerVariant="none">
       <main className="relative flex min-h-screen flex-1 items-center justify-center overflow-hidden bg-[#070c15] px-4 py-10 sm:px-6">
         <div aria-hidden="true" className="absolute inset-0 bg-[#070c15]/75" />
         <div

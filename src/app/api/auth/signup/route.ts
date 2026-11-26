@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db/prisma'
 import { createUserSafe } from '@/lib/db/user'
 import { getCorsHeaders } from '@/config/cors'
 import { checkRateLimit, getResetTime } from '@/lib/utils/rate-limiter'
+import { verifyCloudflareTurnstile } from '@/lib/cloudflare-turnstile'
 
 /**
  * Get client IP from request headers
@@ -51,8 +52,7 @@ export async function POST(request: Request) {
     const referralCode = typeof body?.referralCode === 'string' ? body.referralCode.trim().toUpperCase() : ''
     const telegramUsername = typeof body?.telegramUsername === 'string' ? body.telegramUsername.trim() : ''
     const source = typeof body?.source === 'string' ? body.source.trim() : ''
-    const captchaPrompt = typeof body?.captchaPrompt === 'string' ? body.captchaPrompt.trim() : ''
-    const captchaAnswer = typeof body?.captchaAnswer === 'number' ? body.captchaAnswer : Number(body?.captchaAnswer)
+    const turnstileToken = typeof body?.turnstileToken === 'string' ? body.turnstileToken.trim() : ''
 
     if (!fullName || !address || !username || !email || !password) {
       return NextResponse.json(
@@ -68,24 +68,34 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!captchaPrompt) {
+    if (!turnstileToken || turnstileToken.length > 2048) {
       return NextResponse.json(
-        { error: 'Please solve the captcha correctly before signing up' },
+        { error: 'Please complete the Cloudflare verification and try again.' },
         { status: 400, headers: getCorsHeaders(origin) }
       )
     }
 
-    const expectedValue = captchaPrompt
-      .split('+')
-      .map((part: string) => Number(part.trim()))
-      .reduce((sum: number, value: number) => sum + value, 0)
-
-    // Use Math.round to handle floating-point precision errors
-    const roundedExpected = Math.round(expectedValue)
-
-    if (!Number.isInteger(captchaAnswer) || captchaAnswer !== roundedExpected) {
+    const turnstileSecret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY?.trim()
+    if (!turnstileSecret) {
+      console.error('Cloudflare Turnstile secret key is not configured')
       return NextResponse.json(
-        { error: 'Please solve the captcha correctly before signing up' },
+        { error: 'Verification is temporarily unavailable. Please try again later.' },
+        { status: 503, headers: getCorsHeaders(origin) }
+      )
+    }
+
+    const turnstileResult = await verifyCloudflareTurnstile(turnstileToken, turnstileSecret)
+    if (turnstileResult.status === 'unavailable') {
+      console.error('Cloudflare Turnstile verification is unavailable:', turnstileResult.error)
+      return NextResponse.json(
+        { error: 'Verification is temporarily unavailable. Please try again later.' },
+        { status: 503, headers: getCorsHeaders(origin) }
+      )
+    }
+
+    if (turnstileResult.status !== 'verified') {
+      return NextResponse.json(
+        { error: 'Cloudflare verification failed. Please try again.' },
         { status: 400, headers: getCorsHeaders(origin) }
       )
     }

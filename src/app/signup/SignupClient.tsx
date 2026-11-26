@@ -1,8 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+import Script from "next/script"
 import { getDashboardPath } from "@/lib/auth/dashboard-path"
 import PublicLayout from "@/components/layout/PublicLayout"
 import { signupCountries } from "@/lib/signup-countries"
@@ -12,6 +14,25 @@ import {
   type SignupFieldErrors,
 } from "@/lib/signup-validation"
 import styles from "./Signup.module.css"
+
+type TurnstileRenderOptions = {
+  sitekey: string
+  action: string
+  theme: "dark"
+  callback: (token: string) => void
+  "error-callback": () => void
+  "expired-callback": () => void
+}
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: TurnstileRenderOptions) => string
+      reset: (widgetId?: string) => void
+      remove: (widgetId?: string) => void
+    }
+  }
+}
 
 const signupFieldOrder: SignupField[] = [
   "firstName",
@@ -59,6 +80,9 @@ function buildUsername(email: string) {
 
 export default function SignupClient() {
   const router = useRouter()
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY?.trim() ?? ""
+  const turnstileContainerRef = useRef<HTMLDivElement>(null)
+  const turnstileWidgetRef = useRef<string | null>(null)
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
@@ -76,29 +100,12 @@ export default function SignupClient() {
   const [agreed, setAgreed] = useState(false)
   const [referralCode, setReferralCode] = useState("")
   const [loading, setLoading] = useState(false)
-  const [captchaAnswer, setCaptchaAnswer] = useState("")
-  const [captchaPrompt, setCaptchaPrompt] = useState("3 + 4")
-  const [captchaValue, setCaptchaValue] = useState(7)
-  const [captchaVerified, setCaptchaVerified] = useState(false)
-  const [captchaError, setCaptchaError] = useState("")
+  const [turnstileToken, setTurnstileToken] = useState("")
+  const [turnstileError, setTurnstileError] = useState("")
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({})
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [approvalPendingSuccess, setApprovalPendingSuccess] = useState(false)
-
-  const generateCaptcha = useCallback(() => {
-    const first = Math.floor(Math.random() * 9) + 1
-    const second = Math.floor(Math.random() * 9) + 1
-    setCaptchaPrompt(`${first} + ${second}`)
-    setCaptchaValue(first + second)
-    setCaptchaAnswer("")
-    setCaptchaVerified(false)
-    setCaptchaError("")
-  }, [])
-
-  useEffect(() => {
-    generateCaptcha()
-  }, [generateCaptcha])
 
   useEffect(() => {
     setReferralCode(new URLSearchParams(window.location.search).get("ref")?.trim() ?? "")
@@ -109,16 +116,6 @@ export default function SignupClient() {
     setSuccess("")
     setApprovalPendingSuccess(false)
   }, [router])
-
-  useEffect(() => {
-    const answer = Number(captchaAnswer)
-    if (Number.isInteger(answer) && answer === captchaValue) {
-      setCaptchaVerified(true)
-      setCaptchaError("")
-    } else if (captchaAnswer !== "") {
-      setCaptchaVerified(false)
-    }
-  }, [captchaAnswer, captchaValue])
 
   const countryName = useMemo(
     () => signupCountries.find((item) => item.code === country)?.name ?? country,
@@ -139,10 +136,58 @@ export default function SignupClient() {
     "aria-describedby": fieldErrors[field] ? `signup-${field}-error` : undefined,
   })
 
+  const renderTurnstile = useCallback(() => {
+    const turnstile = window.turnstile
+    const container = turnstileContainerRef.current
+    if (!turnstileSiteKey || !container || turnstileWidgetRef.current) return
+    if (!turnstile) {
+      setTurnstileError("Cloudflare verification could not initialize. Please refresh and try again.")
+      return
+    }
+
+    try {
+      turnstileWidgetRef.current = turnstile.render(container, {
+        sitekey: turnstileSiteKey,
+        action: "signup",
+        theme: "dark",
+        callback: (token) => {
+          setTurnstileToken(token)
+          setTurnstileError("")
+        },
+        "expired-callback": () => {
+          setTurnstileToken("")
+          setTurnstileError("Verification expired. Please complete it again.")
+        },
+        "error-callback": () => {
+          setTurnstileToken("")
+          setTurnstileError("Cloudflare verification failed to load. Please try again.")
+        },
+      })
+    } catch (renderError) {
+      console.error("Could not initialize Cloudflare Turnstile:", renderError)
+      setTurnstileError("Cloudflare verification failed to load. Please refresh and try again.")
+    }
+  }, [turnstileSiteKey])
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken("")
+    if (turnstileWidgetRef.current) {
+      window.turnstile?.reset(turnstileWidgetRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (turnstileWidgetRef.current) {
+        window.turnstile?.remove(turnstileWidgetRef.current)
+      }
+    }
+  }, [])
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError("")
-    setCaptchaError("")
+    setTurnstileError("")
 
     const validationErrors = validateSignupFields({
       firstName,
@@ -162,15 +207,6 @@ export default function SignupClient() {
       hearAbout,
       referralCode,
     })
-    const answer = Number(captchaAnswer)
-    const captchaValid = Number.isInteger(answer) && answer === captchaValue
-    if (!captchaValid) {
-      setCaptchaError(captchaAnswer.trim()
-        ? "Please solve the verification question correctly before continuing."
-        : "Verification answer is required.")
-      setCaptchaVerified(false)
-    }
-
     setFieldErrors(validationErrors)
     const firstInvalidField = signupFieldOrder.find((field) => validationErrors[field])
     if (firstInvalidField) {
@@ -179,10 +215,13 @@ export default function SignupClient() {
       })
       return
     }
-    if (!captchaValid) {
-      window.requestAnimationFrame(() => {
-        document.getElementById("captcha-answer")?.focus()
-      })
+    if (!turnstileToken) {
+      setTurnstileError(
+        turnstileSiteKey
+          ? "Please complete the Cloudflare verification before continuing."
+          : "Cloudflare verification is not configured. Please try again later."
+      )
+      turnstileContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
       return
     }
 
@@ -210,8 +249,7 @@ export default function SignupClient() {
           referralCode,
           telegramUsername: skype.trim() || undefined,
           source: sourceParts.join(" | ") || undefined,
-          captchaPrompt,
-          captchaAnswer: answer,
+          turnstileToken,
         }),
       })
 
@@ -238,16 +276,27 @@ export default function SignupClient() {
           ? submitError.message
           : "We could not create your account. Check your details and try again."
       )
-      generateCaptcha()
+      resetTurnstile()
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <PublicLayout className="!bg-white" footerVariant="auth">
+    <PublicLayout className="!bg-white" headerVariant="none" footerVariant="auth">
       <main className={styles.page}>
         <div className={styles.container}>
+          <Link href="/#home" className={styles.logoLink} aria-label="Crack Bounty home">
+            <Image
+              src="/favicon.png"
+              alt=""
+              width={768}
+              height={768}
+              sizes="64px"
+              className={styles.logo}
+              preload
+            />
+          </Link>
           <h1 className={styles.title}>Publisher Sign Up</h1>
           {referralCode ? (
             <p className={styles.referralNote}>
@@ -590,39 +639,27 @@ export default function SignupClient() {
             </div>
 
             <div className={styles.captcha} aria-live="polite">
-              {captchaVerified ? (
-                <div className={styles.captchaSuccess}>
-                  <span className={styles.captchaCheck} aria-hidden="true">
-                    ✓
-                  </span>
-                  <span className={styles.captchaSuccessText}>Success!</span>
-                </div>
-              ) : (
-                <div className={styles.captchaChallenge}>
-                  <label htmlFor="captcha-answer" className={styles.captchaPrompt}>
-                    {captchaPrompt} =
-                  </label>
-                  <input
-                    id="captcha-answer"
-                    name="captchaAnswer"
-                    type="number"
-                    inputMode="numeric"
-                    value={captchaAnswer}
-                    onChange={(event) => setCaptchaAnswer(event.target.value)}
-                    className={styles.captchaInput}
-                    required
-                    disabled={loading}
-                    aria-invalid={!!captchaError}
-                    aria-describedby={captchaError ? "signup-captcha-error" : undefined}
+              {turnstileSiteKey ? (
+                <>
+                  <Script
+                    src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                    strategy="afterInteractive"
+                    onReady={renderTurnstile}
+                    onError={() => setTurnstileError("Cloudflare verification failed to load. Please try again.")}
                   />
-                </div>
+                  <div ref={turnstileContainerRef} className={styles.turnstileWidget} />
+                </>
+              ) : (
+                <p className={styles.alertError} role="status">
+                  Cloudflare verification is not configured. Please contact support.
+                </p>
               )}
-              <div className={styles.captchaBrand}>
-                <strong>Verify</strong>
-                <span>Privacy</span>
-              </div>
             </div>
-            {captchaError ? <p id="signup-captcha-error" className={styles.alertError}>{captchaError}</p> : null}
+            {turnstileError ? (
+              <p id="signup-captcha-error" className={styles.alertError} role="alert">
+                {turnstileError}
+              </p>
+            ) : null}
 
             <button type="submit" name="btn-join" value="1" className={styles.submit} disabled={loading}>
               {loading ? "…" : "Next"}
