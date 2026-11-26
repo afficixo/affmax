@@ -7370,7 +7370,7 @@ a.offerAction {
 }
 
 .applyDialog {
-  width: min(900px, calc(100vw - 32px));
+  width: min(900px, calc(100vw - 48px));
 }
 
 .applyDialogLayout {
@@ -7435,6 +7435,39 @@ a.offerAction {
 
 .applyTerms input {
   margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+  .applyDialogLayout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .applyDialogPreview {
+    width: min(100%, 360px);
+    max-height: 220px;
+    justify-self: center;
+    object-fit: contain;
+  }
+
+  .applyDialogMeta {
+    gap: 8px;
+  }
+
+  .applyDialogMeta > div {
+    grid-template-columns: minmax(104px, 0.75fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .applyDialogMeta dd {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .applyDialog .pagePrimaryButton {
+    width: 100%;
+    min-height: 40px;
+  }
 }
 
 .campaignNoResults {
