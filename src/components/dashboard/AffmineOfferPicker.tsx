@@ -5,6 +5,7 @@ import Image from 'next/image'
 import * as CountryFlags from 'country-flag-icons/react/1x1'
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import type { AffmineOffer } from '@/lib/affmine'
+import { toCampaignImageSource } from '@/lib/campaign-images'
 import styles from './AffmineOfferPicker.module.css'
 import dashboardStyles from './Dashboard.module.css'
 
@@ -389,7 +390,7 @@ export default function AffmineOfferPicker({
                           {offer.previewUrl ? (
                             <Image
                               className={dashboardStyles.campaignThumb}
-                              src={offer.previewUrl}
+                              src={toCampaignImageSource(offer.id, offer.previewUrl) ?? offer.previewUrl}
                               alt=""
                               width={64}
                               height={50}
