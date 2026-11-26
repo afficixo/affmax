@@ -100,121 +100,116 @@ export default function LoginClient() {
   };
 
   return (
-    <PublicLayout className="public-site-light" headerVariant="none" footerVariant="none">
+    <PublicLayout className="public-site-light" footerVariant="none">
       <main className="relative flex min-h-screen flex-1 items-center justify-center overflow-hidden bg-[#070c15] px-4 py-10 sm:px-6">
-        <div aria-hidden="true" className="absolute inset-0">
-          <Image
-            src="/publishers-image.jpg"
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover grayscale opacity-45"
-            preload
-          />
-        </div>
         <div aria-hidden="true" className="absolute inset-0 bg-[#070c15]/75" />
         <div
           aria-hidden="true"
           className="absolute inset-0 opacity-25"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.42) 0.6px, transparent 0.7px)",
-            backgroundSize: "4px 4px",
+            backgroundImage: "radial-gradient(rgba(148,163,184,0.42) 0.7px, transparent 0.8px)",
+            backgroundSize: "6px 6px",
           }}
         />
-        <div className="relative z-10 w-full max-w-[360px]">
-          <Link
-            href="/#home"
-            className="mb-6 inline-flex w-full justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
+        <div className="relative z-[9999] w-full max-w-[500px]">
+          <form
+            onSubmit={handleSubmit}
+            className="mx-auto w-full max-w-[330px] px-[15px] pt-[50px] pb-[15px]"
           >
-            <Image
-              src="/logo.png"
-              alt="Crack Bounty"
-              width={2172}
-              height={724}
-              sizes="180px"
-              className="h-12 w-[180px] object-contain"
-              preload
-            />
-          </Link>
-          <h1 className="mb-6 text-center text-lg font-semibold tracking-wide text-white">
-            Publisher Login
-          </h1>
-
-          {error && (
-            <div
-              role="alert"
-              className="mb-4 overflow-hidden rounded-sm border border-red-300/40 bg-red-950/70 text-red-100"
+            <Link
+              href="/#home"
+              className="mb-4 inline-flex w-full justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
-              <div className="flex items-start gap-3 p-3">
-                <div className="mt-0.5">
-                  <AlertCircle className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm leading-5">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="overflow-hidden rounded-sm border border-[#dbe2e8] bg-white">
-              <div>
-              <label htmlFor="login-username" className="sr-only">
-                E-mail
-              </label>
-              <input
-                id="login-username"
-                name="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="h-12 w-full border-0 border-b border-[#dbe2e8] bg-white px-3 text-sm text-[#263238] placeholder:text-[#74818a] outline-none transition focus:ring-2 focus:ring-inset focus:ring-[#5ff442]/40"
-                placeholder="E-mail"
-                autoComplete="username"
-                required
-                disabled={loading}
+              <Image
+                src="/favicon.png"
+                alt="Crack Bounty"
+                width={768}
+                height={768}
+                sizes="64px"
+                className="h-16 w-16 object-contain"
+                preload
               />
+            </Link>
+            <h1 className="mb-4 pb-2 text-center text-base font-normal italic !font-sans !tracking-normal text-white">
+              Publisher Login
+            </h1>
+
+            {error && (
+              <div
+                role="alert"
+                className="mb-4 overflow-hidden rounded-sm border border-red-300/40 bg-red-950/70 text-red-100"
+              >
+                <div className="flex items-start gap-3 p-3">
+                  <div className="mt-0.5">
+                    <AlertCircle className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm leading-5">{error}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-              <label htmlFor="login-password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12 w-full border-0 bg-white px-3 text-sm text-[#263238] placeholder:text-[#74818a] outline-none transition focus:ring-2 focus:ring-inset focus:ring-[#5ff442]/40"
-                placeholder="Password"
-                autoComplete="current-password"
-                required
+            )}
+
+            <div className="space-y-3">
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="login-username" className="sr-only">
+                    E-mail
+                  </label>
+                  <input
+                    id="login-username"
+                    name="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="h-12 w-full rounded-sm border border-[#dbe2e8] bg-white px-3 text-sm text-[#263238] placeholder:text-[#74818a] outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-400/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+                    placeholder="E-mail"
+                    autoComplete="username"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="login-password" className="sr-only">
+                    Password
+                  </label>
+                  <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 w-full rounded-sm border border-[#dbe2e8] bg-white px-3 text-sm text-[#263238] placeholder:text-[#74818a] outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-400/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+                    placeholder="Password"
+                    autoComplete="current-password"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
                 disabled={loading}
-              />
+                className="flex min-h-12 w-full items-center justify-center rounded-sm bg-[#5ff442] px-5 py-2.5 text-sm font-semibold text-[#10243b] transition-colors hover:bg-[#4dd935] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070c15] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+
+              <div className="flex flex-col items-center gap-2 pt-1 text-sm">
+                <Link
+                  href="/signup"
+                  className="text-white/75 transition-colors hover:text-[#8aff70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                >
+                  Don&apos;t have an account? <span className="font-semibold text-white">Sign up</span>
+                </Link>
+                <a
+                  href="#forgot-password"
+                  className="text-white/75 transition-colors hover:text-[#8aff70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                >
+                  Forgot Password?
+                </a>
               </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex min-h-12 w-full items-center justify-center rounded-sm bg-[#5ff442] px-5 py-2.5 text-sm font-semibold text-[#10243b] transition-colors hover:bg-[#4dd935] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070c15] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-
-            <div className="flex flex-col items-center gap-2 pt-1 text-sm">
-              <Link
-                href="/signup"
-                className="text-white/75 transition-colors hover:text-[#8aff70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
-              >
-                Don&apos;t have an account? <span className="font-semibold text-white">Sign up</span>
-              </Link>
-              <a
-                href="#forgot-password"
-                className="text-white/75 transition-colors hover:text-[#8aff70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8aff70]"
-              >
-                Forgot Password?
-              </a>
             </div>
           </form>
         </div>
