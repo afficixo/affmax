@@ -14,7 +14,7 @@
     "db:migrate:deploy": "node scripts/migrate-deploy-retry.js",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db execute --file prisma/migrations/20261123210000_remove_unneeded_postback_fields/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261123211000_restore_postback_ip_field/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261123211500_allow_multiple_marketplace_postbacks/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261123214500_preserve_leads_when_postback_deleted/migration.sql --schema prisma/schema.prisma && prisma db push --skip-generate && next build"
+    "vercel-build": "prisma generate && prisma db execute --file prisma/migrations/20261123210000_remove_unneeded_postback_fields/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261123211000_restore_postback_ip_field/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261123211500_allow_multiple_marketplace_postbacks/migration.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261123214500_preserve_leads_when_postback_deleted/migration.sql --schema prisma/schema.prisma && prisma db execute --file scripts/ensure-marketplace-offer-mapping.sql --schema prisma/schema.prisma && prisma db execute --file prisma/migrations/20261127010000_add_marketplace_cmpid_token/migration.sql --schema prisma/schema.prisma && prisma db push --skip-generate && next build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",
