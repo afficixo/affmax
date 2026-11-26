@@ -38,6 +38,8 @@ export async function proxy(request: NextRequest) {
   const isPublicPage = path === '/'
     || path === '/login'
     || path === '/signup'
+    || path === '/terms'
+    || path === '/privacy'
     || path.startsWith('/locker/')
     || path.startsWith('/wall/')
   const isApiRoute = path.startsWith('/api/')

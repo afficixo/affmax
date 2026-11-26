@@ -7,5 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/` },
     { url: `${siteUrl}/login` },
     { url: `${siteUrl}/signup` },
+    { url: `${siteUrl}/terms` },
+    { url: `${siteUrl}/privacy` },
   ]
 }
