@@ -178,19 +178,33 @@ export default function HomePage() {
         </section>
 
         {/* FEATURES */}
-        <section id="about" aria-label="About" className="bg-[#eef2f4] py-16 sm:py-20 md:py-28">
+        <div className="bg-[#eef2f4]">
+        <section id="features" aria-labelledby="features-heading" className="bg-transparent py-16 sm:py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 grid gap-4 sm:mb-12 sm:grid-cols-[minmax(0,1.2fr)_minmax(17rem,0.8fr)] sm:items-end sm:gap-10">
+              <div>
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0f766e]">
+                  Network advantages
+                </p>
+                <h2 id="features-heading" className="font-[Montserrat] text-2xl font-extrabold leading-tight tracking-[-0.03em] text-[#123f3f] sm:text-3xl md:text-4xl">
+                  Built to move your business forward
+                </h2>
+              </div>
+              <p className="max-w-xl text-sm leading-6 text-[#52616b] sm:justify-self-end sm:text-base sm:leading-7">
+                Exclusive campaigns, adaptable technology, and responsive support—all designed to help you scale.
+              </p>
+            </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4 lg:gap-6">
               {[
                 {
                   icon: (
                     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="h-7 w-7">
                       <path d="M24 5.5 29.6 17l12.7 1.8-9.2 9 2.2 12.7L24 34.5l-11.3 6 2.2-12.7-9.2-9L18.4 17 24 5.5Z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
-                      <path d="m24 5.5 5.6 11.4 12.7 1.9-9.2 9 2.2 12.7L24 34.5V5.5Z" fill="#5ff442" fillOpacity=".35" />
+                      <path d="m24 5.5 5.6 11.4 12.7 1.9-9.2 9 2.2 12.7L24 34.5V5.5Z" fill="#5ff442" fillOpacity=".6" />
                     </svg>
                   ),
                   title: "Exclusive campaigns",
-                  body: "Our approach is to provide you only high quality and exclusive campaigns, here you will find a lot.",
+                  body: "Find quality campaigns, including exclusive offers that fit your audience.",
                 },
                 {
                   icon: (
@@ -198,58 +212,144 @@ export default function HomePage() {
                       <rect x="6" y="7" width="36" height="34" rx="5" stroke="currentColor" strokeWidth="2.5" />
                       <path d="M6 16h36" stroke="currentColor" strokeWidth="2.5" />
                       <circle cx="12" cy="11.5" r="1" fill="#5ff442" />
-                      <path d="m13 32 7-7 5 4 10-9" stroke="#359f25" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M31 20h4v4" stroke="#359f25" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="m13 32 7-7 5 4 10-9" stroke="#5ff442" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M31 20h4v4" stroke="#5ff442" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
                   title: "In-house platform",
-                  body: "Adaptable to anything and being able to provide the most user-friendly experience through it.",
+                  body: "A flexible in-house platform delivers an intuitive experience for your day-to-day work.",
                 },
                 {
                   icon: (
                     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="h-7 w-7">
                       <path d="M8 39V27h8v12M20 39V19h8v20M32 39V9h8v30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="m8 20 11-8 8 3 13-9" stroke="#359f25" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M34 6h6v6" stroke="#359f25" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="m8 20 11-8 8 3 13-9" stroke="#5ff442" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M34 6h6v6" stroke="#5ff442" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
                   title: "Top verticals",
-                  body: "We strive to be the best so we are always adding campaigns from top-performing verticals.",
+                  body: "Explore campaigns across popular verticals, with new opportunities added regularly.",
                 },
                 {
                   icon: (
                     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="h-7 w-7">
                       <rect x="5.5" y="11" width="37" height="27" rx="4" stroke="currentColor" strokeWidth="2.5" />
                       <path d="M6 19h36" stroke="currentColor" strokeWidth="2.5" />
-                      <path d="M12 29h10" stroke="#359f25" strokeWidth="2.5" strokeLinecap="round" />
-                      <circle cx="34" cy="29" r="3" fill="#5ff442" stroke="#359f25" strokeWidth="2" />
+                      <path d="M12 29h10" stroke="#5ff442" strokeWidth="2.5" strokeLinecap="round" />
+                      <circle cx="34" cy="29" r="3" fill="#5ff442" stroke="#fff" strokeWidth="2" />
                     </svg>
                   ),
                   title: "Quick payments",
-                  body: "You have a wide selection of payment methods and you can qualify for faster payment terms.",
+                  body: "Choose from multiple payment methods and, if eligible, qualify for faster payment terms.",
                 },
-              ].map((f, i) => (
+              ].map((feature, i) => (
                 <motion.div
-                  key={f.title}
+                  key={feature.title}
                   custom={i}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: "-40px" }}
                   variants={fadeUp}
-                  className="flex gap-4 rounded-xl bg-white/70 backdrop-blur-sm p-5 sm:block sm:text-center sm:p-6 hover:bg-white sm:hover:shadow-md transition-all duration-300"
+                  className="relative flex h-full gap-4 overflow-hidden rounded-2xl border border-[#d1e0dd] bg-white p-5 shadow-[0_8px_28px_rgba(15,76,80,0.06)] transition-all duration-300 hover:border-[#9fc4bd] hover:shadow-[0_16px_34px_rgba(15,76,80,0.12)] sm:block sm:p-6 sm:text-center"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#5ff442]/20 to-[#5ff442]/10 text-[#0e7a4d] sm:mx-auto sm:mb-4 sm:h-14 sm:w-14">
-                    {f.icon}
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#f2faf8] to-transparent" />
+                  <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0f766e] to-[#115e59] text-white shadow-[0_8px_18px_rgba(15,118,110,0.22)] sm:mx-auto sm:mb-5 sm:h-16 sm:w-16">
+                    {feature.icon}
                   </div>
-                  <div className="min-w-0">
-                    <h2 className="font-[Montserrat] mb-2 text-[15px] font-bold text-[#263238] sm:mb-2.5 sm:text-base">{f.title}</h2>
-                    <p className="text-sm leading-relaxed text-[#455964]">{f.body}</p>
+                  <div className="relative z-10 min-w-0">
+                    <h3 className="mb-2 font-[Montserrat] text-lg font-extrabold tracking-tight text-[#123f3f] sm:mb-3 sm:text-xl">
+                      {feature.title}
+                    </h3>
+                    <div aria-hidden="true" className="mb-3 h-0.5 w-8 rounded-full bg-[#10b981] sm:mx-auto" />
+                    <p className="text-sm leading-6 text-[#52616b] sm:text-[15px] sm:leading-7">{feature.body}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
+
+        <section id="about" aria-labelledby="about-heading" className="overflow-hidden bg-transparent">
+          <div className="relative mx-auto min-h-[350px] max-w-[1425px] px-0 py-12 md:min-h-[500px] md:py-0">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 1425 440"
+              fill="none"
+              preserveAspectRatio="xMidYMid meet"
+              className="pointer-events-none absolute left-0 top-1/2 hidden h-[430px] w-full -translate-y-1/2 md:block"
+            >
+              <defs>
+                <filter id="about-cube-shadow" x="-30%" y="-30%" width="160%" height="180%">
+                  <feDropShadow dx="0" dy="3" stdDeviation="2.5" floodColor="#52616b" floodOpacity=".16" />
+                </filter>
+              </defs>
+              {[
+                { x: 247, y: 310 },
+                { x: 629, y: 89 },
+                { x: 996, y: 97 },
+                { x: 506, y: 160 },
+                { x: 873, y: 232 },
+                { x: 506, y: 318 },
+                { x: 752, y: 19 },
+                { x: 356, y: 74 },
+                { x: 640, y: 239 },
+                { x: 1008, y: 310 },
+              ].map(({ x, y }) => (
+                <g key={`${x}-${y}`} transform={`translate(${x} ${y + 12}) scale(1.23 1.35)`} filter="url(#about-cube-shadow)">
+                  <g>
+                    <path className="about-cube-top" d="M0 15 33 0 66 15 33 32 0 15Z" fill="#e1e3e5" />
+                    <path className="about-cube-left" d="M0 15 33 32v18L0 33V15Z" fill="#c7c9cb" />
+                    <path className="about-cube-right" d="m66 15-33 17v18l33-17V15Z" fill="#d1d3d5" />
+                    <path
+                      className="about-cube-bands"
+                      d="M0 37 33 54M66 37 33 54M0 44 33 61M66 44 33 61"
+                      fill="none"
+                      stroke="#e1f4ff"
+                      strokeWidth="1.5"
+                    />
+                  </g>
+                </g>
+              ))}
+              <g className="about-brand-base" transform="translate(370 213)" filter="url(#about-cube-shadow)">
+                <g transform="scale(1.23 1.47)">
+                  <path d="M0 49 33 62v12L0 61V49Z" fill="#74bce4" />
+                  <path d="m66 49-33 13v12l33-13V49Z" fill="#5ba9d8" />
+                </g>
+              </g>
+              <g className="about-brand-lift">
+                <g transform="translate(370 213)" filter="url(#about-cube-shadow)">
+                  <g transform="scale(1.23 1.47)">
+                    <path d="M0 13 33 0l33 13-33 13L0 13Z" fill="#ef4548" />
+                    <path d="M0 13 33 26v36L0 49V13Z" fill="#bd252c" />
+                    <path d="m66 13-33 13v36l33-13V13Z" fill="#df343a" />
+                    <g transform="rotate(23 16.5 41.5)">
+                      <text x="15.3" y="39" fill="#fff" fontFamily="Arial Black, Arial, sans-serif" fontSize="7" fontStyle="italic" fontWeight="900" textAnchor="middle">
+                        CRACK
+                      </text>
+                      <text x="15.6" y="50" fill="#fff" fontFamily="Arial Black, Arial, sans-serif" fontSize="5" fontStyle="italic" fontWeight="900" textAnchor="middle">
+                        BOUNTY
+                      </text>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </svg>
+
+            <div className="relative z-10 mx-4 rounded-[5px] border border-[#d7dce0] bg-white p-3 shadow-[0_2px_8px_rgba(25,35,45,0.06)] md:absolute md:right-[10%] md:top-1/2 md:mx-0 md:w-[min(522.5px,40%)] md:-translate-y-1/2">
+              <h2 id="about-heading" className="mb-5 !font-[Arial,sans-serif] text-[16px] font-bold leading-5 text-[#17191b]">
+                <span className="relative inline-block">
+                  Powering Your Growth
+                  <span aria-hidden="true" className="absolute -bottom-0.5 left-0 h-[3px] w-full bg-[#e23b3f]" />
+                </span>{" "}
+                with Smarter Marketing Solutions
+              </h2>
+              <p className="mb-[13px] font-[Arial,sans-serif] text-[16px] leading-6 text-[#212529]">
+                Access a global network of marketing channels to increase sales, leads, sign-ups, app installs, or any other action you deem essential to evolving your brand. We give you control by ensuring you only pay for the action that you defined.
+              </p>
+            </div>
+          </div>
+        </section>
+        </div>
 
         {/* PUBLISHERS */}
         <section id="publishers" aria-labelledby="publishers-heading" className="bg-white py-16 sm:py-20 md:py-24">

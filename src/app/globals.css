@@ -869,6 +869,90 @@ body {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
 }
+@keyframes about-cube-left-depth {
+  0%, 27%, 94%, 100% { d: path("M 0 19 L 33 36 V 50 L 0 33 V 19 Z"); }
+  30.4% { d: path("M 0 16 L 33 33 V 50 L 0 33 V 16 Z"); }
+  35.4% { d: path("M 0 8 L 33 25 V 50 L 0 33 V 8 Z"); }
+  40.5%, 45.5% { d: path("M 0 2 L 33 19 V 50 L 0 33 V 2 Z"); }
+  50.6% { d: path("M 0 3 L 33 20 V 50 L 0 33 V 3 Z"); }
+  55.7%, 60.7% { d: path("M 0 4 L 33 21 V 50 L 0 33 V 4 Z"); }
+  65.8% { d: path("M 0 3 L 33 20 V 50 L 0 33 V 3 Z"); }
+  70.9%, 72.9% { d: path("M 0 2 L 33 19 V 50 L 0 33 V 2 Z"); }
+  74.9% { d: path("M 0 10 L 33 27 V 50 L 0 33 V 10 Z"); }
+  75.9% { d: path("M 0 15 L 33 32 V 50 L 0 33 V 15 Z"); }
+  76.9% { d: path("M 0 17 L 33 34 V 50 L 0 33 V 17 Z"); }
+  81% { d: path("M 0 19 L 33 36 V 50 L 0 33 V 19 Z"); }
+}
+@keyframes about-cube-right-depth {
+  0%, 27%, 94%, 100% { d: path("M 66 19 L 33 36 V 50 L 66 33 V 19 Z"); }
+  30.4% { d: path("M 66 16 L 33 33 V 50 L 66 33 V 16 Z"); }
+  35.4% { d: path("M 66 8 L 33 25 V 50 L 66 33 V 8 Z"); }
+  40.5%, 45.5% { d: path("M 66 2 L 33 19 V 50 L 66 33 V 2 Z"); }
+  50.6% { d: path("M 66 3 L 33 20 V 50 L 66 33 V 3 Z"); }
+  55.7%, 60.7% { d: path("M 66 4 L 33 21 V 50 L 66 33 V 4 Z"); }
+  65.8% { d: path("M 66 3 L 33 20 V 50 L 66 33 V 3 Z"); }
+  70.9%, 72.9% { d: path("M 66 2 L 33 19 V 50 L 66 33 V 2 Z"); }
+  74.9% { d: path("M 66 10 L 33 27 V 50 L 66 33 V 10 Z"); }
+  75.9% { d: path("M 66 15 L 33 32 V 50 L 66 33 V 15 Z"); }
+  76.9% { d: path("M 66 17 L 33 34 V 50 L 66 33 V 17 Z"); }
+  81% { d: path("M 66 19 L 33 36 V 50 L 66 33 V 19 Z"); }
+}
+@keyframes about-cube-top-depth {
+  0%, 27%, 94%, 100% { d: path("M 0 19 L 33 4 L 66 19 L 33 36 L 0 19 Z"); }
+  30.4% { d: path("M 0 16 L 33 1 L 66 16 L 33 33 L 0 16 Z"); }
+  35.4% { d: path("M 0 8 L 33 -7 L 66 8 L 33 25 L 0 8 Z"); }
+  40.5%, 45.5% { d: path("M 0 2 L 33 -13 L 66 2 L 33 19 L 0 2 Z"); }
+  50.6% { d: path("M 0 3 L 33 -12 L 66 3 L 33 20 L 0 3 Z"); }
+  55.7%, 60.7% { d: path("M 0 4 L 33 -11 L 66 4 L 33 21 L 0 4 Z"); }
+  65.8% { d: path("M 0 3 L 33 -12 L 66 3 L 33 20 L 0 3 Z"); }
+  70.9%, 72.9% { d: path("M 0 2 L 33 -13 L 66 2 L 33 19 L 0 2 Z"); }
+  74.9% { d: path("M 0 10 L 33 -5 L 66 10 L 33 27 L 0 10 Z"); }
+  75.9% { d: path("M 0 15 L 33 0 L 66 15 L 33 32 L 0 15 Z"); }
+  76.9% { d: path("M 0 17 L 33 2 L 66 17 L 33 34 L 0 17 Z"); }
+  81% { d: path("M 0 19 L 33 4 L 66 19 L 33 36 L 0 19 Z"); }
+}
+@keyframes about-cube-top-color {
+  0%, 8%, 94%, 100% { fill: #cfcfcf; }
+  25%, 80% { fill: #a7d9f6; }
+}
+@keyframes about-cube-left-color {
+  0%, 8%, 94%, 100% { fill: #c1c1c1; }
+  25%, 80% { fill: #8ecff2; }
+}
+@keyframes about-cube-right-color {
+  0%, 8%, 94%, 100% { fill: #b3b3b3; }
+  25%, 80% { fill: #75c3f1; }
+}
+@keyframes about-cube-bands {
+  0%, 27%, 30.4%, 94%, 95%, 100% { opacity: 0; }
+  50.6%, 70.9%, 72.9% { opacity: 0.64; }
+  75.9% { opacity: 0; }
+}
+@keyframes about-cube-bands-depth {
+  0%, 27%, 75.9%, 94%, 100% { transform: translateY(0); }
+  50.6%, 70.9%, 72.9% { transform: translateY(-12px); }
+}
+@keyframes about-brand-base-opacity {
+  0%, 8%, 95%, 100% { opacity: 0; }
+  25%, 80% { opacity: 1; }
+}
+@keyframes about-brand-lift {
+  0%, 8% { transform: translateY(-50px); }
+  25%, 65.8% { transform: translateY(0); }
+  70.9% { transform: translateY(-12px); }
+  72.9% { transform: translateY(-19px); }
+  74.9% { transform: translateY(-28px); }
+  75.9% { transform: translateY(-32px); }
+  76.9% { transform: translateY(-35px); }
+  81% { transform: translateY(-47px); }
+  85%, 95%, 100% { transform: translateY(-50px); }
+}
+.about-cube-top { animation: about-cube-top-depth 4.94s ease-in-out infinite, about-cube-top-color 4.94s ease-in-out infinite; }
+.about-cube-left { animation: about-cube-left-depth 4.94s ease-in-out infinite, about-cube-left-color 4.94s ease-in-out infinite; }
+.about-cube-right { animation: about-cube-right-depth 4.94s ease-in-out infinite, about-cube-right-color 4.94s ease-in-out infinite; }
+.about-cube-bands { animation: about-cube-bands 4.94s ease-in-out infinite, about-cube-bands-depth 4.94s ease-in-out infinite; }
+.about-brand-base { animation: about-brand-base-opacity 4.94s ease-in-out infinite; }
+.about-brand-lift { animation: about-brand-lift 4.94s ease-in-out infinite; }
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.3; transform: scale(0.98); }
   50%      { opacity: 0.6; transform: scale(1.02); }
