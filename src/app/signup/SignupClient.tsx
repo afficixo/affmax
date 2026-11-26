@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import Script from "next/script"
+import { ArrowRight } from "lucide-react"
 import { getDashboardPath } from "@/lib/auth/dashboard-path"
 import PublicLayout from "@/components/layout/PublicLayout"
 import { signupCountries } from "@/lib/signup-countries"
@@ -283,7 +284,7 @@ export default function SignupClient() {
   }
 
   return (
-    <PublicLayout className="!bg-white" headerVariant="none" footerVariant="auth">
+    <PublicLayout className="!bg-white" headerVariant="none" footerVariant="default">
       <main className={styles.page}>
         <div className={styles.container}>
           <Link href="/#home" className={styles.logoLink} aria-label="Crack Bounty home">
@@ -662,7 +663,8 @@ export default function SignupClient() {
             ) : null}
 
             <button type="submit" name="btn-join" value="1" className={styles.submit} disabled={loading}>
-              {loading ? "…" : "Next"}
+              <span>{loading ? "Submitting..." : "Next"}</span>
+              {!loading && <ArrowRight aria-hidden="true" className={styles.submitIcon} />}
             </button>
           </form>
         </div>
