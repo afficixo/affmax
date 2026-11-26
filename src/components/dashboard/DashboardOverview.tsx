@@ -88,7 +88,7 @@ import {
   hasRequiredMarketplacePostbackTokens,
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
-import { getAffmineSourceOfferId, type AffmineOffer } from '@/lib/affmine'
+import { applyAffminePayoutReduction, getAffmineSourceOfferId, type AffmineOffer } from '@/lib/affmine'
 import ReportDateRangePicker, { type ReportDatePreset } from './ReportDateRangePicker'
 import AffmineOfferPicker from './AffmineOfferPicker'
 import NewsUpdatesPopover from './NewsUpdatesPopover'
@@ -2331,7 +2331,7 @@ export default function DashboardOverview() {
       ...(isIncentive ? initialIncentiveOfferDraft : initialOfferDraft),
       id,
       name: offer.name,
-      payout: String(offer.payout),
+      payout: String(applyAffminePayoutReduction(offer.payout)),
       imageSource,
       offerTypes: selectedTypes.length ? selectedTypes : [isIncentive ? 'CPI' : 'CPL'],
       requiresApproval: !isIncentive,
@@ -2359,7 +2359,7 @@ export default function DashboardOverview() {
       offer.id,
       getAffmineSourceOfferId(offer.offerLink ?? '') ?? '',
     ]))
-    const uniqueOffers = offers.filter((offer, index) => (
+    const uniqueOffers = offers.filter((offer, index): offer is AffmineOffer & { payout: number } => (
       !existingIds.has(offer.id)
       && !existingAffmineIds.has(offer.id)
       && offers.findIndex((candidate) => candidate.id === offer.id) === index
@@ -2391,7 +2391,7 @@ export default function DashboardOverview() {
       return {
         id: internalOfferIds[index],
         name: offer.name,
-        payout: offer.payout,
+        payout: applyAffminePayoutReduction(offer.payout),
         country: countries[0],
         countries,
         imageSource: offer.previewUrl || (

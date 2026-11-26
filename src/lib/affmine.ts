@@ -13,6 +13,10 @@ export type AffmineOffer = {
   incentive: boolean
 }
 
+export function applyAffminePayoutReduction(payout: number): number {
+  return Math.round(payout * 80) / 100
+}
+
 export function getAffmineSourceOfferId(trackingUrl: string): string | null {
   try {
     const sourceId = new URL(trackingUrl).searchParams.get('o')?.trim()

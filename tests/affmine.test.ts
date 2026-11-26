@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { getAffmineSourceOfferId, parseAffmineOffers } from '../src/lib/affmine'
+import {
+  applyAffminePayoutReduction,
+  getAffmineSourceOfferId,
+  parseAffmineOffers,
+} from '../src/lib/affmine'
+
+test('reduces imported Affmine payouts by 20 percent and rounds to cents', () => {
+  assert.equal(applyAffminePayoutReduction(10), 8)
+  assert.equal(applyAffminePayoutReduction(2.75), 2.2)
+  assert.equal(applyAffminePayoutReduction(1.01), 0.81)
+})
 
 test('reads the original Affmine offer ID from its preserved tracking URL', () => {
   assert.equal(
