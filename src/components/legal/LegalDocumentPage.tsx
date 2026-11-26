@@ -42,7 +42,7 @@ export default function LegalDocumentPage({
   const content = sanitizeLegalHtml(source.replace(headingMatch[0], ""))
 
   return (
-    <PublicLayout className="legal-light-theme bg-white">
+    <PublicLayout className="legal-dark-theme">
       <main className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pb-16 pt-28 sm:px-6 sm:pt-32 lg:px-8">
         <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(38,50,56,0.35)]">
           <header className="border-b border-slate-200 bg-gradient-to-r from-white via-white to-[#f0faed] px-6 py-8 sm:px-10 sm:py-10">

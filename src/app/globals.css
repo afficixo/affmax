@@ -3333,6 +3333,13 @@ html:not(.dark) .public-site.public-site-light {
   color: #495057 !important;
 }
 
+html:not(.dark) .public-site.legal-dark-theme {
+  background-color: #070c15 !important;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.105) 0.7px, transparent 0.8px) !important;
+  background-size: 6px 6px !important;
+  color: #f1f5f3 !important;
+}
+
 html:not(.dark) .public-site [class~="text-white"],
 html:not(.dark) .public-site [class*="text-white/"],
 html:not(.dark) .auth-site [class~="text-white"],
