@@ -735,7 +735,7 @@ const reportPages: Record<string, { title: string; columns: string[] }> = {
   '/reports/geo': { title: 'Geo Reports', columns: ['Country', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/tool': { title: 'Tool Reports', columns: ['Tool ID', 'Name', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
   '/reports/subid': { title: 'SubID Reports', columns: ['SubID 1', 'Revenue', 'Clicks', 'Leads', 'EPC', 'CR'] },
-  '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'SubID 1', 'SubID 2', 'IP', 'Revenue', 'Status'] },
+  '/reports/conversions': { title: 'Conversions', columns: ['Date & time', 'Campaign', 'Country', 'SubID 1', 'SubID 2', 'Revenue', 'Status'] },
 }
 
 const tablePages: Record<string, { title: string; columns: string[] }> = {
@@ -4336,7 +4336,6 @@ export default function DashboardOverview() {
                                 </td>
                               )
                             }
-                            if (column === 'IP') return <td key={column}>{String(row.ip || '—')}</td>
                             if (column === 'Revenue') return <td key={column}>{formatCrackBountyMoney(Number(row.revenue || 0))}</td>
                             if (column === 'Status') {
                               const status = String(row.status || 'Credited')
