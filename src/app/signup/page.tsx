@@ -3,21 +3,24 @@ import { Suspense } from "react"
 import SignupClient from "./SignupClient"
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://crackbounty.afficix.com'),
-  title: 'Join Crack Bounty | Publisher Sign Up',
+  title: 'Join Crack Bounty as a Publisher | Sign Up',
   description:
-    'Create a Crack Bounty publisher account to explore affiliate offers, track campaign performance, and grow your business.',
+    'Apply to join Crack Bounty as a publisher. Create an account to explore affiliate campaigns, track performance, and manage your publisher profile.',
   robots: {
     index: false,
     follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
   },
   alternates: {
-    canonical: 'https://crackbounty.afficix.com/signup',
+    canonical: '/signup',
   },
   openGraph: {
-    title: 'Join Crack Bounty | Publisher Sign Up',
+    title: 'Join Crack Bounty as a Publisher | Sign Up',
     description:
-      'Create a Crack Bounty publisher account to explore affiliate offers, track campaign performance, and grow your business.',
+      'Apply to join Crack Bounty as a publisher. Create an account to explore affiliate campaigns, track performance, and manage your publisher profile.',
     type: 'website',
     url: 'https://crackbounty.afficix.com/signup',
     siteName: 'Crack Bounty',
@@ -33,10 +36,10 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Join Crack Bounty | Publisher Sign Up',
+    card: 'summary',
+    title: 'Join Crack Bounty as a Publisher | Sign Up',
     description:
-      'Create a Crack Bounty publisher account to explore affiliate offers, track campaign performance, and grow your business.',
+      'Apply to join Crack Bounty as a publisher. Create an account to explore affiliate campaigns, track performance, and manage your publisher profile.',
     images: ['https://crackbounty.afficix.com/favicon.png'],
     creator: 'Crack Bounty',
   },

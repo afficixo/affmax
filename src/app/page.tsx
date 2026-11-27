@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import HomePageClient from "./HomePageClient";
 
-const pageTitle = "Crack Bounty | Affiliate Marketing Network";
+const pageTitle = "Affiliate Network for Publishers & Advertisers | Crack Bounty";
 const pageDescription =
-  "Crack Bounty connects publishers and advertisers through a private affiliate network with quality offers, campaign tracking, and clear reporting.";
+  "Grow with Crack Bounty, a private affiliate network connecting publishers and advertisers to quality campaigns, performance tracking, and responsive support.";
 
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,
   alternates: {
-    canonical: "https://crackbounty.afficix.com/",
+    canonical: "/",
   },
   openGraph: {
     title: pageTitle,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: pageTitle,
     description: pageDescription,
     images: ["https://crackbounty.afficix.com/favicon.png"],
@@ -50,8 +50,7 @@ const structuredData = {
         url: "https://crackbounty.afficix.com/favicon.png",
       },
       email: "contact@crackbounty.afficix.com",
-      description:
-        "A private affiliate network connecting publishers and advertisers with quality offers, campaign tracking, and actionable performance insights.",
+      description: pageDescription,
       address: {
         "@type": "PostalAddress",
         streetAddress: "16192 Coastal Highway",

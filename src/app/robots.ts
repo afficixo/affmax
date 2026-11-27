@@ -10,8 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         '/api/',
         '/dashboard',
-        '/login',
-        '/signup',
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,

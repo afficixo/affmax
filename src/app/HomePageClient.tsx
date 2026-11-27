@@ -98,9 +98,9 @@ export default function HomePage() {
                 transition={{ duration: 0.68, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                 className="home-hero-reveal font-[Montserrat] mb-5 text-[2.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:mb-6 sm:text-5xl md:text-[3.6rem] lg:text-[4.15rem]"
               >
-                Affiliate growth,
+                Affiliate network
                 <br />
-                built for <span className="text-[#ff6268]">your goals.</span>
+                for <span className="text-[#ff6268]">publishers &amp; advertisers.</span>
               </motion.h1>
 
               <motion.p

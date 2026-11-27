@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://crackbounty.afficix.com'),
   title: 'Crack Bounty | Private Affiliate Network',
   description:
-    "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
+    "Crack Bounty connects publishers and advertisers with affiliate campaigns, performance tracking, and responsive support.",
   authors: [{ name: 'Crack Bounty', url: 'https://crackbounty.afficix.com' }],
   creator: 'Crack Bounty',
   publisher: 'Crack Bounty',
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Crack Bounty | Private Affiliate Network',
     description:
-      "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
+      'Crack Bounty connects publishers and advertisers with affiliate campaigns, performance tracking, and responsive support.',
     type: 'website',
     url: 'https://crackbounty.afficix.com',
     siteName: 'Crack Bounty',
@@ -72,10 +72,10 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'Crack Bounty | Private Affiliate Network',
     description:
-      "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
+      'Crack Bounty connects publishers and advertisers with affiliate campaigns, performance tracking, and responsive support.',
     images: ['https://crackbounty.afficix.com/favicon.png'],
   },
 }
