@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db/prisma'
 import { lookupCountryCode } from '@/lib/ip2location'
 import { isCreditedConversionStatus } from '@/lib/conversion-reversal'
+import { offerGeoCountryCode } from '@/lib/offer-geo'
 
 export type AnalyticsScope = {
   role: 'MANAGER' | 'PUBLISHER'
@@ -91,7 +92,6 @@ export async function getOverviewStats(scope: AnalyticsScope) {
         offerId: true,
         campaignName: true,
         payout: true,
-        country: true,
         status: true,
         sub1: true,
         sub2: true,
@@ -140,7 +140,7 @@ export async function getOverviewStats(scope: AnalyticsScope) {
   const campaignCountries = new Map(
     campaignOffers.map((offer) => [
       offer.id,
-      (offer.countries?.find((code) => /^[A-Z]{2}$/i.test(code)) || offer.country || '').toUpperCase(),
+      offerGeoCountryCode(offer) || '',
     ]),
   )
 
@@ -165,9 +165,7 @@ export async function getOverviewStats(scope: AnalyticsScope) {
         offerId: lead.offerId,
         campaign,
         payout: Number(lead.payout ?? 0),
-        country: usableCountryCode(lead.country)
-          || campaignCountries.get(lead.offerId || '')
-          || '—',
+        country: campaignCountries.get(lead.offerId || '') || '—',
         subId: lead.sub3 || '—',
         createdAt: (lead.occurredAt || lead.createdAt).toISOString(),
         status: lead.status || 'Approved',
@@ -252,10 +250,7 @@ export async function getReportData(
     const campaignCountries = new Map(
       campaignOffers.map((offer) => [
         offer.id,
-        usableCountryCode(
-          offer.countries?.find((code) => usableCountryCode(code))
-          || offer.country,
-        ),
+        offerGeoCountryCode(offer),
       ]),
     )
     const formatConversionCampaign = (name: string, offerId: string) => {
@@ -272,9 +267,7 @@ export async function getReportData(
         id: lead.id,
         offerId: lead.offerId || '',
         campaign: formatConversionCampaign(lead.campaignName || '', lead.offerId || ''),
-        country: usableCountryCode(lead.country)
-          || campaignCountries.get(lead.offerId || '')
-          || '—',
+        country: campaignCountries.get(lead.offerId || '') || '—',
         // Publisher SubIDs 1 and 2 arrive as inbound postback s3 and s4.
         subId: lead.sub3 || '—',
         subId2: lead.sub4 || '—',

@@ -1,9 +1,26 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  offerGeoCountryCode,
   offerMatchesVisitorCountry,
   visitorCountryCodeFromHeaders,
 } from '../src/lib/offer-geo'
+
+test('uses the offer target GEO instead of an unrelated lead country', () => {
+  const leadCountry = 'CA'
+  const offerGeo = offerGeoCountryCode({ country: 'GLOBAL', countries: ['US'] })
+
+  assert.equal(offerGeo, 'US')
+  assert.notEqual(offerGeo, leadCountry)
+})
+
+test('falls back to the offer country when no target country code is available', () => {
+  assert.equal(offerGeoCountryCode({ country: 'US', countries: ['GLOBAL'] }), 'US')
+})
+
+test('does not convert a global offer into a visitor country', () => {
+  assert.equal(offerGeoCountryCode({ country: 'GLOBAL', countries: ['GLOBAL'] }), null)
+})
 
 test('matches offers against any of their configured countries', () => {
   const offer = { country: 'US', countries: ['US', 'JP'] }

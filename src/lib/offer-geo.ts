@@ -9,6 +9,13 @@ function normalizeCountryCode(value: string | null | undefined) {
     : null
 }
 
+export function offerGeoCountryCode(
+  offer: Pick<IncentiveWidgetOffer, 'country' | 'countries'>,
+): string | null {
+  const country = offer.countries?.find((code) => normalizeCountryCode(code))
+  return normalizeCountryCode(country) || normalizeCountryCode(offer.country)
+}
+
 export function visitorCountryCodeFromHeaders(headers: Headers): string | null {
   return normalizeCountryCode(headers.get('x-vercel-ip-country'))
     || normalizeCountryCode(headers.get('cf-ipcountry'))
