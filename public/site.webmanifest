@@ -6,7 +6,7 @@
       "src": "/favicon.png",
       "sizes": "768x768",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "theme_color": "#eef2f7",

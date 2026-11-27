@@ -46,9 +46,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png', sizes: '768x768' },
     ],
-    apple: [{ url: '/favicon.png', type: 'image/png' }],
+    apple: [{ url: '/favicon.png', type: 'image/png', sizes: '768x768' }],
     shortcut: '/favicon.png',
   },
   manifest: '/site.webmanifest',
@@ -62,11 +62,11 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: 'https://crackbounty.afficix.com/logo.png',
-        secureUrl: 'https://crackbounty.afficix.com/logo.png',
-        width: 2172,
-        height: 724,
-        alt: 'Crack Bounty logo',
+        url: 'https://crackbounty.afficix.com/favicon.png',
+        secureUrl: 'https://crackbounty.afficix.com/favicon.png',
+        width: 768,
+        height: 768,
+        alt: 'Crack Bounty brand icon',
         type: 'image/png',
       },
     ],
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     title: 'Crack Bounty | Private Affiliate Network',
     description:
       "Connect with quality affiliate campaigns, track performance, and grow your business with Crack Bounty's private network.",
-    images: ['https://crackbounty.afficix.com/logo.png'],
+    images: ['https://crackbounty.afficix.com/favicon.png'],
   },
 }
 

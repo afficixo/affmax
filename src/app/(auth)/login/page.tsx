@@ -23,11 +23,11 @@ export const metadata: Metadata = {
     siteName: 'Crack Bounty',
     images: [
       {
-        url: 'https://crackbounty.afficix.com/logo.png',
-        secureUrl: 'https://crackbounty.afficix.com/logo.png',
-        width: 2172,
-        height: 724,
-        alt: 'Crack Bounty logo',
+        url: 'https://crackbounty.afficix.com/favicon.png',
+        secureUrl: 'https://crackbounty.afficix.com/favicon.png',
+        width: 768,
+        height: 768,
+        alt: 'Crack Bounty brand icon',
         type: 'image/png',
       },
     ],
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: 'Publisher Login — Crack Bounty',
     description:
       'Log in to your Crack Bounty publisher account to manage campaigns, performance, and payouts.',
-    images: ['https://crackbounty.afficix.com/logo.png'],
+    images: ['https://crackbounty.afficix.com/favicon.png'],
     creator: 'Crack Bounty',
   },
 };

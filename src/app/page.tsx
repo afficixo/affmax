@@ -20,11 +20,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "https://crackbounty.afficix.com/logo.png",
-        secureUrl: "https://crackbounty.afficix.com/logo.png",
-        width: 2172,
-        height: 724,
-        alt: "Crack Bounty logo",
+        url: "https://crackbounty.afficix.com/favicon.png",
+        secureUrl: "https://crackbounty.afficix.com/favicon.png",
+        width: 768,
+        height: 768,
+        alt: "Crack Bounty brand icon",
         type: "image/png",
       },
     ],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: pageTitle,
     description: pageDescription,
-    images: ["https://crackbounty.afficix.com/logo.png"],
+    images: ["https://crackbounty.afficix.com/favicon.png"],
   },
 };
 
@@ -47,7 +47,7 @@ const structuredData = {
       url: "https://crackbounty.afficix.com/",
       logo: {
         "@type": "ImageObject",
-        url: "https://crackbounty.afficix.com/logo.png",
+        url: "https://crackbounty.afficix.com/favicon.png",
       },
       email: "contact@crackbounty.afficix.com",
       description:

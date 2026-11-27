@@ -640,11 +640,11 @@ function PublisherIllustration() {
   return (
     <div className="relative mx-auto aspect-[16/10] w-full max-w-[520px] overflow-hidden rounded-xl border border-[#e6ebed] bg-[#eef2f4]">
       <Image
-        src="/publishers-image.jpg"
-        alt="Affiliate publisher reviewing campaign performance"
+        src="/favicon.png"
+        alt="Crack Bounty brand icon"
         fill
         sizes="(min-width: 1024px) 50vw, 100vw"
-        className="object-cover"
+        className="object-contain p-10"
       />
     </div>
   );
@@ -654,11 +654,11 @@ function AdvertiserIllustration() {
   return (
     <div className="group relative mx-auto aspect-[16/10] w-full max-w-[520px] overflow-hidden rounded-xl border border-[#dce4e8] bg-[#10243b] shadow-[0_18px_42px_rgba(16,36,59,0.16)]">
       <Image
-        src="/advertisers-image.jpg"
-        alt="Advertiser reviewing campaign analytics on a laptop"
+        src="/favicon.png"
+        alt="Crack Bounty brand icon"
         fill
         sizes="(min-width: 1024px) 50vw, 100vw"
-        className="object-cover object-[56%_center] transition-transform duration-500 motion-safe:group-hover:scale-[1.025]"
+        className="object-contain p-10"
       />
     </div>
   );
