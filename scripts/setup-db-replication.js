@@ -12,6 +12,7 @@ const schemaSqlFiles = [
   'prisma/migrations/20261123214500_preserve_leads_when_postback_deleted/migration.sql',
   'scripts/ensure-marketplace-offer-mapping.sql',
   'prisma/migrations/20261127010000_add_marketplace_cmpid_token/migration.sql',
+  'scripts/drop-unused-tables.sql',
 ]
 
 function normalizeConnectionUrl(value, name) {

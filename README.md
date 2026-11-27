@@ -43,6 +43,8 @@ The setup command prepares the backup schema, creates a publication for all prim
 
 Logical replication does not copy DDL or keep sequence values synchronized. Apply schema migrations to both databases in a safe order, and keep the backup read-only; it is not configured for automatic failover. Enabling logical replication in Neon is permanent, restarts project computes, and can prevent the primary compute from scaling to zero while subscribed.
 
+The Vercel build applies `scripts/drop-unused-tables.sql` to the primary before `prisma db push`; backup schema preparation applies it as well. DDL is not replicated, so existing primary/backup pairs must have this cleanup applied to both databases with the subscription publication refreshed.
+
 <div align="center">
   <sub>Thoughtfully connecting publishers, advertisers, and performance.</sub>
 </div>

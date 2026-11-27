@@ -1,0 +1,23 @@
+ALTER TABLE IF EXISTS public."link_accounts"
+  DROP CONSTRAINT IF EXISTS "link_accounts_customDomainId_fkey";
+
+DROP TABLE IF EXISTS public."landing_pages";
+DROP TABLE IF EXISTS public."landing_page_templates";
+DROP TABLE IF EXISTS public."manager_payout_invoices";
+DROP TABLE IF EXISTS public."referral_commissions";
+DROP TABLE IF EXISTS public."invoices";
+DROP TABLE IF EXISTS public."manager_payouts";
+DROP TABLE IF EXISTS public."country_click_rates";
+DROP TABLE IF EXISTS public."custom_domains";
+DROP TABLE IF EXISTS public."landing_domain_settings";
+DROP TABLE IF EXISTS public."offer_vaults";
+DROP TABLE IF EXISTS public."public_dashboards";
+DROP TABLE IF EXISTS public."clicks";
+DROP TABLE IF EXISTS public."geo_stats";
+DROP TABLE IF EXISTS public."daily_analytics";
+DROP TABLE IF EXISTS public."hourly_analytics";
+DROP TABLE IF EXISTS public."browser_stats";
+DROP TABLE IF EXISTS public."os_stats";
+DROP TABLE IF EXISTS public."device_stats";
+DROP TABLE IF EXISTS public."referrer_stats";
+DROP TABLE IF EXISTS public."telegram_notifications";
