@@ -29,6 +29,20 @@ The product is designed to make that experience feel straightforward: a consider
 
 This repository contains the Crack Bounty homepage and account-entry experience. The signed-in destination is intentionally kept minimal as the product takes shape.
 
+## PostgreSQL backup replication
+
+The application continues to use only `DATABASE_URL`. To maintain a separate live backup, create an empty PostgreSQL database in a separate Neon project and configure `DATABASE_URL`, `BACKUP_DATABASE_URL`, and optionally `DIRECT_DATABASE_URL` in a private local environment. Never commit database URLs or expose them with a `NEXT_PUBLIC_` prefix.
+
+Enable logical replication in the primary Neon project, then run:
+
+```bash
+npm run db:replica:setup
+```
+
+The setup command prepares the backup schema, creates a publication for all primary tables, and creates a subscription that copies existing rows and streams future inserts, updates, and deletes. The application does not connect to `BACKUP_DATABASE_URL`; the setup command uses the primary `DATABASE_URL` (or `DIRECT_DATABASE_URL`) to configure replication. PostgreSQL stores those connection details in the backup subscription.
+
+Logical replication does not copy DDL or keep sequence values synchronized. Apply schema migrations to both databases in a safe order, and keep the backup read-only; it is not configured for automatic failover. Enabling logical replication in Neon is permanent, restarts project computes, and can prevent the primary compute from scaling to zero while subscribed.
+
 <div align="center">
   <sub>Thoughtfully connecting publishers, advertisers, and performance.</sub>
 </div>
