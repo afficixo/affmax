@@ -250,15 +250,12 @@ export default async function SmartlinkReportView({ id, searchParams }: Smartlin
           />
         </Link>
         <div className={styles.reportHeaderControls}>
-          <SmartlinkReportDateFilter
-            startDate={startDate}
-            endDate={endDate}
-            presetLabel={presetLabel}
-          />
-          <SmartlinkCopyButton smartlinkId={id} smartlinkName={smartlink.name} />
           <ServerTime />
         </div>
       </header>
+      <div className={styles.reportPostHeaderActions}>
+        <SmartlinkCopyButton smartlinkId={id} smartlinkName={smartlink.name} />
+      </div>
       <div className={`${dashboardStyles.dashboardGrid} ${styles.reportAnalytics}`}>
         <section className={`${dashboardStyles.panel} ${dashboardStyles.performancePanel}`}>
           <h2><span className={dashboardStyles.titleIcon}>ϟ</span> TODAY PERFORMANCE</h2>
@@ -315,28 +312,35 @@ export default async function SmartlinkReportView({ id, searchParams }: Smartlin
         </section>
       </div>
       <section className={`${dashboardStyles.panel} ${dashboardStyles.dataPage} ${dashboardStyles.reportPanel}`}>
-        <div className={dashboardStyles.reportHeading}>
+        <div className={`${dashboardStyles.reportHeading} ${styles.geoReportHeading}`}>
           <h2><BarChart3 aria-hidden="true" /> Geo Reports</h2>
-          <form method="get" className={dashboardStyles.reportTools}>
-            {isAllTime ? (
-              <input type="hidden" name="allTime" value="1" />
-            ) : (
-              <>
-                <input type="hidden" name="from" value={startDate} />
-                <input type="hidden" name="to" value={endDate} />
-                <input type="hidden" name="preset" value={presetLabel} />
-              </>
-            )}
-            <input
-              id="table_search"
-              type="text"
-              className="table_search"
-              aria-label="Search"
-              placeholder="Search"
-              name="q"
-              defaultValue={firstSearchParam(query.q) || ''}
+          <div className={styles.geoReportFilters}>
+            <SmartlinkReportDateFilter
+              startDate={startDate}
+              endDate={endDate}
+              presetLabel={presetLabel}
             />
-          </form>
+            <form method="get" className={dashboardStyles.reportTools}>
+              {isAllTime ? (
+                <input type="hidden" name="allTime" value="1" />
+              ) : (
+                <>
+                  <input type="hidden" name="from" value={startDate} />
+                  <input type="hidden" name="to" value={endDate} />
+                  <input type="hidden" name="preset" value={presetLabel} />
+                </>
+              )}
+              <input
+                id="table_search"
+                type="text"
+                className="table_search"
+                aria-label="Search"
+                placeholder="Search"
+                name="q"
+                defaultValue={firstSearchParam(query.q) || ''}
+              />
+            </form>
+          </div>
         </div>
         <div className={dashboardStyles.reportBody}>
           <div className={dashboardStyles.reportTableWrap}>

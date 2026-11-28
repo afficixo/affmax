@@ -43,11 +43,12 @@ export default function SmartlinkCopyButton({
       onClick={() => void copyTrackingLink()}
       aria-label={`${label} ${smartlinkName} tracking link`}
       aria-live="polite"
+      title={label}
     >
       {copyStatus === 'copied'
         ? <Check size={14} aria-hidden="true" />
         : <Copy size={14} aria-hidden="true" />}
-      {label}
+      Smartlink
     </button>
   )
 }
