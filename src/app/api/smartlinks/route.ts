@@ -8,6 +8,7 @@ import {
 } from '@/lib/campaign-offers'
 import { prisma } from '@/lib/db/prisma'
 import {
+  publisherSmartlinkTrackingCode,
   PUBLISHER_SMARTLINK_KIND,
   SMARTLINK_OFFERS_CONFIG_ID,
   SMARTLINK_OFFERS_CONFIG_KIND,
@@ -47,10 +48,20 @@ async function requirePublisher(request: Request) {
 
 async function createPublisherSmartlink(name: string, ownerId: string) {
   for (let attempt = 0; attempt < MAX_SUBID_CREATION_ATTEMPTS; attempt += 1) {
+    const id = randomUUID()
+    const matchingReportCode = await prisma.incentiveTool.findFirst({
+      where: {
+        id: { startsWith: publisherSmartlinkTrackingCode(id) },
+        kind: PUBLISHER_SMARTLINK_KIND,
+      },
+      select: { id: true },
+    })
+    if (matchingReportCode) continue
+
     try {
       return await prisma.incentiveTool.create({
         data: {
-          id: randomUUID(),
+          id,
           kind: PUBLISHER_SMARTLINK_KIND,
           publisherSubId: generatePublisherSmartlinkSubId(),
           name,

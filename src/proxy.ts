@@ -11,6 +11,13 @@ import { getTrackingDomainHost, isHexTrackingId, isSharedTrackingAppHost, isTrac
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
 
+  const smartlinkCode = path.match(/^\/([0-9a-f]{8})$/i)?.[1]
+  if (smartlinkCode) {
+    const rewriteUrl = request.nextUrl.clone()
+    rewriteUrl.pathname = `/smartlink/${smartlinkCode.toLowerCase()}`
+    return NextResponse.rewrite(rewriteUrl)
+  }
+
   const trackingParts = isTrackingPath(path)
   if (trackingParts) {
     const trackingHost = getTrackingDomainHost()
@@ -36,6 +43,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const isPublicSmartlinkRoute = /^\/smartlink\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\/report)?$/i.test(path)
+  const isPublicGeoReportRoute = /^\/georeport\/[0-9a-f]{8}$/i.test(path)
   const isPublicPage = path === '/'
     || path === '/login'
     || path === '/signup'
@@ -44,6 +52,7 @@ export async function proxy(request: NextRequest) {
     || path.startsWith('/locker/')
     || path.startsWith('/wall/')
     || isPublicSmartlinkRoute
+    || isPublicGeoReportRoute
   const isApiRoute = path.startsWith('/api/')
   if (!isPublicPage && !isApiRoute && !getCookieValue(request.headers.get('cookie') || '', 'auth-token')) {
     return NextResponse.redirect(new URL('/login', request.url))

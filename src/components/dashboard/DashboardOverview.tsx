@@ -84,6 +84,7 @@ import {
   generateCampaignOfferIds,
   withoutLegacyCrackBountyDemoOffers,
 } from '@/lib/campaign-offers'
+import { publisherSmartlinkTrackingCode } from '@/lib/smartlink'
 import { toCampaignImageSource } from '@/lib/campaign-images'
 import {
   hasRequiredMarketplacePostbackTokens,
@@ -94,6 +95,7 @@ import ReportDateRangePicker from './ReportDateRangePicker'
 import AffmineOfferPicker from './AffmineOfferPicker'
 import NewsUpdatesPopover from './NewsUpdatesPopover'
 import PaymentDashboard from './PaymentDashboard'
+import ServerTime from './ServerTime'
 import styles from './Dashboard.module.css'
 import { allTimeReportPreset, reportRangePresets, type ReportDatePreset } from '@/lib/report-date-presets'
 
@@ -1234,7 +1236,6 @@ export default function DashboardOverview() {
   const publisherSmartlinkRemoveCancelRef = useRef<HTMLButtonElement>(null)
   const publisherSmartlinkRemoveTriggerRef = useRef<HTMLButtonElement | null>(null)
   const deletingPublisherSmartlinkRef = useRef(false)
-  const [time, setTime] = useState('--:--:--')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
   const [userName, setUserName] = useState('')
@@ -1471,16 +1472,6 @@ export default function DashboardOverview() {
 
   useEffect(() => {
     setAppOrigin(window.location.origin)
-    const updateTime = () => setTime(new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hourCycle: 'h23',
-    }).format(new Date()))
-    updateTime()
-    const timer = window.setInterval(updateTime, 1000)
-    return () => window.clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -3382,8 +3373,9 @@ export default function DashboardOverview() {
   }
   const publisherSmartlinkUrl = (id: string) => {
     const origin = resolvePublicTrackingOrigin()
-    return origin ? `${origin.replace(/\/$/, '')}/smartlink/${encodeURIComponent(id)}` : ''
+    return origin ? `${origin.replace(/\/$/, '')}/${publisherSmartlinkTrackingCode(id)}` : ''
   }
+  const publisherSmartlinkReportPath = (id: string) => `/georeport/${publisherSmartlinkTrackingCode(id)}`
   const copyPublisherSmartlink = async (link: PublisherSmartlinkRecord) => {
     const url = publisherSmartlinkUrl(link.id)
     if (!url) {
@@ -3400,7 +3392,7 @@ export default function DashboardOverview() {
     }
   }
   const copyPublisherSmartlinkReport = async (link: PublisherSmartlinkRecord) => {
-    const url = `${window.location.origin}/smartlink/${encodeURIComponent(link.id)}/report`
+    const url = `${window.location.origin}${publisherSmartlinkReportPath(link.id)}`
     try {
       await navigator.clipboard.writeText(url)
       setCopiedPublisherSmartlinkReportId(link.id)
@@ -3984,7 +3976,7 @@ export default function DashboardOverview() {
           <div className={`${styles.pageHeader} ${!pageTitle ? styles.pageHeaderEmpty : ''}`}>
             {pageTitle ? <h1>{pageTitle}</h1> : null}
             <div className={styles.pageHeaderRight}>
-              {isDashboard && <p>Server time: <time>{time}</time></p>}
+              {isDashboard && <ServerTime />}
               {reportPage && (
                 <div className={styles.reportDatePicker}>
                   <input
@@ -5185,7 +5177,7 @@ export default function DashboardOverview() {
                   <div className={styles.publisherSmartlinkActions}>
                     <div className={styles.publisherSmartlinkReportAction}>
                       <Link
-                        href={`/smartlink/${encodeURIComponent(link.id)}/report`}
+                        href={publisherSmartlinkReportPath(link.id)}
                         className={styles.publisherSmartlinkReportLink}
                         target="_blank"
                         rel="noopener noreferrer"

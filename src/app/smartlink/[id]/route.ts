@@ -59,7 +59,7 @@ function normalizeHttpUrl(value: unknown) {
 
 function unsupportedLocationResponse() {
   return new NextResponse(
-    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Location not supported</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f9f7;color:#344239;font:16px/1.5 system-ui,sans-serif}.message{max-width:440px;margin:24px;padding:32px;border:1px solid #e3eae4;border-radius:12px;background:#fff;text-align:center}h1{margin:0;font-size:22px;font-weight:650}p{margin:10px 0 0;color:#6d786f;font-size:14px}</style></head><body><main class="message"><h1>This offer does not support your location.</h1><p>There are no available offers for your country.</p></main></body></html>',
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Location not supported</title></head><body>This offer does not support your location.</body></html>',
     {
       status: 403,
       headers: {
@@ -74,13 +74,19 @@ function unsupportedLocationResponse() {
 
 export async function GET(request: Request, context: RouteContext) {
   const { id } = await context.params
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+  const isFullSmartlinkId = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+  const isSmartlinkCode = /^[0-9a-f]{8}$/i.test(id)
+  if (!isFullSmartlinkId && !isSmartlinkCode) {
     return NextResponse.json({ error: 'Smartlink route not found' }, { status: 404 })
   }
 
   try {
-    const group = await prisma.incentiveTool.findFirst({
-      where: { id, kind: { in: [LEGACY_SMARTLINK_KIND, PUBLISHER_SMARTLINK_KIND] }, isPublished: true },
+    const groups = await prisma.incentiveTool.findMany({
+      where: {
+        id: isSmartlinkCode ? { startsWith: id.toLowerCase() } : id,
+        kind: isSmartlinkCode ? PUBLISHER_SMARTLINK_KIND : { in: [LEGACY_SMARTLINK_KIND, PUBLISHER_SMARTLINK_KIND] },
+        isPublished: true,
+      },
       select: {
         id: true,
         kind: true,
@@ -89,7 +95,12 @@ export async function GET(request: Request, context: RouteContext) {
         publisherSubId: true,
         owner: { select: { publisherNumber: true } },
       },
+      take: 2,
     })
+    if (groups.length !== 1) {
+      return NextResponse.json({ error: 'Smartlink route not found' }, { status: 404 })
+    }
+    const [group] = groups
     if (!group || !isRecord(group.fields)) {
       return NextResponse.json({ error: 'Smartlink route not found' }, { status: 404 })
     }

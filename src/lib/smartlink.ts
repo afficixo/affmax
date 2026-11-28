@@ -8,6 +8,10 @@ export const SMARTLINK_OFFERS_CONFIG_ID = 'smartlink-active-offers'
 export const SMARTLINK_OFFERS_CONFIG_KIND = 'smartlink-offers'
 export const PUBLISHER_SMARTLINK_KIND = 'publisher-smartlink'
 
+export function publisherSmartlinkTrackingCode(id: string) {
+  return id.slice(0, 8).toLowerCase()
+}
+
 export function isPublisherSmartlinkSubId(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9A-F]{5}$/.test(value)
 }

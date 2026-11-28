@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 import dashboardStyles from '@/components/dashboard/Dashboard.module.css'
+import { publisherSmartlinkTrackingCode } from '@/lib/smartlink'
 import { getTrackingDomainOrigin } from '@/lib/tracking'
 
 type SmartlinkCopyButtonProps = {
@@ -18,7 +19,7 @@ export default function SmartlinkCopyButton({
 
   const copyTrackingLink = async () => {
     const origin = getTrackingDomainOrigin() || window.location.origin
-    const url = `${origin.replace(/\/$/, '')}/smartlink/${encodeURIComponent(smartlinkId)}`
+    const url = `${origin.replace(/\/$/, '')}/${publisherSmartlinkTrackingCode(smartlinkId)}`
 
     try {
       await navigator.clipboard.writeText(url)
