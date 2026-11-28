@@ -157,6 +157,17 @@ function buildExternalKey(parts: {
     .digest('hex')
 }
 
+export function mapPublisherSubIds(input: {
+  hasSeparateOfferId: boolean
+  s2: string
+  s3: string
+  s4: string
+}) {
+  return input.hasSeparateOfferId
+    ? { sub1: input.s2, sub2: input.s3, sub3: input.s4 }
+    : { sub1: input.s3, sub2: input.s4, sub3: '' }
+}
+
 export type IngestPostbackResult =
   | {
       ok: true
@@ -247,9 +258,12 @@ export async function ingestMarketplacePostback(
     }
   }
 
-  const publisherSub1 = cmpid ? s2 : s3
-  const publisherSub2 = cmpid ? s3 : s4
-  const publisherSub3 = cmpid ? s4 : ''
+  const publisherSubIds = mapPublisherSubIds({
+    hasSeparateOfferId: Boolean(cmpid || explicitOfferId),
+    s2,
+    s3,
+    s4,
+  })
   const payout = offer.payout
   if (!Number.isFinite(payout) || payout < 0) {
     return { ok: false, status: 400, error: 'Invalid payout' }
@@ -301,9 +315,9 @@ export async function ingestMarketplacePostback(
         status: 'Approved',
         sub1: s1,
         sub2: offer.id,
-        sub3: publisherSub1 || null,
-        sub4: publisherSub2 || null,
-        publisherSub3: publisherSub3 || null,
+        sub3: publisherSubIds.sub1 || null,
+        sub4: publisherSubIds.sub2 || null,
+        publisherSub3: publisherSubIds.sub3 || null,
         occurredAt,
         externalKey,
       },

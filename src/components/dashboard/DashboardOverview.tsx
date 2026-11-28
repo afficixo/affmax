@@ -18,6 +18,7 @@ import {
   Flame,
   Gauge,
   LayoutDashboard,
+  Link2,
   Lock,
   LogOut,
   MessageCircle,
@@ -89,11 +90,12 @@ import {
   type MarketplacePostbackTokens,
 } from '@/lib/postback-tokens'
 import { applyAffminePayoutReduction, getAffmineSourceOfferId, type AffmineOffer } from '@/lib/affmine'
-import ReportDateRangePicker, { type ReportDatePreset } from './ReportDateRangePicker'
+import ReportDateRangePicker from './ReportDateRangePicker'
 import AffmineOfferPicker from './AffmineOfferPicker'
 import NewsUpdatesPopover from './NewsUpdatesPopover'
 import PaymentDashboard from './PaymentDashboard'
 import styles from './Dashboard.module.css'
+import { allTimeReportPreset, reportRangePresets, type ReportDatePreset } from '@/lib/report-date-presets'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler)
 
@@ -855,16 +857,6 @@ const emptyAccountDetails: AccountDetailsForm = {
   leadNotifications: true,
   campaignEmailUpdates: true,
 }
-
-const reportRangePresets = [
-  { label: 'Today', days: 0 },
-  { label: 'Yesterday', days: 1, span: 0 },
-  { label: 'Last 7 Days', days: 6 },
-  { label: 'Last 30 Days', days: 29 },
-  { label: 'This Month', days: 'month' as const },
-  { label: 'Last Month', days: 'last-month' as const },
-] as const
-const allTimeReportPreset = { label: 'All Time', days: 'all-time' } as const
 
 /** Crack Bounty `#reportrange` label: "Nov 5, 2026" */
 function formatReportDateLabel(value: string) {
@@ -4977,11 +4969,8 @@ export default function DashboardOverview() {
           )
         ) : isSmartlinkPage && userRole === 'PUBLISHER' ? (
           <section className={`${styles.panel} ${styles.dataPage} ${styles.smartlinkPage} ${styles.publisherSmartlinkPage}`}>
-            <div className={styles.publisherSmartlinkHeader}>
-              <div>
-                <h2>YOUR SMARTLINKS</h2>
-                <p>Create a tracking link that routes visitors to manager-selected offers based on their country.</p>
-              </div>
+            <div className={`${styles.publisherSmartlinkHeader} ${styles.browseCampaignsHeading}`}>
+              <h2><Link2 size={16} aria-hidden="true" />YOUR SMARTLINKS</h2>
             </div>
             <form className={styles.publisherSmartlinkForm} onSubmit={(event) => void createPublisherSmartlink(event)}>
               <label htmlFor="publisher-smartlink-name">Smartlink name</label>
@@ -5018,21 +5007,27 @@ export default function DashboardOverview() {
                     <code className={styles.publisherSmartlinkSubId} aria-label="Smartlink SubID 1">
                       {link.publisherSubId}
                     </code>
-                    <a href={publisherSmartlinkUrl(link.id)} target="_blank" rel="noopener noreferrer">
-                      <code>{publisherSmartlinkUrl(link.id)}</code>
-                    </a>
                   </div>
-                  <button
-                    type="button"
-                    className={styles.publisherSmartlinkCopy}
-                    onClick={() => void copyPublisherSmartlink(link)}
-                    aria-label={`${copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy'} ${link.name} tracking link`}
-                  >
-                    {copiedPublisherSmartlinkId === link.id
-                      ? <Check size={14} aria-hidden="true" />
-                      : <Copy size={14} aria-hidden="true" />}
-                    {copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy link'}
-                  </button>
+                  <div className={styles.publisherSmartlinkActions}>
+                    <Link
+                      href={`/smartlink/${encodeURIComponent(link.id)}/report`}
+                      className={styles.publisherSmartlinkReportLink}
+                    >
+                      <BarChart3 size={14} aria-hidden="true" />
+                      Geo report
+                    </Link>
+                    <button
+                      type="button"
+                      className={styles.publisherSmartlinkCopy}
+                      onClick={() => void copyPublisherSmartlink(link)}
+                      aria-label={`${copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy'} ${link.name} tracking link`}
+                    >
+                      {copiedPublisherSmartlinkId === link.id
+                        ? <Check size={14} aria-hidden="true" />
+                        : <Copy size={14} aria-hidden="true" />}
+                      {copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy link'}
+                    </button>
+                  </div>
                 </article>
               )) : (
                 <p className={styles.publisherSmartlinkEmpty}>No Smartlinks yet. Create one to get started.</p>

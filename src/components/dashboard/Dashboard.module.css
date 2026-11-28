@@ -1391,6 +1391,10 @@ input.reportRangeInput {
   font: 600 14px / 20px Roboto, sans-serif;
 }
 
+.reportTools input[type='hidden'] {
+  display: none;
+}
+
 :global(html:not(.dark)) .reportTools input,
 :global(html:not(.dark)) .reportTools input[type='text'],
 :global(html:not(.dark)) .reportTools input[type='search'] {
@@ -6425,21 +6429,6 @@ input.reportRangeInput {
   padding: 22px;
 }
 
-.publisherSmartlinkHeader h2 {
-  margin: 0;
-  color: #29372d;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.025em;
-}
-
-.publisherSmartlinkHeader p {
-  margin: 7px 0 0;
-  color: #758078;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
 .publisherSmartlinkForm {
   margin-top: 22px;
 }
@@ -6521,24 +6510,43 @@ input.reportRangeInput {
   letter-spacing: 0.08em;
 }
 
-.publisherSmartlinkDetails a {
-  overflow-wrap: anywhere;
-  color: #65796a;
-  text-decoration: underline;
-  text-decoration-color: #c3d0c5;
-  text-underline-offset: 2px;
-}
-
-.publisherSmartlinkDetails a:hover {
-  color: #405748;
-  text-decoration-color: currentColor;
-}
-
 .publisherSmartlinkDetails code {
   overflow-wrap: anywhere;
   color: inherit;
   font-family: inherit;
   font-size: 11px;
+}
+
+.publisherSmartlinkActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.publisherSmartlinkReportLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  padding: 7px 9px;
+  color: #516356;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.publisherSmartlinkReportLink:hover {
+  border-color: #b7c8ba;
+  background: #f7faf7;
+}
+
+.publisherSmartlinkReportLink:focus-visible {
+  outline: 2px solid #a9c2ad;
+  outline-offset: 2px;
 }
 
 .publisherSmartlinkCopy {
@@ -6829,8 +6837,9 @@ input.reportRangeInput {
     flex-direction: column;
   }
 
-  .publisherSmartlinkCopy {
-    align-self: flex-end;
+  .publisherSmartlinkActions {
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .smartlinkGroupForm {

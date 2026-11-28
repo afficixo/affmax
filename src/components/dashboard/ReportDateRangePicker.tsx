@@ -3,12 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import '@/styles/daterangepicker-bs3.css'
-
-export type ReportDatePreset = {
-  label: string
-  days: number | 'month' | 'last-month' | 'all-time'
-  span?: number
-}
+import type { ReportDatePreset } from '@/lib/report-date-presets'
 
 type ReportDateRangePickerProps = {
   startDate: string
@@ -331,6 +326,7 @@ export default function ReportDateRangePicker({
 
   return createPortal(
     <div
+      id="report-date-range-picker-dialog"
       className={`daterangepicker dropdown-menu opensleft show-calendar${activePreset === 'Custom Range' ? ' custom-range' : ''}`}
       style={{
         display: 'block',
