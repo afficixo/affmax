@@ -1,6 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { BarChart3 } from 'lucide-react'
+import {
+  BarChart3,
+  BriefcaseBusiness,
+  CalendarDays,
+  CircleDollarSign,
+  MousePointer2,
+  ShoppingCart,
+} from 'lucide-react'
 import * as CountryFlags from 'country-flag-icons/react/1x1'
 import { prisma } from '@/lib/db/prisma'
 import { offerGeoCountryCode } from '@/lib/offer-geo'
@@ -40,7 +47,8 @@ export default async function SmartlinkReportPage({ params, searchParams }: Smar
     notFound()
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
   const requestedFrom = firstSearchParam(query.from)
   const requestedTo = firstSearchParam(query.to)
   const parsedFrom = parseReportDate(requestedFrom)
@@ -78,7 +86,31 @@ export default async function SmartlinkReportPage({ params, searchParams }: Smar
   if (!smartlink) notFound()
 
   const publisherSubId = await ensurePublisherSmartlinkSubId(id, smartlink.publisherSubId)
-  const [clickGroups, leads] = await Promise.all([
+  const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+  const todayLeadsPromise = publisherSubId
+    ? prisma.conversionLead.findMany({
+        where: {
+          userId: smartlink.ownerId,
+          sub3: publisherSubId,
+          OR: [{ status: { not: 'Reversed' } }, { status: null }],
+          createdAt: { gte: todayStart },
+        },
+        select: { createdAt: true, payout: true },
+      })
+    : Promise.resolve([])
+  const monthRevenuePromise = publisherSubId
+    ? prisma.conversionLead.aggregate({
+        where: {
+          userId: smartlink.ownerId,
+          sub3: publisherSubId,
+          OR: [{ status: { not: 'Reversed' } }, { status: null }],
+          createdAt: { gte: monthStart },
+        },
+        _sum: { payout: true },
+      })
+    : Promise.resolve(null)
+  const [clickGroups, leads, todayClicks, todayLeads, monthRevenueResult] = await Promise.all([
     prisma.offerClick.groupBy({
       by: ['countryCode'],
       where: {
@@ -99,7 +131,48 @@ export default async function SmartlinkReportPage({ params, searchParams }: Smar
           select: { offerId: true, payout: true },
         })
       : Promise.resolve([]),
+    prisma.offerClick.findMany({
+      where: {
+        smartlinkId: id,
+        isUnique: true,
+        createdAt: { gte: todayStart },
+      },
+      select: { createdAt: true },
+    }),
+    todayLeadsPromise,
+    monthRevenuePromise,
   ])
+  const hourlyPerformance = Array.from({ length: 24 }, () => ({
+    clicks: 0,
+    conversions: 0,
+    revenue: 0,
+  }))
+  for (const click of todayClicks) {
+    hourlyPerformance[click.createdAt.getUTCHours()].clicks += 1
+  }
+  for (const lead of todayLeads) {
+    const hour = lead.createdAt.getUTCHours()
+    hourlyPerformance[hour].conversions += 1
+    hourlyPerformance[hour].revenue += Number(lead.payout ?? 0)
+  }
+  const todayRevenue = todayLeads.reduce((total, lead) => total + Number(lead.payout ?? 0), 0)
+  const todayConversions = todayLeads.length
+  const todayClickCount = todayClicks.length
+  const todayEpc = todayClickCount > 0 ? todayRevenue / todayClickCount : 0
+  const todayConversionRate = todayClickCount > 0
+    ? (todayConversions / todayClickCount) * 100
+    : (todayConversions > 0 ? 100 : 0)
+  const monthRevenue = Number(monthRevenueResult?._sum.payout ?? 0)
+  const maxHourlyValue = Math.max(
+    1,
+    ...hourlyPerformance.map((hour) => hour.clicks),
+    ...hourlyPerformance.map((hour) => hour.conversions),
+    ...hourlyPerformance.map((hour) => hour.revenue),
+  )
+  const chartY = (value: number) => 210 - (value / maxHourlyValue) * 200
+  const chartPoints = (key: 'clicks' | 'conversions' | 'revenue') => hourlyPerformance
+    .map((hour, index) => `${36 + index * 19.2},${chartY(hour[key])}`)
+    .join(' ')
   const offerIds = [...new Set(leads.map((lead) => lead.offerId).filter((offerId): offerId is string => Boolean(offerId)))]
   const offers = offerIds.length
     ? await prisma.campaignOffer.findMany({
@@ -167,6 +240,7 @@ export default async function SmartlinkReportPage({ params, searchParams }: Smar
     ? rows.filter((row) => `${row.label} ${row.code}`.toLowerCase().includes(searchTerm))
     : rows
   const formatMoney = (value: number) => `$${value.toFixed(2)}`
+  const formatStatMoney = (value: number) => `$${value.toFixed(value >= 100 || Number.isInteger(value) ? 0 : 2)}`
   const formatCr = (value: number) => {
     const rounded = Math.round(value * 100) / 100
     return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(2)}%`
@@ -185,6 +259,61 @@ export default async function SmartlinkReportPage({ params, searchParams }: Smar
           <SmartlinkCopyButton smartlinkId={id} smartlinkName={smartlink.name} />
         </div>
       </header>
+      <div className={`${dashboardStyles.dashboardGrid} ${styles.reportAnalytics}`}>
+        <section className={`${dashboardStyles.panel} ${dashboardStyles.performancePanel}`}>
+          <h2><span className={dashboardStyles.titleIcon}>ϟ</span> TODAY PERFORMANCE</h2>
+          <div className={dashboardStyles.chartWrap}>
+            <div className={dashboardStyles.yLabels}>
+              {['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'].map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </div>
+            <div className={dashboardStyles.chart}>
+              <div className={dashboardStyles.chartGrid} />
+              <svg
+                viewBox="0 0 480 224"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Today's hourly clicks, conversions, and revenue for this Smartlink"
+              >
+                <polyline points={chartPoints('revenue')} fill="none" stroke="#3d464d" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+                <polyline points={chartPoints('clicks')} fill="none" stroke="#3498db" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                <polyline points={chartPoints('conversions')} fill="none" stroke="#60ed32" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                {hourlyPerformance.map((hour, index) => (
+                  <circle key={`revenue-${index}`} cx={36 + index * 19.2} cy={chartY(hour.revenue)} r="3" fill="#3d464d" />
+                ))}
+                {hourlyPerformance.map((hour, index) => (
+                  <circle key={`clicks-${index}`} cx={36 + index * 19.2} cy={chartY(hour.clicks)} r="2.5" fill="#3498db" />
+                ))}
+                {hourlyPerformance.map((hour, index) => (
+                  <circle key={`conversions-${index}`} cx={36 + index * 19.2} cy={chartY(hour.conversions)} r="2.5" fill="#60ed32" />
+                ))}
+              </svg>
+              <div className={dashboardStyles.xLabels}>
+                {Array.from({ length: 24 }, (_, hour) => <span key={hour}>{hour}</span>)}
+              </div>
+            </div>
+          </div>
+          <div className={dashboardStyles.legend}>
+            <span><i className={dashboardStyles.legendClicks} />Clicks</span>
+            <span><i className={dashboardStyles.legendConversions} />Conversions</span>
+            <span><i className={dashboardStyles.legendRevenue} />Revenue</span>
+          </div>
+        </section>
+        <section className={`${dashboardStyles.panel} ${dashboardStyles.statsPanel}`} aria-label="Today's Smartlink statistics">
+          <div><p><CircleDollarSign size={15} aria-hidden="true" />Revenue</p><strong>{formatStatMoney(todayRevenue)}</strong></div>
+          <div><p><ShoppingCart size={15} aria-hidden="true" />Conversions</p><strong>{todayConversions}</strong></div>
+          <div><p><MousePointer2 size={15} aria-hidden="true" />Clicks</p><strong>{todayClickCount}</strong></div>
+          <div><p><BriefcaseBusiness size={15} aria-hidden="true" />Avg. EPC</p><strong>{formatStatMoney(todayEpc)}</strong></div>
+          <div>
+            <p><BarChart3 size={15} aria-hidden="true" />Conv. Rate</p>
+            <strong className={dashboardStyles.successValue}>
+              {todayConversionRate.toFixed(todayConversionRate % 1 ? 2 : 0)}<small>%</small>
+            </strong>
+          </div>
+          <div><p><CalendarDays size={15} aria-hidden="true" />This Month</p><strong>${monthRevenue.toFixed(2)}</strong></div>
+        </section>
+      </div>
       <section className={`${dashboardStyles.panel} ${dashboardStyles.dataPage} ${dashboardStyles.reportPanel}`}>
         <div className={dashboardStyles.reportHeading}>
           <h2><BarChart3 aria-hidden="true" /> Geo Reports</h2>

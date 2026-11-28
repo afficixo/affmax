@@ -1223,6 +1223,7 @@ export default function DashboardOverview() {
   const [publisherSmartlinkCreating, setPublisherSmartlinkCreating] = useState(false)
   const [publisherSmartlinkError, setPublisherSmartlinkError] = useState('')
   const [copiedPublisherSmartlinkId, setCopiedPublisherSmartlinkId] = useState<string | null>(null)
+  const [copiedPublisherSmartlinkReportId, setCopiedPublisherSmartlinkReportId] = useState<string | null>(null)
   const [time, setTime] = useState('--:--:--')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
@@ -3324,6 +3325,17 @@ export default function DashboardOverview() {
       setPublisherSmartlinkError('Unable to copy link. Select and copy the URL manually.')
     }
   }
+  const copyPublisherSmartlinkReport = async (link: PublisherSmartlinkRecord) => {
+    const url = `${window.location.origin}/smartlink/${encodeURIComponent(link.id)}/report`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedPublisherSmartlinkReportId(link.id)
+      window.setTimeout(() => setCopiedPublisherSmartlinkReportId((current) => current === link.id ? null : current), 1800)
+    } catch (copyError) {
+      console.error('Unable to copy publisher Smartlink geo report:', copyError)
+      setPublisherSmartlinkError('Unable to copy report link. Select and copy the URL manually.')
+    }
+  }
   const filteredPublisherAccounts = publisherAccounts.filter((publisher) => {
     if (publisherStatusFilter !== 'ALL' && publisher.status !== publisherStatusFilter) return false
     const term = publisherSearch.trim().toLowerCase()
@@ -5009,13 +5021,28 @@ export default function DashboardOverview() {
                     </code>
                   </div>
                   <div className={styles.publisherSmartlinkActions}>
-                    <Link
-                      href={`/smartlink/${encodeURIComponent(link.id)}/report`}
-                      className={styles.publisherSmartlinkReportLink}
-                    >
-                      <BarChart3 size={14} aria-hidden="true" />
-                      Geo report
-                    </Link>
+                    <div className={styles.publisherSmartlinkReportAction}>
+                      <Link
+                        href={`/smartlink/${encodeURIComponent(link.id)}/report`}
+                        className={styles.publisherSmartlinkReportLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <BarChart3 size={14} aria-hidden="true" />
+                        Geo report
+                      </Link>
+                      <button
+                        type="button"
+                        className={styles.publisherSmartlinkReportCopy}
+                        onClick={() => void copyPublisherSmartlinkReport(link)}
+                        aria-label={`${copiedPublisherSmartlinkReportId === link.id ? 'Copied' : 'Copy'} ${link.name} geo report link`}
+                        title={copiedPublisherSmartlinkReportId === link.id ? 'Copied' : 'Copy report link'}
+                      >
+                        {copiedPublisherSmartlinkReportId === link.id
+                          ? <Check size={14} aria-hidden="true" />
+                          : <Copy size={14} aria-hidden="true" />}
+                      </button>
+                    </div>
                     <button
                       type="button"
                       className={styles.publisherSmartlinkCopy}

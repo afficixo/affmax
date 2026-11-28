@@ -6521,7 +6521,38 @@ input.reportRangeInput {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.publisherSmartlinkCopy {
+  display: inline-flex;
+  flex: 0 0 104px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  padding: 0 9px;
+  color: #516356;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.publisherSmartlinkReportAction {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  background: #fff;
 }
 
 .publisherSmartlinkReportLink {
@@ -6529,51 +6560,51 @@ input.reportRangeInput {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid #dfe7e0;
-  border-radius: 6px;
-  padding: 7px 9px;
+  padding: 0 9px;
   color: #516356;
-  background: #fff;
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.publisherSmartlinkReportLink:hover {
-  border-color: #b7c8ba;
-  background: #f7faf7;
-}
-
-.publisherSmartlinkReportLink:focus-visible {
-  outline: 2px solid #a9c2ad;
-  outline-offset: 2px;
-}
-
-.publisherSmartlinkCopy {
+.publisherSmartlinkReportCopy {
   display: inline-flex;
-  flex: 0 0 auto;
+  flex: 0 0 34px;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border: 1px solid #dfe7e0;
-  border-radius: 6px;
-  padding: 7px 9px;
+  border: 0;
+  border-left: 1px solid #dfe7e0;
+  padding: 0;
   color: #516356;
   background: #fff;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 600;
   cursor: pointer;
 }
 
+.publisherSmartlinkCopy {
+  cursor: pointer;
+}
+
+.publisherSmartlinkReportAction:hover,
+.publisherSmartlinkReportCopy:hover,
 .publisherSmartlinkCopy:hover {
   border-color: #b7c8ba;
   background: #f7faf7;
 }
 
+.publisherSmartlinkReportLink:focus-visible,
+.publisherSmartlinkReportCopy:focus-visible,
 .publisherSmartlinkCopy:focus-visible {
   outline: 2px solid #a9c2ad;
   outline-offset: 2px;
+}
+
+.publisherSmartlinkReportCopy {
+  appearance: none;
+}
+
+.publisherSmartlinkCopy {
+  appearance: none;
 }
 
 .publisherSmartlinkEmpty,
