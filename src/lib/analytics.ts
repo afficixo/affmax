@@ -515,6 +515,7 @@ export async function recordOfferClick(input: {
   sub2?: string
   ipAddress?: string | null
   userAgent?: string | null
+  countryCode?: string | null
   useProviderIpFallback?: boolean
 }) {
   const ipAddress = input.ipAddress?.trim() || null
@@ -561,9 +562,11 @@ export async function recordOfferClick(input: {
 
   if (!click.isUnique) return click
 
-  const countryCode = await lookupCountryCode(ipAddress, {
-    useProviderIpFallback: input.useProviderIpFallback,
-  })
+  const countryCode = input.countryCode !== undefined
+    ? input.countryCode
+    : await lookupCountryCode(ipAddress, {
+        useProviderIpFallback: input.useProviderIpFallback,
+      })
   if (!countryCode) return click
 
   return prisma.offerClick.update({

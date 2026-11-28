@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { normalizeSmartlinkOfferIds, smartlinkOffersForCountry } from '../src/lib/smartlink'
+import {
+  normalizeSmartlinkOfferIds,
+  selectSmartlinkOfferForVisitor,
+  smartlinkOffersForCountry,
+} from '../src/lib/smartlink'
 
 const offers = [
   { country: 'US', countries: ['US'], url: 'https://us.example/1' },
@@ -32,6 +36,38 @@ test('uses all active site offers when the visitor country is unknown', () => {
 
 test('returns no candidates when the site has no available offers', () => {
   assert.deepEqual(smartlinkOffersForCountry([], 'US'), [])
+})
+
+test('selects an unseen eligible offer before repeating a geo-eligible offer', () => {
+  const routableOffers = offers.map((offer, index) => ({ ...offer, id: `offer-${index}` }))
+  const selection = selectSmartlinkOfferForVisitor(
+    routableOffers,
+    'US',
+    ['offer-0'],
+    (max) => {
+      assert.equal(max, 1)
+      return 0
+    },
+  )
+
+  assert.equal(selection?.offer.id, 'offer-1')
+  assert.deepEqual(selection?.seenOfferIds, ['offer-0', 'offer-1'])
+})
+
+test('starts a new random cycle after all eligible offers have been seen', () => {
+  const routableOffers = offers.map((offer, index) => ({ ...offer, id: `offer-${index}` }))
+  const selection = selectSmartlinkOfferForVisitor(
+    routableOffers,
+    'US',
+    ['offer-0', 'offer-1', 'offer-2'],
+    (max) => {
+      assert.equal(max, 2)
+      return 1
+    },
+  )
+
+  assert.equal(selection?.offer.id, 'offer-1')
+  assert.deepEqual(selection?.seenOfferIds, ['offer-1'])
 })
 
 test('normalizes and deduplicates selected Smartlink offer IDs', () => {

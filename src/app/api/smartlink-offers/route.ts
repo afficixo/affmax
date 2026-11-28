@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server'
 import { getCorsHeaders } from '@/config/cors'
 import { getTokenFromCookie, getUserFromToken } from '@/lib/auth'
 import { prisma } from '@/lib/db/prisma'
-import { normalizeSmartlinkOfferIds } from '@/lib/smartlink'
-
-const SMARTLINK_OFFERS_CONFIG_ID = 'smartlink-active-offers'
-const SMARTLINK_OFFERS_CONFIG_KIND = 'smartlink-offers'
+import {
+  normalizeSmartlinkOfferIds,
+  SMARTLINK_OFFERS_CONFIG_ID,
+  SMARTLINK_OFFERS_CONFIG_KIND,
+} from '@/lib/smartlink'
 
 async function requireManager(request: Request) {
   const origin = request.headers.get('origin') || null

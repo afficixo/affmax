@@ -95,12 +95,26 @@ model IncentiveTool {
   isPublished      Boolean  @default(true)
   ownerId          String
   owner            User     @relation("IncentiveToolOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  smartlinkVisitorCycles SmartlinkVisitorCycle[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@index([ownerId, kind])
   @@index([kind, isPublished])
   @@map("incentive_tools")
+}
+
+model SmartlinkVisitorCycle {
+  smartlinkId   String
+  smartlink     IncentiveTool @relation(fields: [smartlinkId], references: [id], onDelete: Cascade)
+  visitorHash   String
+  countryCode   String
+  seenOfferIds  String[]      @default([])
+  updatedAt     DateTime      @updatedAt
+
+  @@id([smartlinkId, visitorHash, countryCode])
+  @@index([updatedAt])
+  @@map("smartlink_visitor_cycles")
 }
 
 model OfferApplication {

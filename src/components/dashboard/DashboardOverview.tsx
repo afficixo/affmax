@@ -457,6 +457,12 @@ type PublisherAccountRecord = {
   referredBy?: { id: string; username: string } | null
 }
 
+type PublisherSmartlinkRecord = {
+  id: string
+  name: string
+  createdAt: string
+}
+
 /** Dashboard topbar ticker strings */
 const topbarUpdateStrings = [
   'Add offers from <b>Campaigns</b> or <b>Incentive Offers</b>.',
@@ -1218,6 +1224,12 @@ export default function DashboardOverview() {
   const [smartlinkOffersLoaded, setSmartlinkOffersLoaded] = useState(false)
   const [smartlinkOffersSaving, setSmartlinkOffersSaving] = useState(false)
   const [smartlinkOffersError, setSmartlinkOffersError] = useState('')
+  const [publisherSmartlinks, setPublisherSmartlinks] = useState<PublisherSmartlinkRecord[]>([])
+  const [publisherSmartlinksLoading, setPublisherSmartlinksLoading] = useState(false)
+  const [publisherSmartlinkName, setPublisherSmartlinkName] = useState('')
+  const [publisherSmartlinkCreating, setPublisherSmartlinkCreating] = useState(false)
+  const [publisherSmartlinkError, setPublisherSmartlinkError] = useState('')
+  const [copiedPublisherSmartlinkId, setCopiedPublisherSmartlinkId] = useState<string | null>(null)
   const [time, setTime] = useState('--:--:--')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
@@ -1697,6 +1709,34 @@ export default function DashboardOverview() {
       })
       .finally(() => {
         if (active) setSmartlinkOffersLoading(false)
+      })
+
+    return () => { active = false }
+  }, [userRole, pathname])
+
+  useEffect(() => {
+    if (userRole !== 'PUBLISHER' || pathname !== '/smartlink') return
+    let active = true
+    setPublisherSmartlinksLoading(true)
+    setPublisherSmartlinkError('')
+
+    fetch('/api/smartlinks', { credentials: 'include', cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json() as { links?: PublisherSmartlinkRecord[]; error?: string }
+        if (!response.ok || !Array.isArray(payload.links)) {
+          throw new Error(payload.error || 'Unable to load your Smartlinks')
+        }
+        if (active) setPublisherSmartlinks(payload.links)
+      })
+      .catch((loadError: unknown) => {
+        console.error('Unable to load publisher Smartlinks:', loadError)
+        if (active) {
+          setPublisherSmartlinks([])
+          setPublisherSmartlinkError(loadError instanceof Error ? loadError.message : 'Unable to load your Smartlinks')
+        }
+      })
+      .finally(() => {
+        if (active) setPublisherSmartlinksLoading(false)
       })
 
     return () => { active = false }
@@ -3209,7 +3249,7 @@ export default function DashboardOverview() {
     ? menuGroups
     : menuGroups.map((group) => {
       if (group.label === 'Offers') {
-        return { ...group, items: group.items.filter((item) => item.href !== '/campaigns/add' && item.href !== '/campaigns/approvals' && item.href !== '/smartlink') }
+        return { ...group, items: group.items.filter((item) => item.href !== '/campaigns/add' && item.href !== '/campaigns/approvals') }
       }
       if (group.label === 'Account') {
         return { ...group, items: group.items.filter((item) => item.href !== '/account/publishers') }
@@ -3243,6 +3283,52 @@ export default function DashboardOverview() {
       setSmartlinkOffersError(saveError instanceof Error ? saveError.message : 'Unable to save Smartlink offers')
     } finally {
       setSmartlinkOffersSaving(false)
+    }
+  }
+  const createPublisherSmartlink = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const name = publisherSmartlinkName.trim()
+    if (userRole !== 'PUBLISHER' || !name || publisherSmartlinkCreating) return
+
+    setPublisherSmartlinkCreating(true)
+    setPublisherSmartlinkError('')
+    try {
+      const response = await fetch('/api/smartlinks', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      const payload = await response.json() as { link?: PublisherSmartlinkRecord; error?: string }
+      if (!response.ok || !payload.link) {
+        throw new Error(payload.error || 'Unable to create your Smartlink')
+      }
+      setPublisherSmartlinks((current) => [payload.link!, ...current])
+      setPublisherSmartlinkName('')
+    } catch (createError) {
+      console.error('Unable to create publisher Smartlink:', createError)
+      setPublisherSmartlinkError(createError instanceof Error ? createError.message : 'Unable to create your Smartlink')
+    } finally {
+      setPublisherSmartlinkCreating(false)
+    }
+  }
+  const publisherSmartlinkUrl = (id: string) => {
+    const origin = resolvePublicTrackingOrigin()
+    return origin ? `${origin.replace(/\/$/, '')}/smartlink/${encodeURIComponent(id)}` : ''
+  }
+  const copyPublisherSmartlink = async (link: PublisherSmartlinkRecord) => {
+    const url = publisherSmartlinkUrl(link.id)
+    if (!url) {
+      setPublisherSmartlinkError('Unable to determine your tracking domain')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedPublisherSmartlinkId(link.id)
+      window.setTimeout(() => setCopiedPublisherSmartlinkId((current) => current === link.id ? null : current), 1800)
+    } catch (copyError) {
+      console.error('Unable to copy publisher Smartlink:', copyError)
+      setPublisherSmartlinkError('Unable to copy link. Select and copy the URL manually.')
     }
   }
   const filteredPublisherAccounts = publisherAccounts.filter((publisher) => {
@@ -4888,17 +4974,71 @@ export default function DashboardOverview() {
               </section>
             </>
           )
+        ) : isSmartlinkPage && userRole === 'PUBLISHER' ? (
+          <section className={`${styles.panel} ${styles.dataPage} ${styles.smartlinkPage} ${styles.publisherSmartlinkPage}`}>
+            <div className={styles.publisherSmartlinkHeader}>
+              <div>
+                <h2>YOUR SMARTLINKS</h2>
+                <p>Create a tracking link that routes visitors to manager-selected offers based on their country.</p>
+              </div>
+            </div>
+            <form className={styles.publisherSmartlinkForm} onSubmit={(event) => void createPublisherSmartlink(event)}>
+              <label htmlFor="publisher-smartlink-name">Smartlink name</label>
+              <div className={styles.publisherSmartlinkFormRow}>
+                <input
+                  id="publisher-smartlink-name"
+                  type="text"
+                  value={publisherSmartlinkName}
+                  onChange={(event) => setPublisherSmartlinkName(event.target.value)}
+                  maxLength={80}
+                  placeholder="For example, Global campaign"
+                  required
+                />
+                <button
+                  type="submit"
+                  className={`${styles.pagePrimaryButton} ${styles.addOfferButton}`}
+                  disabled={publisherSmartlinkCreating || !publisherSmartlinkName.trim()}
+                >
+                  <Plus size={14} aria-hidden="true" />
+                  {publisherSmartlinkCreating ? 'Creating…' : 'Create Smartlink'}
+                </button>
+              </div>
+            </form>
+            {publisherSmartlinkError && <p className={styles.publisherSmartlinkError} role="alert">{publisherSmartlinkError}</p>}
+            <div className={styles.publisherSmartlinkList}>
+              {publisherSmartlinksLoading ? (
+                <div className={styles.paymentLoading} role="status" aria-label="Loading your Smartlinks" aria-live="polite" aria-busy="true">
+                  <span className={styles.paymentLoadingSpinner} aria-hidden="true" />
+                </div>
+              ) : publisherSmartlinks.length ? publisherSmartlinks.map((link) => (
+                <article className={styles.publisherSmartlinkItem} key={link.id}>
+                  <div className={styles.publisherSmartlinkDetails}>
+                    <strong>{link.name}</strong>
+                    <code>{publisherSmartlinkUrl(link.id)}</code>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.publisherSmartlinkCopy}
+                    onClick={() => void copyPublisherSmartlink(link)}
+                    aria-label={`${copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy'} ${link.name} tracking link`}
+                  >
+                    {copiedPublisherSmartlinkId === link.id
+                      ? <Check size={14} aria-hidden="true" />
+                      : <Copy size={14} aria-hidden="true" />}
+                    {copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy link'}
+                  </button>
+                </article>
+              )) : (
+                <p className={styles.publisherSmartlinkEmpty}>No Smartlinks yet. Create one to get started.</p>
+              )}
+            </div>
+          </section>
         ) : isCampaignCatalog ? (
           isSmartlinkPage && userRole === null ? (
             <div className={styles.paymentLoading} role="status" aria-label="Checking manager access" aria-live="polite" aria-busy="true">
               <span className={styles.paymentLoadingSpinner} aria-hidden="true" />
             </div>
-          ) : isSmartlinkPage && userRole !== 'MANAGER' ? (
-            <section className={`${styles.panel} ${styles.dataPage} ${styles.smartlinkPage}`}>
-              <h2 className={styles.sectionTitle}>SMARTLINK OFFERS</h2>
-              <p className={styles.pageHint}>Smartlink offer activation is available to managers only. Publisher Smartlink creation is not available yet.</p>
-            </section>
-          ) : (
+          ) : isSmartlinkPage && userRole !== 'MANAGER' ? null : (
           <>
             <section className={`${styles.panel} ${styles.browseFilters}`}>
               <div className={styles.browseFiltersHeading}>
