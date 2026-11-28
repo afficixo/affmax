@@ -19,8 +19,8 @@ test('builds a marketplace URL with its supplied macro tokens', () => {
   assert.equal(
     url,
     'https://crackbounty.example/api/postback/in/app-secret'
-      + '?s1=#S1#&s2=#S2#&s3=#S3#&s4=#S4#'
-    + '&ip={IP}&cmpid=#CMPID#',
+      + '?s1=#S1#&cmpid=#CMPID#&s2=#S2#&s3=#S3#'
+      + '&s4=#S4#&ip={IP}',
   )
 })
 
@@ -55,8 +55,8 @@ test('keeps the existing marketplace token defaults for saved configs', () => {
   assert.equal(
     buildMarketplacePostbackUrl('https://crackbounty.example', 'app-secret'),
     'https://crackbounty.example/api/postback/in/app-secret'
-      + '?s1=#s1#&s2=#s2#&s3=#s3#&s4=#s4#'
-      + '&ip=#ip#&cmpid=#cmpid#',
+      + '?s1=#s1#&cmpid=#cmpid#&s2=#s2#&s3=#s3#'
+      + '&s4=#s4#&ip=#ip#',
   )
 })
 

@@ -47,8 +47,8 @@ export function buildMarketplacePostbackUrl(
   const base = origin.replace(/\/$/, '')
   // Keep the marketplace macro syntax intact so its system can substitute values.
   return `${base}/api/postback/in/${encodeURIComponent(token)}`
-    + `?s1=${tokens.s1}&s2=${tokens.s2}&s3=${tokens.s3}&s4=${tokens.s4}`
-    + `&ip=${tokens.ip}&cmpid=${tokens.cmpid}`
+    + `?s1=${tokens.s1}&cmpid=${tokens.cmpid}&s2=${tokens.s2}&s3=${tokens.s3}`
+    + `&s4=${tokens.s4}&ip=${tokens.ip}`
 }
 
 export async function ensureMarketplacePostbackConfig(managerId: string) {
