@@ -216,20 +216,6 @@
   content: '';
 }
 
-.daterangepicker.opensabove:before {
-  top: auto;
-  bottom: -7px;
-  border-top: 7px solid rgba(0, 0, 0, 0.2);
-  border-bottom: 0;
-}
-
-.daterangepicker.opensabove:after {
-  top: auto;
-  bottom: -6px;
-  border-top: 6px solid #fff;
-  border-bottom: 0;
-}
-
 .daterangepicker.openscenter:before {
   position: absolute;
   top: -7px;
@@ -414,10 +400,6 @@
   vertical-align: middle;
 }
 
-.daterangepicker .range_inputs .cancelBtn {
-  margin-left: 4px;
-}
-
 .daterangepicker .btn-sm,
 .daterangepicker .btn-small {
   font-size: 12px;
@@ -528,26 +510,11 @@
     width: calc(100% - 8px);
   }
 
-  .daterangepicker.custom-range .ranges ul {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
-  }
-
-  .daterangepicker.custom-range .ranges li {
-    margin-bottom: 0;
-    padding: 3px 8px;
-  }
-
   .daterangepicker.custom-range .ranges .range_inputs {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 4px;
-  }
-
-  .daterangepicker.custom-range .ranges .range_inputs .cancelBtn {
-    margin-left: 0;
   }
 
   .daterangepicker.custom-range .ranges .range_inputs > div {

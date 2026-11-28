@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import '@/styles/daterangepicker-bs3.css'
 import type { ReportDatePreset } from '@/lib/report-date-presets'
@@ -63,21 +63,6 @@ function shiftMonth(year: number, monthIndex: number, delta: number) {
   return { year: date.getFullYear(), monthIndex: date.getMonth() }
 }
 
-function getCalendarMonths(startDate: string, endDate: string) {
-  const start = parseIso(startDate)
-  const end = parseIso(endDate)
-  const left = { year: start.getFullYear(), monthIndex: start.getMonth() }
-  const endIsAfterStartMonth = end.getFullYear() > left.year
-    || (end.getFullYear() === left.year && end.getMonth() > left.monthIndex)
-
-  return {
-    left,
-    right: endIsAfterStartMonth
-      ? { year: end.getFullYear(), monthIndex: end.getMonth() }
-      : shiftMonth(left.year, left.monthIndex, 1),
-  }
-}
-
 function buildMonthCells(year: number, monthIndex: number): CalendarCell[][] {
   const first = new Date(year, monthIndex, 1, 12, 0, 0, 0)
   const startOffset = first.getDay()
@@ -136,11 +121,11 @@ export default function ReportDateRangePicker({
   const [activePreset, setActivePreset] = useState(presetLabel)
   const [pickingEnd, setPickingEnd] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [position, setPosition] = useState({ top: 97, left: 8, maxHeight: 0, opensAbove: false })
-  const pickerRef = useRef<HTMLDivElement>(null)
-  const initialMonths = getCalendarMonths(startDate, endDate)
-  const [leftMonth, setLeftMonth] = useState(initialMonths.left)
-  const [rightMonth, setRightMonth] = useState(initialMonths.right)
+  const [position, setPosition] = useState({ top: 97, right: 20, maxHeight: 0 })
+  const startMonth = parseIso(startDate)
+  const endMonth = parseIso(endDate)
+  const [leftMonth, setLeftMonth] = useState({ year: startMonth.getFullYear(), monthIndex: startMonth.getMonth() })
+  const [rightMonth, setRightMonth] = useState({ year: endMonth.getFullYear(), monthIndex: endMonth.getMonth() })
 
   useEffect(() => {
     setMounted(true)
@@ -151,24 +136,11 @@ export default function ReportDateRangePicker({
       const anchor = anchorRef?.current
       if (!anchor) return
       const rect = anchor.getBoundingClientRect()
-      const pickerRect = pickerRef.current?.getBoundingClientRect()
-      const gap = 8
-      const spaceBelow = Math.max(0, window.innerHeight - rect.bottom - gap)
-      const spaceAbove = Math.max(0, rect.top - gap)
-      const opensAbove = (pickerRect?.height ?? 0) > spaceBelow && spaceAbove > spaceBelow
-      const maxHeight = opensAbove ? spaceAbove : spaceBelow
-      const top = opensAbove
-        ? Math.max(gap, rect.top - Math.min(pickerRect?.height ?? 0, maxHeight) - gap)
-        : rect.bottom + gap
-      const width = pickerRect?.width ?? 0
+      const top = Math.round(rect.bottom + window.scrollY)
       setPosition({
-        top: Math.round(top),
-        left: Math.round(Math.min(
-          Math.max(gap, rect.right - width),
-          Math.max(gap, window.innerWidth - width - gap),
-        )),
-        maxHeight: Math.round(maxHeight),
-        opensAbove,
+        top,
+        right: Math.max(8, Math.round(window.innerWidth - rect.right)),
+        maxHeight: window.innerWidth <= 700 ? Math.max(0, window.innerHeight - rect.bottom - 8) : 0,
       })
     }
     updatePosition()
@@ -178,7 +150,7 @@ export default function ReportDateRangePicker({
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition, true)
     }
-  }, [activePreset, anchorRef, mounted])
+  }, [anchorRef])
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent | TouchEvent) => {
@@ -207,9 +179,10 @@ export default function ReportDateRangePicker({
     setDraftEnd(endDate)
     setActivePreset(presetLabel)
     setPickingEnd(false)
-    const months = getCalendarMonths(startDate, endDate)
-    setLeftMonth(months.left)
-    setRightMonth(months.right)
+    const start = parseIso(startDate)
+    const end = parseIso(endDate)
+    setLeftMonth({ year: start.getFullYear(), monthIndex: start.getMonth() })
+    setRightMonth({ year: end.getFullYear(), monthIndex: end.getMonth() })
   }, [startDate, endDate, presetLabel])
 
   const leftCells = useMemo(() => buildMonthCells(leftMonth.year, leftMonth.monthIndex), [leftMonth])
@@ -353,17 +326,15 @@ export default function ReportDateRangePicker({
 
   return createPortal(
     <div
-      ref={pickerRef}
       id="report-date-range-picker-dialog"
-      className={`daterangepicker dropdown-menu opensleft show-calendar${activePreset === 'Custom Range' ? ' custom-range' : ''}${position.opensAbove ? ' opensabove' : ''}`}
+      className={`daterangepicker dropdown-menu opensleft show-calendar${activePreset === 'Custom Range' ? ' custom-range' : ''}`}
       style={{
         display: 'block',
         top: position.top,
-        left: position.left,
-        right: 'auto',
-        maxHeight: position.maxHeight > 0 ? position.maxHeight : undefined,
-        overflowY: position.maxHeight > 0 ? 'auto' : undefined,
-        position: 'fixed',
+        right: position.right,
+        left: 'auto',
+        maxHeight: activePreset === 'Custom Range' && position.maxHeight > 0 ? position.maxHeight : undefined,
+        overflowY: activePreset === 'Custom Range' && position.maxHeight > 0 ? 'auto' : undefined,
       }}
       role="dialog"
       aria-label="Select report date range"
@@ -434,6 +405,7 @@ export default function ReportDateRangePicker({
           >
             Apply
           </button>
+          &nbsp;
           <button type="button" className="cancelBtn btn btn-sm btn-small btn-primary btn-white" onClick={onCancel}>
             Cancel
           </button>
