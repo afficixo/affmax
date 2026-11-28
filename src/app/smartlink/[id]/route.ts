@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db/prisma'
 import { ensurePublisherNumber } from '@/lib/db/user'
 import { lookupCountryCode } from '@/lib/ip2location'
 import { offerMatchesVisitorCountry, visitorCountryCodeFromHeaders } from '@/lib/offer-geo'
+import { ensurePublisherSmartlinkSubId } from '@/lib/smartlink-subid'
 import {
   PUBLISHER_SMARTLINK_KIND,
   selectSmartlinkOfferForVisitor,
@@ -85,6 +86,7 @@ export async function GET(request: Request, context: RouteContext) {
         kind: true,
         fields: true,
         ownerId: true,
+        publisherSubId: true,
         owner: { select: { publisherNumber: true } },
       },
     })
@@ -137,6 +139,11 @@ export async function GET(request: Request, context: RouteContext) {
       response.headers.set('Cache-Control', 'private, no-store')
       response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
       return response
+    }
+
+    const publisherSubId = await ensurePublisherSmartlinkSubId(group.id, group.publisherSubId)
+    if (!publisherSubId) {
+      return NextResponse.json({ error: 'Smartlink SubID is not configured' }, { status: 503 })
     }
 
     const config = await prisma.incentiveTool.findUnique({
@@ -239,7 +246,7 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     const requestUrl = new URL(request.url)
-    const subId1 = requestUrl.searchParams.get('s1')?.slice(0, 100) ?? ''
+    const subId1 = publisherSubId
     const subId2 = requestUrl.searchParams.get('s2')?.slice(0, 100) ?? ''
     const subId3 = requestUrl.searchParams.get('s3')?.slice(0, 100) ?? ''
     try {

@@ -461,6 +461,7 @@ type PublisherSmartlinkRecord = {
   id: string
   name: string
   createdAt: string
+  publisherSubId: string
 }
 
 /** Dashboard topbar ticker strings */
@@ -5014,6 +5015,9 @@ export default function DashboardOverview() {
                 <article className={styles.publisherSmartlinkItem} key={link.id}>
                   <div className={styles.publisherSmartlinkDetails}>
                     <strong>{link.name}</strong>
+                    <code className={styles.publisherSmartlinkSubId} aria-label="Smartlink SubID 1">
+                      {link.publisherSubId}
+                    </code>
                     <a href={publisherSmartlinkUrl(link.id)} target="_blank" rel="noopener noreferrer">
                       <code>{publisherSmartlinkUrl(link.id)}</code>
                     </a>

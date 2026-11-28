@@ -7,6 +7,7 @@ import {
   encodeTrackingId,
   isHexTrackingId,
 } from '../src/lib/tracking'
+import { formatSmartlinkSubId } from '../src/lib/smartlink'
 
 test('encodes decimal tracking IDs as prefixed hexadecimal and decodes them', () => {
   const publisherId = encodeTrackingId(60001, 'P')
@@ -47,6 +48,18 @@ test('maps publisher IDs and all three publisher sub IDs to marketplace paramete
   assert.equal(url.searchParams.get('s2'), 'source')
   assert.equal(url.searchParams.get('s3'), 'slot-2')
   assert.equal(url.searchParams.get('s4'), 'slot-3')
+})
+
+test('maps a Smartlink SubID to publisher SubID 1 and marketplace SubID 2', () => {
+  const smartlinkSubId = formatSmartlinkSubId(0xABCDE)
+  const url = new URL(buildMainOfferUrl({
+    mainOfferBase: 'https://network.example/campaign',
+    publisherId: 60001,
+    subId1: smartlinkSubId,
+  }))
+
+  assert.equal(smartlinkSubId, 'ABCDE')
+  assert.equal(url.searchParams.get('s2'), smartlinkSubId)
 })
 
 test('preserves existing network query parameters when adding tracking Sub IDs', () => {

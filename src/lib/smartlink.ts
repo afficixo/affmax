@@ -2,10 +2,22 @@ import { offerMatchesVisitorCountry } from './offer-geo'
 
 const MAX_SMARTLINK_OFFERS = 1000
 const MAX_SMARTLINK_OFFER_ID_LENGTH = 128
+const MAX_SMARTLINK_SUBID_VALUE = 0xFFFFF
 
 export const SMARTLINK_OFFERS_CONFIG_ID = 'smartlink-active-offers'
 export const SMARTLINK_OFFERS_CONFIG_KIND = 'smartlink-offers'
 export const PUBLISHER_SMARTLINK_KIND = 'publisher-smartlink'
+
+export function isPublisherSmartlinkSubId(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9A-F]{5}$/.test(value)
+}
+
+export function formatSmartlinkSubId(value: number): string {
+  if (!Number.isInteger(value) || value < 0 || value > MAX_SMARTLINK_SUBID_VALUE) {
+    throw new RangeError('Smartlink SubID must fit in five hexadecimal digits')
+  }
+  return value.toString(16).toUpperCase().padStart(5, '0')
+}
 
 export type SmartlinkAvailableOffer = {
   country: string

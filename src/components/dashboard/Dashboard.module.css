@@ -6508,6 +6508,19 @@ input.reportRangeInput {
   white-space: nowrap;
 }
 
+.publisherSmartlinkDetails > .publisherSmartlinkSubId {
+  justify-self: start;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #43584a;
+  background: #f0f5f0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 .publisherSmartlinkDetails a {
   overflow-wrap: anywhere;
   color: #65796a;

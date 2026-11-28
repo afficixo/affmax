@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { Prisma } from '@prisma/client'
 import { NextResponse } from 'next/server'
 import { getCorsHeaders } from '@/config/cors'
 import { getTokenFromCookie, getUserFromToken } from '@/lib/auth'
@@ -11,8 +12,13 @@ import {
   SMARTLINK_OFFERS_CONFIG_ID,
   SMARTLINK_OFFERS_CONFIG_KIND,
 } from '@/lib/smartlink'
+import {
+  ensurePublisherSmartlinkSubId,
+  generatePublisherSmartlinkSubId,
+} from '@/lib/smartlink-subid'
 
 const MAX_SMARTLINK_NAME_LENGTH = 80
+const MAX_SUBID_CREATION_ATTEMPTS = 8
 const legacyOfferIds = new Set<string>(LEGACY_CRACK_BOUNTY_DEMO_OFFER_IDS)
 
 function isHttpUrl(value: string | null) {
@@ -39,6 +45,33 @@ async function requirePublisher(request: Request) {
   return { user, origin }
 }
 
+async function createPublisherSmartlink(name: string, ownerId: string) {
+  for (let attempt = 0; attempt < MAX_SUBID_CREATION_ATTEMPTS; attempt += 1) {
+    try {
+      return await prisma.incentiveTool.create({
+        data: {
+          id: randomUUID(),
+          kind: PUBLISHER_SMARTLINK_KIND,
+          publisherSubId: generatePublisherSmartlinkSubId(),
+          name,
+          fields: {},
+          toggles: {},
+          selectedOfferIds: [],
+          isPublished: true,
+          ownerId,
+        },
+        select: { id: true, name: true, createdAt: true, publisherSubId: true },
+      })
+    } catch (error) {
+      const isPublisherSubIdCollision = error instanceof Prisma.PrismaClientKnownRequestError
+        && error.code === 'P2002'
+      if (!isPublisherSubIdCollision || attempt === MAX_SUBID_CREATION_ATTEMPTS - 1) throw error
+    }
+  }
+
+  throw new Error('Unable to allocate a unique Smartlink SubID')
+}
+
 export async function GET(request: Request) {
   const auth = await requirePublisher(request)
   if ('error' in auth) return auth.error
@@ -50,10 +83,14 @@ export async function GET(request: Request) {
         kind: PUBLISHER_SMARTLINK_KIND,
         isPublished: true,
       },
-      select: { id: true, name: true, createdAt: true },
+      select: { id: true, name: true, createdAt: true, publisherSubId: true },
       orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json({ links }, {
+    const linksWithSubIds = await Promise.all(links.map(async (link) => {
+      const publisherSubId = await ensurePublisherSmartlinkSubId(link.id, link.publisherSubId)
+      return publisherSubId ? { ...link, publisherSubId } : null
+    }))
+    return NextResponse.json({ links: linksWithSubIds.filter((link) => link !== null) }, {
       headers: { ...getCorsHeaders(auth.origin), 'Cache-Control': 'no-store' },
     })
   } catch (error) {
@@ -119,19 +156,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const link = await prisma.incentiveTool.create({
-      data: {
-        id: randomUUID(),
-        kind: PUBLISHER_SMARTLINK_KIND,
-        name,
-        fields: {},
-        toggles: {},
-        selectedOfferIds: [],
-        isPublished: true,
-        ownerId: auth.user.id,
-      },
-      select: { id: true, name: true, createdAt: true },
-    })
+    const link = await createPublisherSmartlink(name, auth.user.id)
     return NextResponse.json({ link }, {
       status: 201,
       headers: { ...getCorsHeaders(auth.origin), 'Cache-Control': 'no-store' },

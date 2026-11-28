@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  formatSmartlinkSubId,
+  isPublisherSmartlinkSubId,
   normalizeSmartlinkOfferIds,
   selectSmartlinkOfferForVisitor,
   smartlinkOffersForCountry,
@@ -52,6 +54,17 @@ test('does not route publisher Smartlinks to another country when there is no ge
 
 test('returns no candidates when the site has no available offers', () => {
   assert.deepEqual(smartlinkOffersForCountry([], 'US'), [])
+})
+
+test('formats Smartlink SubID 1 as a five-character uppercase hexadecimal value', () => {
+  assert.equal(formatSmartlinkSubId(0), '00000')
+  assert.equal(formatSmartlinkSubId(0xABCDE), 'ABCDE')
+  assert.equal(formatSmartlinkSubId(0xFFFFF), 'FFFFF')
+  assert.equal(isPublisherSmartlinkSubId('ABCDE'), true)
+  assert.equal(isPublisherSmartlinkSubId('ABCD'), false)
+  assert.equal(isPublisherSmartlinkSubId('ABCDE0'), false)
+  assert.equal(isPublisherSmartlinkSubId('abcde'), false)
+  assert.throws(() => formatSmartlinkSubId(0x100000), RangeError)
 })
 
 test('selects an unseen eligible offer before repeating a geo-eligible offer', () => {
