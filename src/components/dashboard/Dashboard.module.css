@@ -5895,6 +5895,73 @@ input.reportRangeInput {
   color: #ffaaa4;
 }
 
+.publisherSmartlinkRemoveConfirmIcon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf6ee;
+  color: #4b9255;
+}
+
+.publisherSmartlinkRemoveConfirmDialog {
+  width: min(380px, 100%);
+  border-color: #e1e8e2;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 12px 32px rgb(34 51 39 / 16%);
+}
+
+.publisherSmartlinkRemoveConfirmDialog h2 {
+  margin: 10px 0 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.publisherSmartlinkRemoveConfirmDialog .campaignDeleteConfirmActions {
+  margin-top: 16px;
+}
+
+.publisherSmartlinkRemoveConfirmDialog .campaignDeleteConfirmActions button {
+  min-height: 34px;
+}
+
+.publisherSmartlinkRemoveConfirmSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #43864d;
+  border-radius: 5px;
+  padding: 0 14px;
+  background: #4b9255;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.publisherSmartlinkRemoveConfirmSubmit:hover:not([aria-disabled="true"]) {
+  border-color: #397541;
+  background: #43864d;
+}
+
+.publisherSmartlinkRemoveConfirmSubmit[aria-disabled="true"] {
+  opacity: 0.68;
+  cursor: wait;
+}
+
+.publisherSmartlinkRemoveConfirmSubmit:focus-visible {
+  outline: 2px solid #4b9255;
+  outline-offset: 2px;
+}
+
+:global(html.dark) .publisherSmartlinkRemoveConfirmIcon {
+  background: #263d2b;
+  color: #95d29c;
+}
+
 .conversionConfirmBackdrop {
   position: fixed;
   inset: 0;
@@ -6497,6 +6564,64 @@ input.reportRangeInput {
   white-space: nowrap;
 }
 
+.publisherSmartlinkEditForm {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.publisherSmartlinkEditForm input {
+  box-sizing: border-box;
+  width: 180px;
+  min-width: 0;
+  height: 34px;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  padding: 0 9px;
+  color: #344239;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.publisherSmartlinkEditForm button,
+.publisherSmartlinkActionTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dfe7e0;
+  border-radius: 6px;
+  color: #516356;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.publisherSmartlinkEditForm button {
+  height: 34px;
+  padding: 0 9px;
+}
+
+.publisherSmartlinkEditForm button:hover,
+.publisherSmartlinkActionTrigger:hover {
+  border-color: #b7c8ba;
+  background: #f7faf7;
+}
+
+.publisherSmartlinkEditForm button:disabled,
+.publisherSmartlinkActionTrigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.publisherSmartlinkEditForm .publisherSmartlinkEditCancel {
+  color: #78847b;
+}
+
 .publisherSmartlinkDetails > .publisherSmartlinkSubId {
   justify-self: start;
   border: 1px solid #dfe7e0;
@@ -6523,6 +6648,52 @@ input.reportRangeInput {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.publisherSmartlinkActionMenu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.publisherSmartlinkActionTrigger {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.publisherSmartlinkActionItems {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 148px;
+  gap: 2px;
+  border: 1px solid #e1e8e2;
+  border-radius: 7px;
+  padding: 4px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(34 51 39 / 14%);
+}
+
+.publisherSmartlinkActionItems button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 4px;
+  padding: 0 8px;
+  color: #43584a;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.publisherSmartlinkActionItems button:hover {
+  background: #f3f7f3;
 }
 
 .publisherSmartlinkCopy {

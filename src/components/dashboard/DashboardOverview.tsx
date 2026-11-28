@@ -1220,10 +1220,20 @@ export default function DashboardOverview() {
   const [publisherSmartlinks, setPublisherSmartlinks] = useState<PublisherSmartlinkRecord[]>([])
   const [publisherSmartlinksLoading, setPublisherSmartlinksLoading] = useState(false)
   const [publisherSmartlinkName, setPublisherSmartlinkName] = useState('')
+  const [publisherSmartlinkToRemove, setPublisherSmartlinkToRemove] = useState<PublisherSmartlinkRecord | null>(null)
   const [publisherSmartlinkCreating, setPublisherSmartlinkCreating] = useState(false)
   const [publisherSmartlinkError, setPublisherSmartlinkError] = useState('')
   const [copiedPublisherSmartlinkId, setCopiedPublisherSmartlinkId] = useState<string | null>(null)
   const [copiedPublisherSmartlinkReportId, setCopiedPublisherSmartlinkReportId] = useState<string | null>(null)
+  const [openPublisherSmartlinkActionsId, setOpenPublisherSmartlinkActionsId] = useState<string | null>(null)
+  const [editingPublisherSmartlinkId, setEditingPublisherSmartlinkId] = useState<string | null>(null)
+  const [publisherSmartlinkEditName, setPublisherSmartlinkEditName] = useState('')
+  const [savingPublisherSmartlinkId, setSavingPublisherSmartlinkId] = useState<string | null>(null)
+  const [deletingPublisherSmartlinkId, setDeletingPublisherSmartlinkId] = useState<string | null>(null)
+  const publisherSmartlinkRemoveDialogRef = useRef<HTMLElement>(null)
+  const publisherSmartlinkRemoveCancelRef = useRef<HTMLButtonElement>(null)
+  const publisherSmartlinkRemoveTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const deletingPublisherSmartlinkRef = useRef(false)
   const [time, setTime] = useState('--:--:--')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
@@ -1735,6 +1745,70 @@ export default function DashboardOverview() {
 
     return () => { active = false }
   }, [userRole, pathname])
+
+  useEffect(() => {
+    if (!openPublisherSmartlinkActionsId) return
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-publisher-smartlink-menu]')) {
+        setOpenPublisherSmartlinkActionsId(null)
+      }
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpenPublisherSmartlinkActionsId(null)
+    }
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [openPublisherSmartlinkActionsId])
+
+  useEffect(() => {
+    if (!publisherSmartlinkToRemove) return
+
+    const previousOverflow = document.body.style.overflow
+    const previouslyFocusedElement = document.activeElement
+    const removeTrigger = publisherSmartlinkRemoveTriggerRef.current
+    const handleKeyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (!deletingPublisherSmartlinkRef.current) setPublisherSmartlinkToRemove(null)
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const buttons = publisherSmartlinkRemoveDialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      if (!buttons?.length) return
+      const firstButton = buttons[0]
+      const lastButton = buttons[buttons.length - 1]
+      if (event.shiftKey && (document.activeElement === firstButton || !publisherSmartlinkRemoveDialogRef.current?.contains(document.activeElement))) {
+        event.preventDefault()
+        lastButton.focus()
+      } else if (!event.shiftKey && (document.activeElement === lastButton || !publisherSmartlinkRemoveDialogRef.current?.contains(document.activeElement))) {
+        event.preventDefault()
+        firstButton.focus()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyboard)
+    publisherSmartlinkRemoveCancelRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyboard)
+      if (removeTrigger && document.contains(removeTrigger)) {
+        removeTrigger.focus()
+      } else if (
+        previouslyFocusedElement instanceof HTMLElement
+        && previouslyFocusedElement !== document.body
+        && document.contains(previouslyFocusedElement)
+      ) {
+        previouslyFocusedElement.focus()
+      } else {
+        document.querySelector<HTMLButtonElement>('[data-publisher-smartlink-menu] button[aria-haspopup="menu"]')?.focus()
+      }
+    }
+  }, [publisherSmartlinkToRemove])
 
   useEffect(() => {
     const activeFeaturedCampaigns = featuredCampaignsFromOffers(
@@ -3335,6 +3409,70 @@ export default function DashboardOverview() {
       console.error('Unable to copy publisher Smartlink geo report:', copyError)
       setPublisherSmartlinkError('Unable to copy report link. Select and copy the URL manually.')
     }
+  }
+  const savePublisherSmartlinkName = async (event: FormEvent<HTMLFormElement>, link: PublisherSmartlinkRecord) => {
+    event.preventDefault()
+    const name = publisherSmartlinkEditName.trim()
+    if (userRole !== 'PUBLISHER' || savingPublisherSmartlinkId || !name || name.length > 80) return
+    if (name === link.name) {
+      setEditingPublisherSmartlinkId(null)
+      return
+    }
+
+    setSavingPublisherSmartlinkId(link.id)
+    setPublisherSmartlinkError('')
+    try {
+      const response = await fetch(`/api/smartlinks/${encodeURIComponent(link.id)}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      const payload = await response.json() as { link?: { id: string; name: string }; error?: string }
+      if (!response.ok || !payload.link) {
+        throw new Error(payload.error || 'Unable to update your Smartlink')
+      }
+      const updatedName = payload.link.name
+      setPublisherSmartlinks((current) => current.map((item) => item.id === link.id
+        ? { ...item, name: updatedName }
+        : item))
+      setEditingPublisherSmartlinkId(null)
+    } catch (saveError) {
+      console.error('Unable to update publisher Smartlink:', saveError)
+      setPublisherSmartlinkError(saveError instanceof Error ? saveError.message : 'Unable to update your Smartlink')
+    } finally {
+      setSavingPublisherSmartlinkId(null)
+    }
+  }
+  const removePublisherSmartlink = async (link: PublisherSmartlinkRecord) => {
+    if (userRole !== 'PUBLISHER' || deletingPublisherSmartlinkRef.current) return false
+
+    deletingPublisherSmartlinkRef.current = true
+    setDeletingPublisherSmartlinkId(link.id)
+    setPublisherSmartlinkError('')
+    try {
+      const response = await fetch(`/api/smartlinks/${encodeURIComponent(link.id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      const payload = await response.json() as { error?: string }
+      if (!response.ok) throw new Error(payload.error || 'Unable to remove your Smartlink')
+      setPublisherSmartlinks((current) => current.filter((item) => item.id !== link.id))
+      if (editingPublisherSmartlinkId === link.id) setEditingPublisherSmartlinkId(null)
+      return true
+    } catch (removeError) {
+      console.error('Unable to remove publisher Smartlink:', removeError)
+      setPublisherSmartlinkError(removeError instanceof Error ? removeError.message : 'Unable to remove your Smartlink')
+      return false
+    } finally {
+      deletingPublisherSmartlinkRef.current = false
+      setDeletingPublisherSmartlinkId(null)
+    }
+  }
+  const confirmRemovePublisherSmartlink = async () => {
+    if (!publisherSmartlinkToRemove || deletingPublisherSmartlinkRef.current) return
+    const removed = await removePublisherSmartlink(publisherSmartlinkToRemove)
+    if (removed) setPublisherSmartlinkToRemove(null)
   }
   const filteredPublisherAccounts = publisherAccounts.filter((publisher) => {
     if (publisherStatusFilter !== 'ALL' && publisher.status !== publisherStatusFilter) return false
@@ -5015,7 +5153,31 @@ export default function DashboardOverview() {
               ) : publisherSmartlinks.length ? publisherSmartlinks.map((link) => (
                 <article className={styles.publisherSmartlinkItem} key={link.id}>
                   <div className={styles.publisherSmartlinkDetails}>
-                    <strong>{link.name}</strong>
+                    {editingPublisherSmartlinkId === link.id ? (
+                      <form className={styles.publisherSmartlinkEditForm} onSubmit={(event) => void savePublisherSmartlinkName(event, link)}>
+                        <input
+                          autoFocus
+                          aria-label={`Edit ${link.name} name`}
+                          maxLength={80}
+                          onChange={(event) => setPublisherSmartlinkEditName(event.target.value)}
+                          required
+                          value={publisherSmartlinkEditName}
+                        />
+                        <button type="submit" disabled={savingPublisherSmartlinkId === link.id || !publisherSmartlinkEditName.trim()}>
+                          {savingPublisherSmartlinkId === link.id ? 'Saving' : 'Save'}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.publisherSmartlinkEditCancel}
+                          disabled={savingPublisherSmartlinkId === link.id}
+                          onClick={() => setEditingPublisherSmartlinkId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <strong>{link.name}</strong>
+                    )}
                     <code className={styles.publisherSmartlinkSubId} aria-label="Smartlink SubID 1">
                       {link.publisherSubId}
                     </code>
@@ -5054,6 +5216,53 @@ export default function DashboardOverview() {
                         : <Copy size={14} aria-hidden="true" />}
                       {copiedPublisherSmartlinkId === link.id ? 'Copied' : 'Copy link'}
                     </button>
+                    <div className={styles.publisherSmartlinkActionMenu} data-publisher-smartlink-menu>
+                      <button
+                        type="button"
+                        className={styles.publisherSmartlinkActionTrigger}
+                        aria-label={`${link.name} actions`}
+                        aria-haspopup="menu"
+                        aria-expanded={openPublisherSmartlinkActionsId === link.id}
+                        disabled={deletingPublisherSmartlinkId === link.id}
+                        onClick={() => setOpenPublisherSmartlinkActionsId((current) => current === link.id ? null : link.id)}
+                        title="Smartlink actions"
+                      >
+                        <MoreHorizontal size={17} aria-hidden="true" />
+                      </button>
+                      {openPublisherSmartlinkActionsId === link.id && (
+                        <div className={styles.publisherSmartlinkActionItems} role="menu" aria-label={`${link.name} actions`}>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => {
+                              setPublisherSmartlinkError('')
+                              setPublisherSmartlinkEditName(link.name)
+                              setEditingPublisherSmartlinkId(link.id)
+                              setOpenPublisherSmartlinkActionsId(null)
+                            }}
+                          >
+                            <Pencil size={14} aria-hidden="true" />
+                            Edit name
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.publisherSmartlinkRemoveAction}
+                            role="menuitem"
+                            onClick={(event) => {
+                              publisherSmartlinkRemoveTriggerRef.current = event.currentTarget
+                                .closest('[data-publisher-smartlink-menu]')
+                                ?.querySelector<HTMLButtonElement>('button[aria-haspopup="menu"]') ?? null
+                              setPublisherSmartlinkError('')
+                              setPublisherSmartlinkToRemove(link)
+                              setOpenPublisherSmartlinkActionsId(null)
+                            }}
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </article>
               )) : (
@@ -7633,6 +7842,54 @@ export default function DashboardOverview() {
                 }}
               >
                 Reverse
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {publisherSmartlinkToRemove && (
+        <div
+          className={styles.campaignDeleteConfirmBackdrop}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingPublisherSmartlinkRef.current) {
+              setPublisherSmartlinkToRemove(null)
+            }
+          }}
+        >
+          <section
+            ref={publisherSmartlinkRemoveDialogRef}
+            className={`${styles.campaignDeleteConfirmDialog} ${styles.publisherSmartlinkRemoveConfirmDialog}`}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="publisher-smartlink-remove-title"
+          >
+            <div className={styles.publisherSmartlinkRemoveConfirmIcon} aria-hidden="true">
+              <Trash2 size={20} />
+            </div>
+            <h2 id="publisher-smartlink-remove-title">Remove “{publisherSmartlinkToRemove.name}”?</h2>
+            {publisherSmartlinkError && (
+              <p className={styles.campaignDeleteConfirmError} role="alert">{publisherSmartlinkError}</p>
+            )}
+            <div className={styles.campaignDeleteConfirmActions}>
+              <button
+                ref={publisherSmartlinkRemoveCancelRef}
+                type="button"
+                className={styles.pageSecondaryButton}
+                disabled={deletingPublisherSmartlinkId === publisherSmartlinkToRemove.id}
+                onClick={() => setPublisherSmartlinkToRemove(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.publisherSmartlinkRemoveConfirmSubmit}
+                aria-disabled={deletingPublisherSmartlinkId === publisherSmartlinkToRemove.id}
+                aria-busy={deletingPublisherSmartlinkId === publisherSmartlinkToRemove.id}
+                onClick={() => { void confirmRemovePublisherSmartlink() }}
+              >
+                {deletingPublisherSmartlinkId === publisherSmartlinkToRemove.id
+                  ? 'Removing…'
+                  : 'Remove'}
               </button>
             </div>
           </section>
