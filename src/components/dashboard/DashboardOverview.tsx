@@ -211,7 +211,14 @@ function ReportDailyBarChart({
 
 type MenuItem = { label: string; href: string }
 type MenuGroup = { label: string; iconClass: string; items: MenuItem[] }
-type CampaignFilterOption = { value: string; label: string; triggerLabel?: string; flag?: string }
+type CampaignFilterOption = {
+  value: string
+  label: string
+  triggerLabel?: string
+  flag?: string
+  searchText?: string
+  meta?: string
+}
 
 const campaignFilterOptions: Record<'country' | 'device' | 'category' | 'type', CampaignFilterOption[]> = {
   country: [
@@ -271,12 +278,20 @@ function CampaignFilterSelect({
   value,
   options,
   onChange,
+  placeholder,
+  searchPlaceholder,
+  emptyMessage = 'No results matched',
+  disabled = false,
 }: {
   id: string
   label: string
   value: string
   options: CampaignFilterOption[]
   onChange: (value: string) => void
+  placeholder?: string
+  searchPlaceholder?: string
+  emptyMessage?: string
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -284,7 +299,14 @@ function CampaignFilterSelect({
   const buttonRef = useRef<HTMLButtonElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const selectedOption = options.find((option) => option.value === value)
-  const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+  const normalizedSearch = searchTerm.trim().toLowerCase()
+  const exactCodeMatches = options.filter((option) => option.searchText?.toLowerCase() === normalizedSearch)
+  const filteredOptions = exactCodeMatches.length
+    ? exactCodeMatches
+    : options.filter((option) => {
+      const optionSearchText = `${option.label} ${option.searchText ?? ''}`.toLowerCase()
+      return optionSearchText.includes(normalizedSearch)
+    })
 
   useEffect(() => {
     if (!open) return
@@ -333,12 +355,13 @@ function CampaignFilterSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${id}-options`}
+        disabled={disabled}
         onClick={() => {
           setOpen((isOpen) => !isOpen)
           setSearchTerm('')
         }}
       >
-        <span>{selectedOption?.triggerLabel ?? selectedOption?.label ?? value}</span>
+        <span>{selectedOption?.triggerLabel ?? selectedOption?.label ?? placeholder ?? value}</span>
         <span className={styles.filterSelectCaret} aria-hidden="true" />
       </button>
       {open && (
@@ -348,6 +371,7 @@ function CampaignFilterSelect({
               ref={searchRef}
               type="text"
               className={styles.filterSearch}
+              placeholder={searchPlaceholder}
               aria-label={`Search ${label}`}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
@@ -355,6 +379,9 @@ function CampaignFilterSelect({
                 if (event.key === 'ArrowDown') {
                   event.preventDefault()
                   containerRef.current?.querySelector<HTMLButtonElement>('[role="option"]')?.focus()
+                } else if (event.key === 'Enter') {
+                  event.preventDefault()
+                  if (filteredOptions[0]) chooseOption(filteredOptions[0])
                 }
               }}
             />
@@ -374,11 +401,12 @@ function CampaignFilterSelect({
                 >
                   {Flag && <Flag className={styles.filterOptionFlag} aria-hidden="true" />}
                   <span>{option.label}</span>
+                  {option.meta && <small className={styles.filterOptionMeta}>{option.meta}</small>}
                   {isSelected && <i className={`fa fa-check ${styles.filterOptionCheck}`} aria-hidden="true" />}
                 </button>
               )
             })}
-            {!filteredOptions.length && <div className={styles.filterNoResults}>No results matched</div>}
+            {!filteredOptions.length && <div className={styles.filterNoResults}>{emptyMessage}</div>}
           </div>
         </div>
       )}
@@ -387,7 +415,7 @@ function CampaignFilterSelect({
 }
 
 const menuGroups: MenuGroup[] = [
-  { label: 'Offers', iconClass: 'fa fa-tags', items: [{ label: 'Browse', href: '/campaigns/browse' }, { label: 'New added', href: '/campaigns/new' }, { label: 'Incentive Offers', href: '/incentive_offers' }, { label: 'Offer Approval', href: '/campaigns/approvals' }] },
+  { label: 'Offers', iconClass: 'fa fa-tags', items: [{ label: 'Browse', href: '/campaigns/browse' }, { label: 'New added', href: '/campaigns/new' }, { label: 'Incentive Offers', href: '/incentive_offers' }, { label: 'Offer Approval', href: '/campaigns/approvals' }, { label: 'Smartlink', href: '/smartlink' }] },
   { label: 'Reports', iconClass: 'fa fa-pie-chart', items: [{ label: 'Daily reports', href: '/reports/daily' }, { label: 'Campaign reports', href: '/reports/campaign' }, { label: 'Geo reports', href: '/reports/geo' }, { label: 'Tool reports', href: '/reports/tool' }, { label: 'SubID reports', href: '/reports/subid' }, { label: 'Conversions', href: '/reports/conversions' }] },
   { label: 'Incentive Tools', iconClass: 'fa fa-th-large', items: [{ label: 'Content Locker', href: '/contentlocker' }, { label: 'Offerwall', href: '/offerwall' }] },
   { label: 'Developer Tools', iconClass: 'fa fa-cogs', items: [{ label: 'Postback', href: '/tools/postback' }] },
@@ -750,6 +778,7 @@ const tablePages: Record<string, { title: string; columns: string[] }> = {
 const pageTitles: Record<string, string> = {
   '/campaigns/add': 'Add offer',
   '/campaigns/approvals': 'Offer Approval',
+  '/smartlink': 'Smartlink',
   '/tools/postback': 'Global Postback',
   '/contentlocker': 'Content Locker',
   '/offerwall': 'OfferWall',
@@ -1052,6 +1081,7 @@ export default function DashboardOverview() {
   const campaignDeleteConfirmCancelRef = useRef<HTMLButtonElement>(null)
   const campaignDeleteConfirmTriggerRef = useRef<HTMLButtonElement>(null)
   const selectAllCampaignsRef = useRef<HTMLInputElement>(null)
+  const selectAllSmartlinkOffersRef = useRef<HTMLInputElement>(null)
   const [activeIncentiveOfferIds, setActiveIncentiveOfferIds] = useState<string[]>([])
   const [openOfferActionsId, setOpenOfferActionsId] = useState<string | null>(null)
   const [offerActionMenuPosition, setOfferActionMenuPosition] = useState<{ top: number; left: number } | null>(null)
@@ -1182,6 +1212,12 @@ export default function DashboardOverview() {
   const [wizardSelectedOfferIds, setWizardSelectedOfferIds] = useState<string[]>([])
   const [copiedToolId, setCopiedToolId] = useState<string | null>(null)
   const [appOrigin, setAppOrigin] = useState('')
+  const [smartlinkOfferIds, setSmartlinkOfferIds] = useState<string[]>([])
+  const [showActiveSmartlinkOffersOnly, setShowActiveSmartlinkOffersOnly] = useState(false)
+  const [smartlinkOffersLoading, setSmartlinkOffersLoading] = useState(false)
+  const [smartlinkOffersLoaded, setSmartlinkOffersLoaded] = useState(false)
+  const [smartlinkOffersSaving, setSmartlinkOffersSaving] = useState(false)
+  const [smartlinkOffersError, setSmartlinkOffersError] = useState('')
   const [time, setTime] = useState('--:--:--')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
@@ -1632,6 +1668,37 @@ export default function DashboardOverview() {
           setPublisherCounts({ ALL: 0, PENDING: 0, ACTIVE: 0, DISABLED: 0, REJECTED: 0 })
         }
       })
+    return () => { active = false }
+  }, [userRole, pathname])
+
+  useEffect(() => {
+    if (userRole !== 'MANAGER' || pathname !== '/smartlink') return
+    let active = true
+    setSmartlinkOffersLoading(true)
+    setSmartlinkOffersLoaded(false)
+    setSmartlinkOffersError('')
+
+    fetch('/api/smartlink-offers', { credentials: 'include', cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json() as { offerIds?: unknown; error?: string }
+        if (!response.ok) throw new Error(payload.error || 'Unable to load Smartlink offers')
+        if (active) {
+          setSmartlinkOfferIds(Array.isArray(payload.offerIds)
+            ? payload.offerIds.filter((id): id is string => typeof id === 'string')
+            : [])
+          setSmartlinkOffersLoaded(true)
+        }
+      })
+      .catch((loadError: unknown) => {
+        console.error('Unable to load Smartlink offers:', loadError)
+        if (active) {
+          setSmartlinkOffersError(loadError instanceof Error ? loadError.message : 'Unable to load Smartlink offers')
+        }
+      })
+      .finally(() => {
+        if (active) setSmartlinkOffersLoading(false)
+      })
+
     return () => { active = false }
   }, [userRole, pathname])
 
@@ -2760,15 +2827,18 @@ export default function DashboardOverview() {
   const isDashboard = pathname === '/dashboard'
   const isCampaignBrowse = pathname === '/campaigns/browse'
   const isIncentiveOffers = pathname === '/incentive_offers'
+  const isSmartlinkPage = pathname === '/smartlink'
   const isCampaignAdd = pathname === '/campaigns/add'
   const isOfferApprovals = pathname === '/campaigns/approvals'
   const isPublisherAccounts = pathname === '/account/publishers'
-  const isCampaignCatalog = isCampaignBrowse || pathname === '/campaigns/new' || isIncentiveOffers
+  const isCampaignCatalog = isCampaignBrowse || pathname === '/campaigns/new' || isIncentiveOffers || isSmartlinkPage
   const canManageOffers = userRole === 'MANAGER' && (isCampaignBrowse || isIncentiveOffers)
+  const canManageSmartlinkOffers = userRole === 'MANAGER' && isSmartlinkPage
   const pageTitle = isDashboard ? 'DASHBOARD'
     : isContentLockerWizard ? (pathname.endsWith('/new') ? 'NEW CONTENT LOCKER' : 'EDIT CONTENT LOCKER')
       : isOfferWallWizard ? (pathname.endsWith('/new') ? 'NEW OFFERWALL' : 'EDIT OFFERWALL')
         : isCampaignBrowse ? 'Browse campaigns'
+          : isSmartlinkPage ? 'Smartlink offers'
           : isIncentiveOffers ? ''
             : isOfferApprovals ? 'Offer Approval'
               : isPublisherAccounts ? 'Publishers'
@@ -3139,7 +3209,7 @@ export default function DashboardOverview() {
     ? menuGroups
     : menuGroups.map((group) => {
       if (group.label === 'Offers') {
-        return { ...group, items: group.items.filter((item) => item.href !== '/campaigns/add' && item.href !== '/campaigns/approvals') }
+        return { ...group, items: group.items.filter((item) => item.href !== '/campaigns/add' && item.href !== '/campaigns/approvals' && item.href !== '/smartlink') }
       }
       if (group.label === 'Account') {
         return { ...group, items: group.items.filter((item) => item.href !== '/account/publishers') }
@@ -3149,6 +3219,32 @@ export default function DashboardOverview() {
   const accountMenuItems = visibleMenuGroups.find((group) => group.label === 'Account')?.items ?? []
   const accountMenuActive = accountMenuItems.some((item) => isMenuItemActive(pathname, item.href))
   const accountMenuExpanded = openGroups.includes('Account') || accountMenuActive
+  const saveSmartlinkOfferIds = async (offerIds: string[]) => {
+    if (userRole !== 'MANAGER' || !smartlinkOffersLoaded || smartlinkOffersLoading || smartlinkOffersSaving) return
+
+    setSmartlinkOffersSaving(true)
+    setSmartlinkOffersError('')
+    try {
+      const response = await fetch('/api/smartlink-offers', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerIds: [...new Set(offerIds)] }),
+      })
+      const payload = await response.json() as { offerIds?: unknown; error?: string }
+      if (!response.ok || !Array.isArray(payload.offerIds)) {
+        throw new Error(payload.error || 'Unable to save Smartlink offers')
+      }
+
+      const savedIds = payload.offerIds.filter((id): id is string => typeof id === 'string')
+      setSmartlinkOfferIds(savedIds)
+    } catch (saveError) {
+      console.error('Unable to save Smartlink offers:', saveError)
+      setSmartlinkOffersError(saveError instanceof Error ? saveError.message : 'Unable to save Smartlink offers')
+    } finally {
+      setSmartlinkOffersSaving(false)
+    }
+  }
   const filteredPublisherAccounts = publisherAccounts.filter((publisher) => {
     if (publisherStatusFilter !== 'ALL' && publisher.status !== publisherStatusFilter) return false
     const term = publisherSearch.trim().toLowerCase()
@@ -3197,11 +3293,13 @@ export default function DashboardOverview() {
   const getCampaignGeos = (campaign: CampaignOffer) => (
     campaign.countries?.length ? campaign.countries : [campaign.country]
   )
+  const activeSmartlinkOfferIdSet = new Set(smartlinkOfferIds)
   const filteredCampaigns = campaignOffers
     .filter((campaign) => {
       const searchTerm = campaignSearch.trim().toLowerCase()
       const geos = getCampaignGeos(campaign)
-      return (!searchTerm || `${campaign.id} ${campaign.name}`.toLowerCase().includes(searchTerm))
+      return (!isSmartlinkPage || !showActiveSmartlinkOffersOnly || activeSmartlinkOfferIdSet.has(campaign.id))
+        && (!searchTerm || `${campaign.id} ${campaign.name}`.toLowerCase().includes(searchTerm))
         && (appliedCampaignFilters.country === 'All' || geos.includes(appliedCampaignFilters.country))
         && (appliedCampaignFilters.device === 'All' || getCampaignDevices(campaign).includes(appliedCampaignFilters.device))
         && (appliedCampaignFilters.category === 'All' || appliedCampaignFilters.category === 'CPL SOI')
@@ -3226,10 +3324,15 @@ export default function DashboardOverview() {
   const allVisibleCampaignsSelected = visibleCampaigns.length > 0
     && selectedVisibleCampaignCount === visibleCampaigns.length
   const someVisibleCampaignsSelected = selectedVisibleCampaignCount > 0
+  const activeVisibleSmartlinkOfferCount = visibleCampaigns.filter((campaign) => activeSmartlinkOfferIdSet.has(campaign.id)).length
+  const allVisibleSmartlinkOffersActive = visibleCampaigns.length > 0
+    && activeVisibleSmartlinkOfferCount === visibleCampaigns.length
+  const someVisibleSmartlinkOffersActive = activeVisibleSmartlinkOfferCount > 0
 
   useEffect(() => {
     setSelectedCampaignOfferIds([])
     setShowCampaignDeleteConfirm(false)
+    setShowActiveSmartlinkOffersOnly(false)
   }, [pathname])
 
   useEffect(() => {
@@ -3237,6 +3340,12 @@ export default function DashboardOverview() {
       selectAllCampaignsRef.current.indeterminate = someVisibleCampaignsSelected && !allVisibleCampaignsSelected
     }
   }, [allVisibleCampaignsSelected, someVisibleCampaignsSelected])
+
+  useEffect(() => {
+    if (selectAllSmartlinkOffersRef.current) {
+      selectAllSmartlinkOffersRef.current.indeterminate = someVisibleSmartlinkOffersActive && !allVisibleSmartlinkOffersActive
+    }
+  }, [allVisibleSmartlinkOffersActive, someVisibleSmartlinkOffersActive])
 
   const toggleCampaignOfferSelection = (id: string) => {
     setSelectedCampaignOfferIds((current) => (
@@ -3252,6 +3361,31 @@ export default function DashboardOverview() {
       }
       return [...new Set([...current, ...visibleIds])]
     })
+  }
+
+  const toggleSmartlinkActiveOfferFilter = () => {
+    setShowActiveSmartlinkOffersOnly((showActiveOffers) => !showActiveOffers)
+    setCampaignPage(1)
+  }
+
+  const toggleSmartlinkCampaignOffer = (offerId: string) => {
+    const nextOfferIds = new Set(smartlinkOfferIds)
+    if (nextOfferIds.has(offerId)) nextOfferIds.delete(offerId)
+    else nextOfferIds.add(offerId)
+    setCampaignPage(1)
+    void saveSmartlinkOfferIds([...nextOfferIds])
+  }
+
+  const toggleVisibleSmartlinkCampaignOffers = () => {
+    const visibleIds = new Set(visibleCampaigns.map((campaign) => campaign.id))
+    const nextOfferIds = new Set(smartlinkOfferIds)
+    if (allVisibleSmartlinkOffersActive) {
+      visibleIds.forEach((id) => nextOfferIds.delete(id))
+    } else {
+      visibleIds.forEach((id) => nextOfferIds.add(id))
+    }
+    setCampaignPage(1)
+    void saveSmartlinkOfferIds([...nextOfferIds])
   }
 
   const deleteSelectedCampaignOffers = async () => {
@@ -3617,7 +3751,7 @@ export default function DashboardOverview() {
       {mobileNavOpen && <button className={styles.backdrop} type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
 
       <main className={`${styles.main} ${desktopSidebarHidden ? styles.mainExpanded : ''}`}>
-        {!campaignDetail && (
+        {!campaignDetail && !isSmartlinkPage && (
           <div className={`${styles.pageHeader} ${!pageTitle ? styles.pageHeaderEmpty : ''}`}>
             {pageTitle ? <h1>{pageTitle}</h1> : null}
             <div className={styles.pageHeaderRight}>
@@ -4755,6 +4889,16 @@ export default function DashboardOverview() {
             </>
           )
         ) : isCampaignCatalog ? (
+          isSmartlinkPage && userRole === null ? (
+            <div className={styles.paymentLoading} role="status" aria-label="Checking manager access" aria-live="polite" aria-busy="true">
+              <span className={styles.paymentLoadingSpinner} aria-hidden="true" />
+            </div>
+          ) : isSmartlinkPage && userRole !== 'MANAGER' ? (
+            <section className={`${styles.panel} ${styles.dataPage} ${styles.smartlinkPage}`}>
+              <h2 className={styles.sectionTitle}>SMARTLINK OFFERS</h2>
+              <p className={styles.pageHint}>Smartlink offer activation is available to managers only. Publisher Smartlink creation is not available yet.</p>
+            </section>
+          ) : (
           <>
             <section className={`${styles.panel} ${styles.browseFilters}`}>
               <div className={styles.browseFiltersHeading}>
@@ -4788,14 +4932,36 @@ export default function DashboardOverview() {
               )}
             </section>
 
-            <section className={`${styles.panel} ${styles.browseCampaigns} ${isIncentiveOffers ? styles.incentiveCampaigns : ''}`}>
+            <section className={`${styles.panel} ${styles.browseCampaigns} ${isIncentiveOffers ? styles.incentiveCampaigns : ''} ${isSmartlinkPage ? styles.smartlinkPage : ''}`}>
               <div className={styles.browseCampaignsHeading}>
-                <h2><Tags size={16} fill="currentColor" />CAMPAIGNS</h2>
+                <h2><Tags size={16} fill="currentColor" />{isSmartlinkPage ? 'SMARTLINK OFFERS' : 'CAMPAIGNS'}</h2>
                 <div className={styles.browseCampaignActions}>
                   {userRole === 'MANAGER' && pathname !== '/campaigns/new' && <Link href={isIncentiveOffers ? '/campaigns/add?placement=incentive' : '/campaigns/add'} className={`${styles.pagePrimaryButton} ${styles.addOfferButton}`}><Plus size={14} />Add offer</Link>}
-                  <label className={styles.campaignTableSearch}><Search size={14} /><input type="search" placeholder="Search" aria-label="Search campaigns" value={campaignSearch} onChange={(event) => { setCampaignSearch(event.target.value); setCampaignPage(1) }} /></label>
+                  <label className={styles.campaignTableSearch}><Search size={14} /><input type="search" placeholder={isSmartlinkPage ? 'Search offers' : 'Search'} aria-label={isSmartlinkPage ? 'Search Smartlink offers' : 'Search campaigns'} value={campaignSearch} onChange={(event) => { setCampaignSearch(event.target.value); setCampaignPage(1) }} /></label>
                 </div>
               </div>
+              {isSmartlinkPage && (
+                <div className={styles.smartlinkActivationSummary}>
+                  <p>Choose the standard offers publishers can use with Smartlink. Selections save automatically.</p>
+                  {userRole === 'MANAGER' && (
+                    <button
+                      type="button"
+                      className={styles.smartlinkActiveCount}
+                      aria-pressed={showActiveSmartlinkOffersOnly}
+                      aria-label={showActiveSmartlinkOffersOnly
+                        ? 'Show all standard offers'
+                        : `Show ${smartlinkOfferIds.length} active Smartlink offers`}
+                      title={showActiveSmartlinkOffersOnly ? 'Show all offers' : 'Show active offers'}
+                      disabled={!smartlinkOffersLoaded || (!smartlinkOfferIds.length && !showActiveSmartlinkOffersOnly)}
+                      onClick={toggleSmartlinkActiveOfferFilter}
+                    >
+                      <strong>{smartlinkOfferIds.length}</strong> active
+                    </button>
+                  )}
+                </div>
+              )}
+              {isSmartlinkPage && smartlinkOffersLoading && <p className={styles.pageHint}>Loading Smartlink offer settings…</p>}
+              {isSmartlinkPage && smartlinkOffersError && <p className={styles.smartlinkError} role="alert">{smartlinkOffersError}</p>}
               {pageNotice && (
                 <div className={styles.pageNotice} role="status">
                   <span>{pageNotice}</span>
@@ -4831,10 +4997,27 @@ export default function DashboardOverview() {
                 </div>
               )}
               <div className={styles.campaignTableWrap}>
-                <table className={`${styles.campaignTable} ${isIncentiveOffers ? styles.campaignTableIncentive : ''} ${canManageOffers ? styles.campaignTableManager : ''} ${isIncentiveOffers && canManageOffers ? styles.campaignTableManagerIncentive : ''}`}>
+                <table className={`${styles.campaignTable} ${isIncentiveOffers ? styles.campaignTableIncentive : ''} ${canManageOffers ? styles.campaignTableManager : ''} ${isIncentiveOffers && canManageOffers ? styles.campaignTableManagerIncentive : ''} ${canManageSmartlinkOffers ? styles.campaignTableSmartlink : ''}`}>
                   <thead>
                     <tr>
                       {isIncentiveOffers && <th>Active</th>}
+                      {canManageSmartlinkOffers && (
+                        <th className={styles.campaignSelectHeader}>
+                          <div className={styles.smartlinkActivationHeader}>
+                            <span>Smartlink</span>
+                            <input
+                              ref={selectAllSmartlinkOffersRef}
+                              type="checkbox"
+                              checked={allVisibleSmartlinkOffersActive}
+                              aria-checked={someVisibleSmartlinkOffersActive && !allVisibleSmartlinkOffersActive ? 'mixed' : allVisibleSmartlinkOffersActive}
+                              aria-label="Activate all offers on this page for Smartlink"
+                              title="Activate all offers on this page for Smartlink"
+                              disabled={!visibleCampaigns.length || !smartlinkOffersLoaded || smartlinkOffersSaving}
+                              onChange={toggleVisibleSmartlinkCampaignOffers}
+                            />
+                          </div>
+                        </th>
+                      )}
                       {canManageOffers && (
                         <th className={styles.campaignSelectHeader}>
                           <input
@@ -4890,6 +5073,17 @@ export default function DashboardOverview() {
                                 <label htmlFor={`active-${campaign.id}`} className={styles.incentiveCheckboxLabel} />
                               </div>
                             )}
+                          </td>
+                        )}
+                        {canManageSmartlinkOffers && (
+                          <td className={styles.campaignSelectCell}>
+                            <input
+                              type="checkbox"
+                              checked={activeSmartlinkOfferIdSet.has(campaign.id)}
+                              disabled={!smartlinkOffersLoaded || smartlinkOffersSaving}
+                              aria-label={`Activate offer ${campaign.id} - ${campaign.name} for Smartlink`}
+                              onChange={() => toggleSmartlinkCampaignOffer(campaign.id)}
+                            />
                           </td>
                         )}
                         {canManageOffers && (
@@ -4997,12 +5191,14 @@ export default function DashboardOverview() {
                           </div>
                         </td>
                       </tr>
-                    }) : <tr><td className={styles.campaignNoResults} colSpan={isIncentiveOffers ? (canManageOffers ? 10 : 9) : (canManageOffers ? 9 : 8)}>{isIncentiveOffers ? 'No incentive offers found' : 'No matching campaigns found'}</td></tr>}
+                    }) : <tr><td className={styles.campaignNoResults} colSpan={isIncentiveOffers ? (canManageOffers ? 10 : 9) : (canManageOffers || canManageSmartlinkOffers ? 9 : 8)}>{isSmartlinkPage ? 'No matching offers found' : isIncentiveOffers ? 'No incentive offers found' : 'No matching campaigns found'}</td></tr>}
                   </tbody>
                 </table>
               </div>
               <div className={styles.campaignTableFooter}>
-                <span>Showing {filteredCampaigns.length ? (campaignPage - 1) * campaignPageSize + 1 : 0} to {Math.min(campaignPage * campaignPageSize, filteredCampaigns.length)} of {filteredCampaigns.length} campaigns</span>
+                <span>Showing {filteredCampaigns.length ? (campaignPage - 1) * campaignPageSize + 1 : 0} to {Math.min(campaignPage * campaignPageSize, filteredCampaigns.length)} of {filteredCampaigns.length} {isSmartlinkPage || isIncentiveOffers
+                  ? filteredCampaigns.length === 1 ? 'offer' : 'offers'
+                  : filteredCampaigns.length === 1 ? 'campaign' : 'campaigns'}</span>
                 <div className={styles.campaignPagination}>
                   <button type="button" disabled={campaignPage === 1} onClick={() => setCampaignPage((page) => page - 1)}>Previous</button>
                   {Array.from({ length: campaignPageCount }, (_, index) => index + 1).map((page) => <button type="button" className={page === campaignPage ? styles.campaignPageActive : ''} key={page} onClick={() => setCampaignPage(page)}>{page}</button>)}
@@ -5011,6 +5207,7 @@ export default function DashboardOverview() {
               </div>
             </section>
           </>
+          )
         ) : campaignDetail ? (
           <section className={`${styles.panel} ${styles.dataPage} ${styles.campaignDetails}`}>
             <div className={styles.detailHeading}>

@@ -35,6 +35,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  const isPublicSmartlinkRoute = /^\/smartlink\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(path)
   const isPublicPage = path === '/'
     || path === '/login'
     || path === '/signup'
@@ -42,6 +43,7 @@ export async function proxy(request: NextRequest) {
     || path === '/privacy'
     || path.startsWith('/locker/')
     || path.startsWith('/wall/')
+    || isPublicSmartlinkRoute
   const isApiRoute = path.startsWith('/api/')
   if (!isPublicPage && !isApiRoute && !getCookieValue(request.headers.get('cookie') || '', 'auth-token')) {
     return NextResponse.redirect(new URL('/login', request.url))

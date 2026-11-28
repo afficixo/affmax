@@ -6009,6 +6009,714 @@ input.reportRangeInput {
   text-align: center;
 }
 
+.main:has(.smartlinkPage) .smartlinkPage {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: dashboardPanelIn 260ms ease-out both;
+}
+
+.main:has(.smartlinkPage) {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.main:has(.smartlinkPage) .pageHeader h1 {
+  color: #34443a;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+
+.smartlinkPage > .dataPageHeading {
+  min-height: 48px;
+  border-bottom-color: #e5ebe6;
+  padding-bottom: 15px;
+}
+
+.smartlinkPage > .dataPageHeading h2 {
+  color: #34443a;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+
+.smartlinkGroupForm {
+  display: grid;
+  gap: 20px;
+  margin: 18px 0 28px;
+}
+
+.smartlinkAddRuleRow {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.smartlinkAddRuleRow .pageSecondaryButton {
+  flex: 0 0 auto;
+  min-height: 38px;
+  border-color: #d7e3d8;
+  border-radius: 7px;
+  background: #fff;
+  color: #4c7753;
+  font-size: 12px;
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.smartlinkAddRuleRow .pageSecondaryButton:hover {
+  transform: translateY(-1px);
+  border-color: #b9d1bc;
+  background: #f5faf5;
+  box-shadow: 0 3px 8px rgb(34 54 41 / 6%);
+}
+
+.smartlinkRuleCard {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 14px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+
+.smartlinkRuleCard:focus-within {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.smartlinkRuleHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.smartlinkGeoField {
+  display: grid;
+  width: min(420px, 100%);
+  max-width: 560px;
+  gap: 8px;
+  color: #4d5d52;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.smartlinkGeoField .filterSelect {
+  width: 100%;
+}
+
+.smartlinkGeoField .filterSelectButton {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #d8e1d9;
+  border-radius: 9px;
+  padding: 0 14px;
+  background: #fbfdfb;
+  color: #34443a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  box-shadow: none;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.smartlinkGeoField .filterSelectButton:hover:not(:disabled) {
+  border-color: #bdcfc0;
+  background: #fff;
+}
+
+.smartlinkGeoField .filterSelectButtonOpen,
+.smartlinkGeoField .filterSelectButton:focus {
+  border-color: #aab6ad;
+  outline: 0;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(52 68 58 / 8%);
+}
+
+.smartlinkGeoField .filterSelectButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.smartlinkGeoField .filterSelectCaret {
+  width: 8px;
+  height: 8px;
+  margin: -4px 2px 0 12px;
+  transform: rotate(45deg);
+  border: 0;
+  border-right: 1.5px solid #7a877d;
+  border-bottom: 1.5px solid #7a877d;
+}
+
+.smartlinkGeoField .filterDropdown,
+.smartlinkGeoField .filterDropdownWide {
+  top: calc(100% + 6px);
+  width: 100%;
+  min-height: 0;
+  max-height: min(360px, calc(100vh - 180px));
+  border: 1px solid #e0e7e1;
+  border-radius: 10px;
+  padding: 0 0 5px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgb(31 48 36 / 14%);
+  color: #34443a;
+  font: inherit;
+}
+
+.smartlinkGeoField .filterDropdownSearch {
+  padding: 10px;
+}
+
+.smartlinkGeoField .filterSearch {
+  height: 40px;
+  border-color: #dfe6e0;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #fff;
+  color: #34443a;
+  font: inherit;
+  font-size: 13px;
+}
+
+.smartlinkGeoField .filterSearch:focus,
+.smartlinkGeoField .filterSearch:focus-visible {
+  border-color: #aab6ad;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgb(52 68 58 / 8%);
+}
+
+.smartlinkGeoField .filterOptions {
+  min-height: 0;
+  max-height: 260px;
+  padding: 4px;
+  scrollbar-color: #cbd6cd transparent;
+  scrollbar-width: thin;
+}
+
+.smartlinkGeoField .filterOption {
+  min-height: 42px;
+  gap: 10px;
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: #34443a;
+  font: inherit;
+  font-size: 13px;
+}
+
+.smartlinkGeoField .filterOption:hover,
+.smartlinkGeoField .filterOption:focus-visible,
+.smartlinkGeoField .filterOptionSelected {
+  outline: 0;
+  background: #f3f7f3;
+}
+
+.smartlinkGeoField .filterOptionFlag {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
+.smartlinkGeoField .filterOptionCheck {
+  color: #4d6952;
+}
+
+.smartlinkGeoField .filterNoResults {
+  padding: 12px 14px;
+  color: #758078;
+  font-size: 12px;
+}
+
+.filterOptionMeta {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #748077;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.smartlinkNameField input:focus {
+  border-color: #aab6ad;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgb(52 68 58 / 8%);
+}
+
+.smartlinkRotationHint {
+  flex: 0 1 auto;
+  max-width: 100%;
+  margin: 14px auto 0 0;
+  border: 1px solid #dce9dd;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #f1f8f2;
+  color: #54745a;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: normal;
+}
+
+.smartlinkRemoveRule {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e6e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #758078;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.smartlinkRemoveRule:hover:not(:disabled) {
+  border-color: #eccbc7;
+  background: #fff8f7;
+  color: #a74d45;
+}
+
+.smartlinkRemoveRule:focus-visible,
+.smartlinkAddRuleRow .pageSecondaryButton:focus-visible,
+.smartlinkFormActions .pagePrimaryButton:focus-visible {
+  outline: 3px solid rgb(92 184 92 / 22%);
+  outline-offset: 2px;
+}
+
+.smartlinkRemoveRule:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.smartlinkNameField {
+  display: grid;
+  max-width: 560px;
+  gap: 8px;
+  color: #4d5d52;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.smartlinkNameField input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #d8e1d9;
+  border-radius: 9px;
+  padding: 0 14px;
+  background: #fbfdfb;
+  color: #34443a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.smartlinkNameField input:hover:not(:focus) {
+  border-color: #bdcfc0;
+  background: #fff;
+}
+
+.smartlinkSelectionHeading {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.smartlinkSelectionHeading h3 {
+  margin: 0;
+  color: #34443a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.smartlinkSelectionHeading > span {
+  border-radius: 99px;
+  padding: 4px 9px;
+  background: #f1f5f1;
+  color: #66776b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.smartlinkOfferToolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.smartlinkPage .smartlinkSearch {
+  flex: 0 1 360px;
+  width: min(360px, 100%);
+  margin-left: auto;
+  border-color: #dfe7e0;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.smartlinkActivationSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 15px 12px;
+  color: #68756c;
+  font-size: 12px;
+}
+
+.smartlinkActivationSummary p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.smartlinkActiveCount {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 4px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #75817a;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.smartlinkActiveCount:hover:not(:disabled),
+.smartlinkActiveCount[aria-pressed='true'] {
+  color: #43584a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.smartlinkActiveCount:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #a9c2ad;
+  outline-offset: 3px;
+}
+
+.smartlinkActiveCount:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.smartlinkActiveCount strong {
+  color: #43584a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.campaignTable.campaignTableSmartlink {
+  min-width: 1080px;
+  table-layout: fixed;
+}
+
+.campaignTableSmartlink .smartlinkActivationHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.campaignTable.campaignTableSmartlink th:nth-child(1),
+.campaignTable.campaignTableSmartlink td:nth-child(1) { width: 70px; text-align: center; }
+.campaignTable.campaignTableSmartlink th:nth-child(2),
+.campaignTable.campaignTableSmartlink td:nth-child(2) { width: 7%; }
+.campaignTable.campaignTableSmartlink th:nth-child(3),
+.campaignTable.campaignTableSmartlink td:nth-child(3) { width: 8%; }
+.campaignTable.campaignTableSmartlink th:nth-child(4),
+.campaignTable.campaignTableSmartlink td:nth-child(4) { width: 31%; }
+.campaignTable.campaignTableSmartlink th:nth-child(5),
+.campaignTable.campaignTableSmartlink td:nth-child(5) { width: 11%; }
+.campaignTable.campaignTableSmartlink th:nth-child(6),
+.campaignTable.campaignTableSmartlink td:nth-child(6) { width: 14%; }
+.campaignTable.campaignTableSmartlink th:nth-child(7),
+.campaignTable.campaignTableSmartlink td:nth-child(7) { width: 12%; }
+.campaignTable.campaignTableSmartlink th:nth-child(8),
+.campaignTable.campaignTableSmartlink td:nth-child(8) { width: 10%; }
+.campaignTable.campaignTableSmartlink th:nth-child(9),
+.campaignTable.campaignTableSmartlink td:nth-child(9) { width: 118px; }
+
+.smartlinkSearch svg {
+  display: block;
+}
+
+.smartlinkOfferTableWrap {
+  max-height: 440px;
+  overflow: auto;
+  scrollbar-color: #ccd8ce transparent;
+  scrollbar-width: thin;
+}
+
+.campaignTable.smartlinkOfferTable {
+  min-width: 900px;
+  table-layout: fixed;
+}
+
+.campaignTable.smartlinkOfferTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.campaignTable.smartlinkOfferTable th:nth-child(1),
+.campaignTable.smartlinkOfferTable td:nth-child(1) { width: 4%; }
+.campaignTable.smartlinkOfferTable th:nth-child(2),
+.campaignTable.smartlinkOfferTable td:nth-child(2) { width: 6%; }
+.campaignTable.smartlinkOfferTable th:nth-child(3),
+.campaignTable.smartlinkOfferTable td:nth-child(3) { width: 7%; }
+.campaignTable.smartlinkOfferTable th:nth-child(4),
+.campaignTable.smartlinkOfferTable td:nth-child(4) { width: 34%; }
+.campaignTable.smartlinkOfferTable th:nth-child(5),
+.campaignTable.smartlinkOfferTable td:nth-child(5) { width: 10%; }
+.campaignTable.smartlinkOfferTable th:nth-child(6),
+.campaignTable.smartlinkOfferTable td:nth-child(6) { width: 15%; }
+.campaignTable.smartlinkOfferTable th:nth-child(7),
+.campaignTable.smartlinkOfferTable td:nth-child(7) { width: 11%; }
+.campaignTable.smartlinkOfferTable th:nth-child(8),
+.campaignTable.smartlinkOfferTable td:nth-child(8) { width: 13%; }
+
+.smartlinkOfferTable .campaignNameCell > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smartlinkEmptyOffers {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 28px 14px;
+  color: #69766d;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.smartlinkFormActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.smartlinkFormActions .pagePrimaryButton {
+  min-height: 42px;
+  border-color: #43864d;
+  border-radius: 7px;
+  padding: 0 18px;
+  background: #4b9255;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.smartlinkFormActions .pagePrimaryButton:hover:not(:disabled) {
+  border-color: #397541;
+  background: #43864d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgb(60 130 68 / 20%);
+}
+
+.smartlinkError {
+  margin: 0 0 14px;
+  border: 1px solid #efd0cc;
+  border-radius: 7px;
+  padding: 12px 14px;
+  background: #fff7f6;
+  color: #a53e35;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.smartlinkSavedGroups {
+  margin-top: 26px;
+  border-top: 1px solid #e5ebe6;
+  padding-top: 20px;
+}
+
+.smartlinkGroupList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.smartlinkGroupCard {
+  min-width: 0;
+  border: 1px solid #e2e9e3;
+  border-radius: 9px;
+  padding: 16px;
+  background: linear-gradient(180deg, #fff 0%, #fcfdfc 100%);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.smartlinkGroupCard:hover {
+  transform: translateY(-1px);
+  border-color: #cbdccc;
+  box-shadow: 0 5px 16px rgb(34 54 41 / 7%);
+}
+
+.smartlinkGroupCardHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid #e9eee9;
+  padding-bottom: 11px;
+}
+
+.smartlinkGroupCardHeading h4 {
+  overflow: hidden;
+  margin: 0;
+  color: #34443a;
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
+.smartlinkGroupCardHeading span {
+  flex: 0 0 auto;
+  border-radius: 99px;
+  padding: 4px 8px;
+  background: #f1f6f1;
+  color: #63806a;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.smartlinkSavedRules {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.smartlinkSavedRules li {
+  display: grid;
+  gap: 3px;
+  color: #68756c;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.smartlinkSavedRules strong {
+  color: #45545b;
+  font-size: 12px;
+}
+
+.smartlinkLegacyGroup {
+  overflow-wrap: anywhere;
+  margin: 13px 0 0;
+  color: #6f7a72;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.smartlinkGroupCard ul {
+  display: grid;
+  gap: 4px;
+  margin: 9px 0 0;
+  padding-left: 18px;
+  color: #68757b;
+  font-size: 12px;
+}
+
+.smartlinkSavedGroups > .dataPageEmpty {
+  margin-top: 8px;
+  border: 1px dashed #dfe7e0;
+  border-radius: 8px;
+  padding: 30px 14px;
+  background: #fbfcfb;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .main:has(.smartlinkPage) .pageHeader h1 {
+    font-size: 20px;
+  }
+
+  .smartlinkGroupForm {
+    gap: 17px;
+  }
+
+  .smartlinkAddRuleRow {
+    justify-content: flex-start;
+  }
+
+  .smartlinkAddRuleRow .pageSecondaryButton {
+    min-height: 36px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .smartlinkRuleHeader {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .smartlinkOfferToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .smartlinkGeoField {
+    width: 100%;
+    max-width: none;
+  }
+
+  .smartlinkRotationHint {
+    margin: 0 auto 0 0;
+    max-width: calc(100% - 46px);
+  }
+
+  .smartlinkPage .smartlinkSearch {
+    flex-basis: 100%;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .smartlinkFormActions .pagePrimaryButton {
+    width: 100%;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main:has(.smartlinkPage) .smartlinkPage,
+  .smartlinkPage,
+  .smartlinkRuleCard,
+  .smartlinkAddRuleRow .pageSecondaryButton,
+  .smartlinkFormActions .pagePrimaryButton,
+  .smartlinkGroupCard {
+    animation: none;
+    transition: none;
+  }
+}
+
 .browseFilters,
 .browseCampaigns {
   margin-right: 0;
