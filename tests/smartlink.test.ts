@@ -34,6 +34,22 @@ test('uses all active site offers when the visitor country is unknown', () => {
   )
 })
 
+test('does not route publisher Smartlinks when the visitor country is unknown', () => {
+  const routableOffers = offers.map((offer, index) => ({ ...offer, id: `offer-${index}` }))
+  assert.equal(
+    selectSmartlinkOfferForVisitor(routableOffers, null, [], () => assert.fail('must not select an offer')),
+    null,
+  )
+})
+
+test('does not route publisher Smartlinks to another country when there is no geo match', () => {
+  const countryOffers = [offers[0], offers[2]].map((offer, index) => ({ ...offer, id: `offer-${index}` }))
+  assert.equal(
+    selectSmartlinkOfferForVisitor(countryOffers, 'GB', [], () => assert.fail('must not select an offer')),
+    null,
+  )
+})
+
 test('returns no candidates when the site has no available offers', () => {
   assert.deepEqual(smartlinkOffersForCountry([], 'US'), [])
 })

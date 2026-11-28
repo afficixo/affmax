@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db/prisma'
 import { lookupCountryCode } from '@/lib/ip2location'
 import { isCreditedConversionStatus } from '@/lib/conversion-reversal'
 import { offerGeoCountryCode } from '@/lib/offer-geo'
+import { buildOfferClickDuplicateWhere } from '@/lib/offer-click-dedupe'
 
 export type AnalyticsScope = {
   role: 'MANAGER' | 'PUBLISHER'
@@ -516,30 +517,34 @@ export async function recordOfferClick(input: {
   ipAddress?: string | null
   userAgent?: string | null
   countryCode?: string | null
+  smartlinkId?: string | null
+  smartlinkVisitorHash?: string | null
   useProviderIpFallback?: boolean
 }) {
   const ipAddress = input.ipAddress?.trim() || null
   const userAgent = input.userAgent?.trim() || null
-  const duplicateConditions = [
-    ...(ipAddress ? [{ ipAddress }] : []),
-    ...(userAgent ? [{ userAgent }] : []),
-  ]
   const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const duplicateWhere = buildOfferClickDuplicateWhere({
+    publisherNumber: input.publisherNumber,
+    offerId: input.offerId,
+    smartlinkId: input.smartlinkId,
+    ipAddress,
+    userAgent,
+    windowStart,
+  })
 
   const click = await prisma.$transaction(async (transaction) => {
+    const lockKey = input.smartlinkId && input.smartlinkVisitorHash
+      ? `smartlink:${input.smartlinkId}:${input.smartlinkVisitorHash}`
+      : `offer:${input.offerId}`
     await transaction.$queryRaw<Array<{ locked: boolean }>>`
       SELECT TRUE AS locked
-      FROM pg_advisory_xact_lock(CAST(${input.publisherNumber} AS INTEGER), hashtext(${input.offerId}))
+      FROM pg_advisory_xact_lock(CAST(${input.publisherNumber} AS INTEGER), hashtext(${lockKey}))
     `
 
-    const duplicate = duplicateConditions.length
+    const duplicate = duplicateWhere
       ? await transaction.offerClick.findFirst({
-          where: {
-            publisherNumber: input.publisherNumber,
-            offerId: input.offerId,
-            createdAt: { gte: windowStart },
-            OR: duplicateConditions,
-          },
+          where: duplicateWhere,
           orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
           select: { countryCode: true },
         })
@@ -555,6 +560,7 @@ export async function recordOfferClick(input: {
         ipAddress,
         countryCode: duplicate?.countryCode || null,
         userAgent,
+        smartlinkId: input.smartlinkId || null,
         isUnique: !duplicate,
       },
     })

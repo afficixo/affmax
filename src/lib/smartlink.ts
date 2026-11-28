@@ -48,7 +48,9 @@ export function selectSmartlinkOfferForVisitor(
   seenOfferIds: string[],
   randomIndex: (max: number) => number,
 ): { offer: SmartlinkRoutableOffer; seenOfferIds: string[] } | null {
-  const candidates = smartlinkOffersForCountry(offers, countryCode)
+  const candidates = countryCode
+    ? offers.filter((offer) => offerMatchesVisitorCountry(offer, countryCode))
+    : []
   if (!candidates.length) return null
 
   const candidateIds = new Set(candidates.map((offer) => offer.id))

@@ -6,7 +6,7 @@ import { LEGACY_CRACK_BOUNTY_DEMO_OFFER_IDS } from '@/lib/campaign-offers'
 import { prisma } from '@/lib/db/prisma'
 import { ensurePublisherNumber } from '@/lib/db/user'
 import { lookupCountryCode } from '@/lib/ip2location'
-import { visitorCountryCodeFromHeaders } from '@/lib/offer-geo'
+import { offerMatchesVisitorCountry, visitorCountryCodeFromHeaders } from '@/lib/offer-geo'
 import {
   PUBLISHER_SMARTLINK_KIND,
   selectSmartlinkOfferForVisitor,
@@ -54,6 +54,21 @@ function normalizeHttpUrl(value: unknown) {
   } catch {
     return null
   }
+}
+
+function unsupportedLocationResponse() {
+  return new NextResponse(
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Location not supported</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f9f7;color:#344239;font:16px/1.5 system-ui,sans-serif}.message{max-width:440px;margin:24px;padding:32px;border:1px solid #e3eae4;border-radius:12px;background:#fff;text-align:center}h1{margin:0;font-size:22px;font-weight:650}p{margin:10px 0 0;color:#6d786f;font-size:14px}</style></head><body><main class="message"><h1>This offer does not support your location.</h1><p>There are no available offers for your country.</p></main></body></html>',
+    {
+      status: 403,
+      headers: {
+        'Cache-Control': 'private, no-store',
+        'Content-Type': 'text/html; charset=utf-8',
+        'Referrer-Policy': 'no-referrer',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    },
+  )
 }
 
 export async function GET(request: Request, context: RouteContext) {
@@ -156,8 +171,15 @@ export async function GET(request: Request, context: RouteContext) {
 
     const ipAddress = getClientIp(request.headers)
     const userAgent = request.headers.get('user-agent')?.trim().slice(0, 512) ?? ''
-    if (!ipAddress || !userAgent) {
+    if (!ipAddress) return unsupportedLocationResponse()
+    if (!userAgent) {
       return NextResponse.json({ error: 'Unable to identify visitor for Smartlink routing' }, { status: 503 })
+    }
+
+    const countryCode = await lookupCountryCode(ipAddress)
+      || visitorCountryCodeFromHeaders(request.headers)
+    if (!countryCode || !routableOffers.some((offer) => offerMatchesVisitorCountry(offer, countryCode))) {
+      return unsupportedLocationResponse()
     }
 
     const publisherNumber = group.owner.publisherNumber
@@ -166,8 +188,6 @@ export async function GET(request: Request, context: RouteContext) {
       return NextResponse.json({ error: 'Smartlink owner is missing a publisher ID' }, { status: 503 })
     }
 
-    const countryCode = await lookupCountryCode(ipAddress)
-      || visitorCountryCodeFromHeaders(request.headers)
     const visitorHash = hashVisitor(ipAddress, userAgent)
     const historyCountryCode = countryCode ?? 'XX'
     const selection = await prisma.$transaction(async (transaction) => {
@@ -215,7 +235,7 @@ export async function GET(request: Request, context: RouteContext) {
       return next.offer
     })
     if (!selection) {
-      return NextResponse.json({ error: 'No active Smartlink offers match this visitor' }, { status: 410 })
+      return unsupportedLocationResponse()
     }
 
     const requestUrl = new URL(request.url)
@@ -232,6 +252,8 @@ export async function GET(request: Request, context: RouteContext) {
         ipAddress,
         userAgent,
         countryCode,
+        smartlinkId: group.id,
+        smartlinkVisitorHash: visitorHash,
       })
     } catch (error) {
       console.error('Record Smartlink offer click failed:', error)

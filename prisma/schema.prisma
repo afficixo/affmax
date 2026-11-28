@@ -96,6 +96,7 @@ model IncentiveTool {
   ownerId          String
   owner            User     @relation("IncentiveToolOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   smartlinkVisitorCycles SmartlinkVisitorCycle[]
+  smartlinkClicks  OfferClick[] @relation("SmartlinkOfferClicks")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -179,6 +180,8 @@ model OfferClick {
   publisherNumber Int
   publisherUserId String?
   offerId         String
+  smartlinkId     String?
+  smartlink       IncentiveTool? @relation("SmartlinkOfferClicks", fields: [smartlinkId], references: [id], onDelete: SetNull)
   sub1            String?
   sub2            String?
   ipAddress       String?
@@ -190,6 +193,7 @@ model OfferClick {
   @@index([publisherUserId, createdAt])
   @@index([publisherNumber, createdAt])
   @@index([publisherNumber, offerId, createdAt])
+  @@index([publisherNumber, smartlinkId, createdAt])
   @@index([offerId, createdAt])
   @@index([createdAt])
   @@map("offer_clicks")

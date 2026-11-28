@@ -5014,7 +5014,9 @@ export default function DashboardOverview() {
                 <article className={styles.publisherSmartlinkItem} key={link.id}>
                   <div className={styles.publisherSmartlinkDetails}>
                     <strong>{link.name}</strong>
-                    <code>{publisherSmartlinkUrl(link.id)}</code>
+                    <a href={publisherSmartlinkUrl(link.id)} target="_blank" rel="noopener noreferrer">
+                      <code>{publisherSmartlinkUrl(link.id)}</code>
+                    </a>
                   </div>
                   <button
                     type="button"

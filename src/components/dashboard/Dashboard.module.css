@@ -6508,9 +6508,22 @@ input.reportRangeInput {
   white-space: nowrap;
 }
 
+.publisherSmartlinkDetails a {
+  overflow-wrap: anywhere;
+  color: #65796a;
+  text-decoration: underline;
+  text-decoration-color: #c3d0c5;
+  text-underline-offset: 2px;
+}
+
+.publisherSmartlinkDetails a:hover {
+  color: #405748;
+  text-decoration-color: currentColor;
+}
+
 .publisherSmartlinkDetails code {
   overflow-wrap: anywhere;
-  color: #78847b;
+  color: inherit;
   font-family: inherit;
   font-size: 11px;
 }
